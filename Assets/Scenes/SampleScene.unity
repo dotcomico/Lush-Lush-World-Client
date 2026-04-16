@@ -188,6 +188,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 3150474306388093854, guid: b7d3ece06a1b30b49975b8255cd37c5b, type: 3}
+--- !u!1 &125964270 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 453084650579209855, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
+  m_PrefabInstance: {fileID: 1792565893}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &184788906
 GameObject:
   m_ObjectHideFlags: 0
@@ -222,7 +227,7 @@ MonoBehaviour:
     m_Value: 0
   OutputChannel: 1
   StandbyUpdate: 2
-  m_StreamingVersion: 0
+  m_StreamingVersion: 20241001
   m_LegacyPriority: 0
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 410102747}
@@ -267,7 +272,7 @@ Transform:
   m_GameObject: {fileID: 184788906}
   serializedVersion: 2
   m_LocalRotation: {x: 0.3535534, y: 0.3535534, z: -0.14644663, w: 0.85355335}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 646.21936, y: 24.902168, z: 138.40654}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -611,7 +616,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 453084650579209848, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
   m_PrefabInstance: {fileID: 1792565893}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 125964270}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 55919ac34a26952479f3fc91f777b2fa, type: 3}
@@ -699,6 +704,7 @@ GameObject:
   m_Component:
   - component: {fileID: 563038215}
   - component: {fileID: 563038214}
+  - component: {fileID: 563038216}
   m_Layer: 0
   m_Name: CameraViewManager
   m_TagString: Untagged
@@ -725,8 +731,8 @@ MonoBehaviour:
   PlayerMeshRenderers:
   - {fileID: 860003427}
   - {fileID: 1233890145}
+  OrbitController: {fileID: 563038216}
   CycleCameraButton: {fileID: 1835337480}
-  CycleCameraKey: 118
 --- !u!4 &563038215
 Transform:
   m_ObjectHideFlags: 0
@@ -742,6 +748,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &563038216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 563038213}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07d4fcd535cadf0449e7a805b8f5ee9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Camera.ThirdPersonOrbitController
+  OrbitPivot: {fileID: 1193769129}
+  Player: {fileID: 125964270}
+  HorizontalSensitivity: 1
+  VerticalSensitivity: 1
+  MinPitch: -20
+  MaxPitch: 60
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -868,6 +892,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac0b09e7857660247b1477e93731de29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachinePipeline
+--- !u!1 &1193769128
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1193769129}
+  m_Layer: 0
+  m_Name: CameraOrbitPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1193769129
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1193769128}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 410102747}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1219920961
 GameObject:
   m_ObjectHideFlags: 0
@@ -902,7 +957,7 @@ MonoBehaviour:
     m_Value: 0
   OutputChannel: 1
   StandbyUpdate: 2
-  m_StreamingVersion: 0
+  m_StreamingVersion: 20241001
   m_LegacyPriority: 0
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 410102747}
@@ -947,7 +1002,7 @@ Transform:
   m_GameObject: {fileID: 1219920961}
   serializedVersion: 2
   m_LocalRotation: {x: 0.3535534, y: 0.3535534, z: -0.14644663, w: 0.85355335}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 646.21936, y: 24.902168, z: 138.40654}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -993,7 +1048,7 @@ MonoBehaviour:
     m_Value: 0
   OutputChannel: 1
   StandbyUpdate: 2
-  m_StreamingVersion: 0
+  m_StreamingVersion: 20241001
   m_LegacyPriority: 0
   m_LookAt: {fileID: 1476443953}
   m_Follow: {fileID: 410102747}
@@ -1037,8 +1092,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1278026649}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.000060172664, y: 0.9994699, z: -0.0018502324, w: 0.03250444}
+  m_LocalPosition: {x: 655.87115, y: 13.7021675, z: 152.90306}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1158,7 +1213,7 @@ MonoBehaviour:
     m_Value: 0
   OutputChannel: 1
   StandbyUpdate: 2
-  m_StreamingVersion: 0
+  m_StreamingVersion: 20241001
   m_LegacyPriority: 0
   m_LookAt: {fileID: 1476443953}
   m_Follow: {fileID: 410102747}
@@ -1202,8 +1257,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1324868100}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.000060172664, y: 0.9994699, z: -0.0018502324, w: 0.03250444}
+  m_LocalPosition: {x: 655.87115, y: 13.7021675, z: 152.90306}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1774,6 +1829,9 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 937451010987979973, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1193769129}
     - targetCorrespondingSourceObject: {fileID: 4253012990419024490, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1785774702}

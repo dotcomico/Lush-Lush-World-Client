@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using Unity.Cinemachine;
 using StarterAssets;
 
 namespace LushWorld.Camera
@@ -29,6 +30,11 @@ namespace LushWorld.Camera
         [Tooltip("All mesh renderers that should be hidden in first-person view")]
         public Renderer[] PlayerMeshRenderers;
 
+        // ── Third Person Orbit ────────────────────────────────────────────────
+        [Header("Third Person Orbit")]
+        [Tooltip("Controller that orbits the TP camera around the player via look input")]
+        public ThirdPersonOrbitController OrbitController;
+
         // ── UI ────────────────────────────────────────────────────────────────
         [Header("UI")]
         [Tooltip("Button that cycles through camera modes (mobile & PC)")]
@@ -44,7 +50,15 @@ namespace LushWorld.Camera
             if (CycleCameraButton != null)
                 CycleCameraButton.onClick.AddListener(CycleCamera);
 
-            Debug.Log($"[CameraView] Keyboard.current = {Keyboard.current}");
+            // Rewire TP VCam Follow to the orbit pivot so the camera orbits
+            // around the player instead of locking to the character's facing direction.
+            if (ThirdPersonCameraGO != null && OrbitController != null && OrbitController.OrbitPivot != null)
+            {
+                var vcam = ThirdPersonCameraGO.GetComponent<CinemachineVirtualCamera>();
+                if (vcam != null)
+                    vcam.Follow = OrbitController.OrbitPivot;
+            }
+
             ApplyMode(_currentMode);
         }
 
@@ -77,6 +91,10 @@ namespace LushWorld.Camera
             SetActive(FirstPersonCameraGO, mode == CameraMode.FirstPerson);
             SetActive(ThirdPersonCameraGO, mode == CameraMode.ThirdPerson);
             SetActive(IsometricCameraGO, mode == CameraMode.Isometric);
+
+            // Orbit controller only runs in TP mode.
+            if (OrbitController != null)
+                OrbitController.enabled = (mode == CameraMode.ThirdPerson);
 
             bool isFP = mode == CameraMode.FirstPerson;
 
