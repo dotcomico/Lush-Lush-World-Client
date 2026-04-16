@@ -2,9 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Game Design
+
+Full feature design, mechanics, biomes, multiplayer architecture, and open questions are documented in:
+**[`../Docs/GDD.md`](../Docs/GDD.md)** — read this before implementing any new system.
+
+---
+
 ## Project Overview
 
-**Lush-Lush-World** is a Unity 6 (6000.3.13f1) first-person exploration/adventure game. The repo contains two top-level folders:
+**Lush-Lush-World** is a Unity 6 (6000.3.13f1) multiplayer survival/exploration game where players control snails. The repo contains two top-level folders:
 
 - `Lush-Lush-World-Client/` — the active Unity project
 - `Lush-Lush-World-Server/` — empty placeholder for a future multiplayer server
