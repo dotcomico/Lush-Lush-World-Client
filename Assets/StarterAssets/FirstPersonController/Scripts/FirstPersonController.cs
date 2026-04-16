@@ -211,7 +211,7 @@ namespace StarterAssets
 					if (inputDirection.sqrMagnitude > 0.01f)
 					{
 						float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg;
-						float smoothAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _rotationVelocity, 0.1f);
+						float smoothAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _rotationVelocity, 0.15f);
 						transform.rotation = Quaternion.Euler(0f, smoothAngle, 0f);
 					}
 				}

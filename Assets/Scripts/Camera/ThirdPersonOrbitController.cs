@@ -25,8 +25,8 @@ namespace LushWorld.Camera
         [Range(  0f, 80f)] public float MaxPitch =  60f;
 
         [Header("Smoothing")]
-        [Tooltip("Lower = snappier, higher = smoother. 0.05–0.12 is a good range.")]
-        [Range(0f, 0.3f)] public float RotationSmoothTime = 0.08f;
+        [Tooltip("0 = instant (Minecraft/GTA feel). Increase slightly for cinematic float.")]
+        [Range(0f, 0.3f)] public float RotationSmoothTime = 0f;
 
         private StarterAssetsInputs _input;
         private PlayerInput _playerInput;
@@ -76,11 +76,19 @@ namespace LushWorld.Camera
                 _targetPitch  = Mathf.Clamp(_targetPitch, MinPitch, MaxPitch);
             }
 
-            // Smooth the angles so mouse micro-movements don't cause shake.
-            _smoothYaw = Mathf.SmoothDampAngle(
-                _smoothYaw, _targetYaw, ref _yawVelocity, RotationSmoothTime);
-            _smoothPitch = Mathf.SmoothDampAngle(
-                _smoothPitch, _targetPitch, ref _pitchVelocity, RotationSmoothTime);
+            // Smooth only if the user wants it — 0 = direct/instant (recommended).
+            if (RotationSmoothTime > 0f)
+            {
+                _smoothYaw = Mathf.SmoothDampAngle(
+                    _smoothYaw, _targetYaw, ref _yawVelocity, RotationSmoothTime);
+                _smoothPitch = Mathf.SmoothDampAngle(
+                    _smoothPitch, _targetPitch, ref _pitchVelocity, RotationSmoothTime);
+            }
+            else
+            {
+                _smoothYaw   = _targetYaw;
+                _smoothPitch = _targetPitch;
+            }
 
             // Set world rotation — independent of player body facing direction.
             OrbitPivot.rotation = Quaternion.Euler(_smoothPitch, _smoothYaw, 0f);
