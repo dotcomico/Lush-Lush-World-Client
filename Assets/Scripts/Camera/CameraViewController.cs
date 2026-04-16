@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
@@ -43,6 +44,7 @@ namespace LushWorld.Camera
         // ─────────────────────────────────────────────────────────────────────
         private CameraMode _currentMode = CameraMode.FirstPerson;
         private static readonly string[] _modeLabels = { "FP", "3P", "ISO" };
+        private Coroutine _hideMeshCoroutine;
 
         // ─────────────────────────────────────────────────────────────────────
         private void Start()
@@ -115,10 +117,21 @@ namespace LushWorld.Camera
                 PlayerController.MovementCameraTransform = isFP ? null : UnityEngine.Camera.main.transform;
             }
 
-            // Show player mesh in TP/ISO, hide it in FP (you're inside the character).
-            foreach (var r in PlayerMeshRenderers)
-                if (r != null)
-                    r.enabled = !isFP;
+            // Show player mesh in TP/ISO immediately so it's visible during the blend.
+            // When entering FP, wait for the Cinemachine blend to finish before hiding —
+            // otherwise the snail vanishes mid-transition.
+            if (isFP)
+            {
+                // Cancel any in-flight hide (e.g. double-tap) before starting a new one.
+                if (_hideMeshCoroutine != null) StopCoroutine(_hideMeshCoroutine);
+                _hideMeshCoroutine = StartCoroutine(HideMeshAfterBlend());
+            }
+            else
+            {
+                // Leaving FP: cancel any pending hide and show the mesh immediately.
+                if (_hideMeshCoroutine != null) { StopCoroutine(_hideMeshCoroutine); _hideMeshCoroutine = null; }
+                SetMeshVisibility(true);
+            }
 
             // Update button label so the player knows the current mode.
             if (CycleCameraButton != null)
@@ -135,6 +148,38 @@ namespace LushWorld.Camera
         {
             if (go != null)
                 go.SetActive(active);
+        }
+
+        private void SetMeshVisibility(bool visible)
+        {
+            foreach (var r in PlayerMeshRenderers)
+                if (r != null)
+                    r.enabled = visible;
+        }
+
+        /// <summary>
+        /// Waits until the Cinemachine Brain is done blending, then hides the player mesh.
+        /// Prevents the snail from disappearing mid-transition when entering FP mode.
+        /// </summary>
+        private IEnumerator HideMeshAfterBlend()
+        {
+            // Yield one frame FIRST. Cinemachine activates new vcams and starts blending
+            // in LateUpdate — if we check IsBlending on the same frame SetActive was called,
+            // the blend hasn't registered yet and IsBlending is still false, so the
+            // WaitUntil fires immediately and the mesh is hidden too early.
+            yield return null;
+
+            var brain = UnityEngine.Camera.main?.GetComponent<CinemachineBrain>();
+            if (brain != null)
+                yield return new WaitUntil(() => !brain.IsBlending);
+
+            // Only hide if we're still in FP mode — user may have switched away
+            // before the blend finished.
+            if (_currentMode == CameraMode.FirstPerson)
+            {
+                SetMeshVisibility(false);
+                _hideMeshCoroutine = null;
+            }
         }
     }
 
