@@ -105,6 +105,11 @@ namespace LushWorld.Camera
                 // In TP/ISO: disable that so the character faces movement direction instead.
                 PlayerController.EnableCameraRotation = isFP;
 
+                // In TP/ISO: reset FP camera target pitch to zero so the CinemachineComposer
+                // isn't chasing a tilted look-at point inherited from FP mode.
+                if (!isFP && PlayerController.CinemachineCameraTarget != null)
+                    PlayerController.CinemachineCameraTarget.transform.localRotation = Quaternion.identity;
+
                 // In TP/ISO: pass the main camera so movement is camera-relative.
                 // In FP: null means movement is player-relative (existing behaviour).
                 PlayerController.MovementCameraTransform = isFP ? null : UnityEngine.Camera.main.transform;

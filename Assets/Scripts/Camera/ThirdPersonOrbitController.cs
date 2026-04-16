@@ -20,20 +20,32 @@ namespace LushWorld.Camera
 
         [Header("Orbit Settings")]
         public float HorizontalSensitivity = 1.0f;
-        public float VerticalSensitivity = 1.0f;
-        [Range(-80f, 0f)] public float MinPitch = -20f;
-        [Range(0f,  80f)] public float MaxPitch =  60f;
+        public float VerticalSensitivity   = 1.0f;
+        [Range(-80f,  0f)] public float MinPitch = -20f;
+        [Range(  0f, 80f)] public float MaxPitch =  60f;
+
+        [Header("Smoothing")]
+        [Tooltip("Lower = snappier, higher = smoother. 0.05–0.12 is a good range.")]
+        [Range(0f, 0.3f)] public float RotationSmoothTime = 0.08f;
 
         private StarterAssetsInputs _input;
         private PlayerInput _playerInput;
-        private float _yaw;
-        private float _pitch = 15f;
+
+        // Target angles (updated from raw input each frame)
+        private float _targetYaw;
+        private float _targetPitch = 15f;
+
+        // Smoothed angles (fed to the pivot rotation)
+        private float _smoothYaw;
+        private float _smoothPitch;
+        private float _yawVelocity;
+        private float _pitchVelocity;
 
         private void Awake()
         {
             if (Player != null)
             {
-                _input = Player.GetComponent<StarterAssetsInputs>();
+                _input       = Player.GetComponent<StarterAssetsInputs>();
                 _playerInput = Player.GetComponent<PlayerInput>();
             }
         }
@@ -42,7 +54,10 @@ namespace LushWorld.Camera
         {
             // Sync yaw with the player's current facing so the camera doesn't snap on switch.
             if (OrbitPivot != null && OrbitPivot.parent != null)
-                _yaw = OrbitPivot.parent.eulerAngles.y;
+            {
+                _targetYaw = _smoothYaw = OrbitPivot.parent.eulerAngles.y;
+                _targetPitch = _smoothPitch = 15f;
+            }
         }
 
         private void LateUpdate()
@@ -56,13 +71,19 @@ namespace LushWorld.Camera
                                _playerInput.currentControlScheme == "KeyboardMouse";
                 float multiplier = isMouse ? 1f : Time.deltaTime;
 
-                _yaw   += look.x * HorizontalSensitivity * multiplier;
-                _pitch += look.y * VerticalSensitivity   * multiplier;
-                _pitch  = Mathf.Clamp(_pitch, MinPitch, MaxPitch);
+                _targetYaw   += look.x * HorizontalSensitivity * multiplier;
+                _targetPitch += look.y * VerticalSensitivity   * multiplier;
+                _targetPitch  = Mathf.Clamp(_targetPitch, MinPitch, MaxPitch);
             }
 
+            // Smooth the angles so mouse micro-movements don't cause shake.
+            _smoothYaw = Mathf.SmoothDampAngle(
+                _smoothYaw, _targetYaw, ref _yawVelocity, RotationSmoothTime);
+            _smoothPitch = Mathf.SmoothDampAngle(
+                _smoothPitch, _targetPitch, ref _pitchVelocity, RotationSmoothTime);
+
             // Set world rotation — independent of player body facing direction.
-            OrbitPivot.rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+            OrbitPivot.rotation = Quaternion.Euler(_smoothPitch, _smoothYaw, 0f);
         }
     }
 }
