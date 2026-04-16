@@ -68,7 +68,7 @@ namespace LushWorld.Camera
             if (look.sqrMagnitude >= 0.01f)
             {
                 bool isMouse = _playerInput != null &&
-                               _playerInput.currentControlScheme == "KeyboardMouse";
+                               _playerInput.currentControlScheme == "Keyboard&Mouse";
                 float multiplier = isMouse ? 1f : Time.deltaTime;
 
                 _targetYaw   += look.x * HorizontalSensitivity * multiplier;
