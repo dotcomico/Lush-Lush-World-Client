@@ -57,7 +57,7 @@ namespace LushWorld.Camera
                 float multiplier = isMouse ? 1f : Time.deltaTime;
 
                 _yaw   += look.x * HorizontalSensitivity * multiplier;
-                _pitch -= look.y * VerticalSensitivity   * multiplier;
+                _pitch += look.y * VerticalSensitivity   * multiplier;
                 _pitch  = Mathf.Clamp(_pitch, MinPitch, MaxPitch);
             }
 
