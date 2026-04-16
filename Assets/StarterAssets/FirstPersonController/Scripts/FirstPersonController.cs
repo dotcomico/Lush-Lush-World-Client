@@ -51,6 +51,12 @@ namespace StarterAssets
 		[Tooltip("How far in degrees can you move the camera down")]
 		public float BottomClamp = -90.0f;
 
+		[Header("Camera Mode (managed by CameraViewController)")]
+		[Tooltip("When false, look input does not rotate the camera target or player body. Set by CameraViewController.")]
+		public bool EnableCameraRotation = true;
+		[Tooltip("When set, movement is relative to this camera transform and the player auto-rotates to face movement. Set by CameraViewController.")]
+		public Transform MovementCameraTransform;
+
 		// cinemachine
 		private float _cinemachineTargetPitch;
 
@@ -131,6 +137,8 @@ namespace StarterAssets
 
 		private void CameraRotation()
 		{
+			if (!EnableCameraRotation) return;
+
 			// if there is an input
 			if (_input.look.sqrMagnitude >= _threshold)
 			{
@@ -190,8 +198,28 @@ namespace StarterAssets
 			// if there is a move input rotate player when the player is moving
 			if (_input.move != Vector2.zero)
 			{
-				// move
-				inputDirection = transform.right * _input.move.x + transform.forward * _input.move.y;
+				if (MovementCameraTransform != null)
+				{
+					// TP / ISO mode: move relative to camera facing, auto-rotate player to face movement.
+					Vector3 camForward = MovementCameraTransform.forward;
+					Vector3 camRight   = MovementCameraTransform.right;
+					camForward.y = 0f; camRight.y = 0f;
+					camForward.Normalize(); camRight.Normalize();
+					inputDirection = camForward * _input.move.y + camRight * _input.move.x;
+
+					// Smoothly rotate the player to face the movement direction.
+					if (inputDirection.sqrMagnitude > 0.01f)
+					{
+						float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg;
+						float smoothAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _rotationVelocity, 0.1f);
+						transform.rotation = Quaternion.Euler(0f, smoothAngle, 0f);
+					}
+				}
+				else
+				{
+					// FP mode: move relative to player facing (original behaviour).
+					inputDirection = transform.right * _input.move.x + transform.forward * _input.move.y;
+				}
 			}
 
 			// move the player
