@@ -113,7 +113,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8897064847352149686}
-  - component: {fileID: 3977195412106959893}
   m_Layer: 0
   m_Name: PlayerRig
   m_TagString: Untagged
@@ -145,21 +144,6 @@ Transform:
   - {fileID: 978557393225820698}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: -0.614, z: 0}
---- !u!114 &3977195412106959893
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2753887583838102160}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 670beb656c7a59e4a8939b564f0c45db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Resource.ResourceInteractor
-  pickupRadius: 2.5
-  interactPrompt: {fileID: 721509093286942169}
-  itemRegistry: {fileID: 0}
 --- !u!1 &2946818970127725409
 GameObject:
   m_ObjectHideFlags: 0
@@ -1041,6 +1025,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8897064847352149686}
     m_Modifications:
+    - target: {fileID: 920854678723782983, guid: a66dbf59885bb34478bc067b4915690a, type: 3}
+      propertyPath: itemRegistry
+      value: 
+      objectReference: {fileID: 11400000, guid: eb4469f6f44f4124fbbcff30e118c857, type: 2}
     - target: {fileID: 1592461796901364802, guid: a66dbf59885bb34478bc067b4915690a, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -1257,6 +1245,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8452790474979350428, guid: a66dbf59885bb34478bc067b4915690a, type: 3}
+      propertyPath: itemRegistry
+      value: 
+      objectReference: {fileID: 11400000, guid: eb4469f6f44f4124fbbcff30e118c857, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -1817,6 +1809,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2745627720534265304}
+    - targetCorrespondingSourceObject: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8650797432705633658}
   m_SourcePrefab: {fileID: 100100000, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
 --- !u!4 &1719532525433075789 stripped
 Transform:
@@ -1876,6 +1871,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Inventory.CursorLockManager
   inputBridge: {fileID: 2321761983353699979}
+--- !u!114 &8650797432705633658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2060063764280730359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 670beb656c7a59e4a8939b564f0c45db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Resource.ResourceInteractor
+  pickupRadius: 4
+  interactPrompt: {fileID: 721509093286942169}
+  itemRegistry: {fileID: 11400000, guid: eb4469f6f44f4124fbbcff30e118c857, type: 2}
 --- !u!114 &2060063764280730363 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8616685848737228376, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}

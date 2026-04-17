@@ -125,6 +125,8 @@ namespace LushWorld.Resource
                 }
 
                 Vector3 worldPos = Vector3.Scale(ti.position, td.size) + _terrain.transform.position;
+                // ti.position.y is always 0 (trees sit on the surface); sample actual terrain height.
+                worldPos.y = _terrain.SampleHeight(worldPos) + _terrain.transform.position.y;
                 _spots.Add(new ResourceSpot
                 {
                     worldPos = worldPos,

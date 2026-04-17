@@ -245,11 +245,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8173969039763012199, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 8173969039763012199, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -590
+      value: -443
       objectReference: {fileID: 0}
     - target: {fileID: 8173969039763012199, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -410,63 +410,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 3150474306388093854, guid: b7d3ece06a1b30b49975b8255cd37c5b, type: 3}
---- !u!1 &196115438
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 196115441}
-  - component: {fileID: 196115440}
-  - component: {fileID: 196115439}
-  m_Layer: 0
-  m_Name: InventoryInputHandler
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &196115439
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 196115438}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 43c30f6a167208b419ce72054cde089f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Inventory.InventoryInputHandler
---- !u!114 &196115440
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 196115438}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4452af70de92d94449d746830861d70a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Inventory.InventorySystem
---- !u!4 &196115441
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 196115438}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 444.1688, y: 0.00001, z: 349.0961}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &256456671
 GameObject:
   m_ObjectHideFlags: 0
@@ -924,5 +867,4 @@ SceneRoots:
   - {fileID: 1154466463}
   - {fileID: 582100331}
   - {fileID: 256456673}
-  - {fileID: 196115441}
   - {fileID: 1584693322}
