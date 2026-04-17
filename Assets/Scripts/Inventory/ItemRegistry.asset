@@ -12,4 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a160afea1c95011409cdbbf2778bbf99, type: 3}
   m_Name: ItemRegistry
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Inventory.ItemRegistry
-  allItems: []
+  allItems:
+  - {fileID: 11400000, guid: 08e1ba1a4d6ecdb43942bcf1f3a13bcb, type: 2}
