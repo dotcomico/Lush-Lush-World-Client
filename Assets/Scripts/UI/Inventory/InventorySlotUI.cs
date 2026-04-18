@@ -14,13 +14,23 @@ namespace LushWorld.UI.Inventory
         [SerializeField] private Image iconImage;
         [SerializeField] private TextMeshProUGUI quantityText;
         [SerializeField] private TextMeshProUGUI slotNumberText;
-        [SerializeField] private GameObject highlightBorder;
+
+        [SerializeField] private Color selectedColor = new Color(1f, 0.85f, 0.2f, 1f);
 
         // Fired when the player clicks the slot — consumed by future drag-drop / context menu system.
         public event Action<int, bool> OnSlotClicked;
 
         private int _slotIndex;
         private bool _isHotbarSlot;
+        private Image _background;
+        private Color _normalColor;
+
+        private void Awake()
+        {
+            _background = GetComponent<Image>();
+            if (_background != null)
+                _normalColor = _background.color;
+        }
 
         public void Initialize(int slotIndex, bool isHotbarSlot)
         {
@@ -56,8 +66,8 @@ namespace LushWorld.UI.Inventory
 
         public void SetSelected(bool selected)
         {
-            if (highlightBorder != null)
-                highlightBorder.SetActive(selected);
+            if (_background != null)
+                _background.color = selected ? selectedColor : _normalColor;
         }
 
         public void OnPointerClick(PointerEventData eventData)
