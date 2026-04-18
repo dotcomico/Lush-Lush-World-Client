@@ -55,6 +55,18 @@ namespace LushWorld.Resource
             _originalTreeInstances = _terrain.terrainData.treeInstances;
             BuildSpotList();
 
+            Debug.Log($"[TerrainResourceManager] Found {_spots.Count} resource spots on terrain.");
+            if (_spots.Count == 0)
+                Debug.LogWarning("[TerrainResourceManager] No resource spots found. " +
+                    "Check that 'Resource Prototypes' prototypeIndex values match your terrain's tree prototype indices " +
+                    "(0-based order in the Terrain Inspector under Paint Trees).");
+
+            if (_terrain.treeDistance < despawnRadius * 2f)
+                Debug.LogWarning($"[TerrainResourceManager] Terrain treeDistance ({_terrain.treeDistance}) is too small — " +
+                    $"rocks will be culled by Unity before they reach swap range ({despawnRadius}u). " +
+                    $"Fix: Select the Terrain → Inspector → Terrain Settings → Tree & Detail Objects → " +
+                    $"set Tree Distance to at least {despawnRadius * 4f}.");
+
             if (playerTransform == null)
             {
                 var fpc = FindFirstObjectByType<FirstPersonController>();
@@ -114,15 +126,9 @@ namespace LushWorld.Resource
             var instances = td.treeInstances;
             var protoSet = BuildProtoIndexSet();
 
-            var keepInstances = new List<TreeInstance>(instances.Length);
-
             foreach (var ti in instances)
             {
-                if (!protoSet.Contains(ti.prototypeIndex))
-                {
-                    keepInstances.Add(ti);
-                    continue;
-                }
+                if (!protoSet.Contains(ti.prototypeIndex)) continue;
 
                 Vector3 worldPos = Vector3.Scale(ti.position, td.size) + _terrain.transform.position;
                 // ti.position.y is always 0 (trees sit on the surface); sample actual terrain height.
@@ -136,10 +142,8 @@ namespace LushWorld.Resource
                     originalInstance = ti
                 });
             }
-
-            // Remove matching trees from terrain (runtime only — does not dirty the asset)
-            td.treeInstances = keepInstances.ToArray();
-            _terrain.Flush();
+            // Trees stay in the terrain here — each one is removed lazily in SpawnSpot()
+            // so distant rocks remain visible as terrain billboards until approached.
         }
 
         private HashSet<int> BuildProtoIndexSet()
@@ -183,9 +187,17 @@ namespace LushWorld.Resource
         private void SpawnSpot(ResourceSpot spot)
         {
             var prefab = GetPrefabForProto(spot.protoIndex);
-            if (prefab == null) return;
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[TerrainResourceManager] SpawnSpot: no prefab mapped for prototypeIndex {spot.protoIndex}. Rock at {spot.worldPos} will stay as terrain tree forever.");
+                return;
+            }
 
+            // Remove this individual tree now so the terrain billboard and the prefab
+            // never overlap. All other distant trees remain visible until their own turn.
+            RemoveTreeInstance(spot.originalInstance);
             spot.activeGO = Instantiate(prefab, spot.worldPos, Quaternion.identity);
+            Debug.Log($"[TerrainResourceManager] Spawned '{prefab.name}' at {spot.worldPos} | scale ws={spot.originalInstance.widthScale:F2} hs={spot.originalInstance.heightScale:F2}");
 
             // Read the prefab's authored LODGroup size while localScale is still (1,1,1).
             // We need this reference before we change localScale so we can correct it afterward.
@@ -241,6 +253,30 @@ namespace LushWorld.Resource
                 spot.activeGO = null; // Destroy() already called by ResourceNode
                 return;
             }
+        }
+
+        private void RemoveTreeInstance(TreeInstance ti)
+        {
+            if (_terrain == null) return;
+            var td = _terrain.terrainData;
+            var current = td.treeInstances;
+            var updated = new List<TreeInstance>(current.Length);
+            bool removed = false;
+            foreach (var t in current)
+            {
+                // Match by normalized position (0–1 range on terrain); 1e-6 tolerance is ~1mm on a 1000u terrain.
+                if (!removed && Vector3.SqrMagnitude(t.position - ti.position) < 1e-6f)
+                {
+                    removed = true;
+                    continue;
+                }
+                updated.Add(t);
+            }
+            if (removed)
+                td.treeInstances = updated.ToArray();
+            else
+                Debug.LogWarning($"[TerrainResourceManager] RemoveTreeInstance: no terrain tree matched normalized pos {ti.position}. " +
+                    "Terrain billboard may remain visible underneath the spawned prefab.");
         }
 
         private void AddTreeInstance(TreeInstance ti)
