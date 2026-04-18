@@ -36,13 +36,22 @@ namespace LushWorld.UI.Inventory
 
         public void SetStack(ItemStack stack, ItemDefinition definition)
         {
-            bool hasItem = !stack.IsEmpty && definition != null;
+            bool hasItem = !stack.IsEmpty;
 
             iconImage.enabled = hasItem;
-            if (hasItem) iconImage.sprite = definition.Icon;
+            if (hasItem)
+            {
+                var icon = definition?.Icon;
+                iconImage.sprite = icon;
+                iconImage.color = icon != null ? Color.white : new Color(0.4f, 0.4f, 0.4f, 1f);
+            }
+            else
+            {
+                iconImage.color = Color.white;
+            }
 
             if (quantityText != null)
-                quantityText.text = hasItem && stack.Quantity > 1 ? stack.Quantity.ToString() : string.Empty;
+                quantityText.text = hasItem ? stack.Quantity.ToString() : string.Empty;
         }
 
         public void SetSelected(bool selected)

@@ -34,9 +34,20 @@ namespace LushWorld.Inventory
             OnInventoryDestroyed?.Invoke();
         }
 
-        public void RequestAddItem(ItemStack stack)
+        // Global entry point for giving an item to the local player from anywhere in the codebase.
+        public static bool GiveItem(string itemId, int quantity = 1)
         {
-            Data.TryAddItem(stack, out _);
+            if (LocalPlayer == null)
+            {
+                Debug.LogWarning("[Inventory] GiveItem called but no active player found.");
+                return false;
+            }
+            return LocalPlayer.RequestAddItem(new ItemStack(itemId, quantity));
+        }
+
+        public bool RequestAddItem(ItemStack stack)
+        {
+            return Data.TryAddItem(stack, out _);
         }
 
         public void RequestRemoveItem(int slot, bool isHotbar, int qty)

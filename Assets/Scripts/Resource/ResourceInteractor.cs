@@ -79,9 +79,7 @@ namespace LushWorld.Resource
         {
             if (!value.isPressed) return;
             if (_nearestNode == null) return;
-            var inventory = InventorySystem.LocalPlayer;
-            if (inventory == null) return;
-            _nearestNode.TryPickup(inventory);
+            _nearestNode.TryPickup();
             _nearestNode = null;
             UpdatePrompt();
         }

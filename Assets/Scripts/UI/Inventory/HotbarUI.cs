@@ -18,6 +18,13 @@ namespace LushWorld.UI.Inventory
             InventorySystem.OnInventoryDestroyed += HandleInventoryDestroyed;
         }
 
+        // Fallback: if InventorySystem.Start() fired before our OnEnable(), we missed the event.
+        private void Start()
+        {
+            if (_data == null && InventorySystem.LocalPlayer != null)
+                HandleInventoryReady(InventorySystem.LocalPlayer.Data);
+        }
+
         private void OnDisable()
         {
             InventorySystem.OnInventoryReady -= HandleInventoryReady;

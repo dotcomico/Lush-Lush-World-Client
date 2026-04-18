@@ -16,9 +16,9 @@ namespace LushWorld.Resource
 
         public event Action<ResourceNode> OnPickedUp;
 
-        public void TryPickup(InventorySystem inventory)
+        public void TryPickup()
         {
-            inventory.RequestAddItem(new ItemStack(itemId, quantity));
+            if (!InventorySystem.GiveItem(itemId, quantity)) return;
             OnPickedUp?.Invoke(this);
             Destroy(gameObject);
         }
