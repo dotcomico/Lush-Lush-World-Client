@@ -19,6 +19,8 @@ namespace LushWorld.Inventory
 
         public InventoryData Data { get; private set; }
 
+        [SerializeField] private ItemRegistry _itemRegistry;
+
         private bool _backpackOpen;
 
         private void Start()
@@ -57,7 +59,57 @@ namespace LushWorld.Inventory
 
         public void RequestSwapSlots(int fromIndex, bool fromHotbar, int toIndex, bool toHotbar)
         {
+            var fromStack = Data.GetSlot(fromIndex, fromHotbar);
+            var toStack   = Data.GetSlot(toIndex,   toHotbar);
+
+            // Same item type: merge quantities up to MaxStackSize.
+            // If dst is full, TryMergeIntoSlot returns false and we fall through to a normal swap.
+            if (!fromStack.IsEmpty && !toStack.IsEmpty && fromStack.ItemId == toStack.ItemId)
+            {
+                var def      = _itemRegistry != null ? _itemRegistry.GetById(fromStack.ItemId) : null;
+                int maxStack = def?.MaxStackSize ?? 64;
+                if (Data.TryMergeIntoSlot(fromIndex, fromHotbar, toIndex, toHotbar, maxStack))
+                    return;
+            }
+
             Data.TrySwapSlots(fromIndex, fromHotbar, toIndex, toHotbar);
+        }
+
+        // Shift-click: moves the full stack at slotIndex to the other section (hotbar↔backpack).
+        // Pass 1 merges into existing partial stacks; Pass 2 fills the first empty slot.
+        public void RequestMoveToOtherSection(int slotIndex, bool isHotbar)
+        {
+            var srcStack = Data.GetSlot(slotIndex, isHotbar);
+            if (srcStack.IsEmpty) return;
+
+            bool dstHotbar = !isHotbar;
+            int  dstSize   = dstHotbar ? InventoryData.HotbarSize : InventoryData.BackpackSize;
+
+            var def      = _itemRegistry != null ? _itemRegistry.GetById(srcStack.ItemId) : null;
+            int maxStack = def?.MaxStackSize ?? 64;
+
+            // Pass 1: pour into existing partial stacks of the same item type.
+            for (int i = 0; i < dstSize; i++)
+            {
+                var dstStack = Data.GetSlot(i, dstHotbar);
+                if (dstStack.IsEmpty || dstStack.ItemId != srcStack.ItemId) continue;
+                Data.TryMergeIntoSlot(slotIndex, isHotbar, i, dstHotbar, maxStack);
+                srcStack = Data.GetSlot(slotIndex, isHotbar);
+                if (srcStack.IsEmpty) return;
+            }
+
+            // Pass 2: place whatever remains in the first empty slot.
+            for (int i = 0; i < dstSize; i++)
+            {
+                if (!Data.GetSlot(i, dstHotbar).IsEmpty) continue;
+                Data.TrySwapSlots(slotIndex, isHotbar, i, dstHotbar);
+                return;
+            }
+        }
+
+        public void RequestSplitStack(int slotIndex, bool isHotbar)
+        {
+            Data.TrySplitStack(slotIndex, isHotbar, out _);
         }
 
         public void RequestSelectSlot(int index)

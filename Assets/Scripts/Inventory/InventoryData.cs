@@ -27,6 +27,7 @@ namespace LushWorld.Inventory
 
         public ItemStack GetHotbarSlot(int index) => _hotbar[index];
         public ItemStack GetBackpackSlot(int index) => _backpack[index];
+        public ItemStack GetSlot(int index, bool isHotbar) => isHotbar ? _hotbar[index] : _backpack[index];
 
         public bool TryAddItem(ItemStack stack, out int placedIndex)
         {
@@ -77,6 +78,64 @@ namespace LushWorld.Inventory
             FireSlotChanged(fromIndex, fromSlots[fromIndex], fromHotbar);
             FireSlotChanged(toIndex, toSlots[toIndex], toHotbar);
             return true;
+        }
+
+        // Merges src quantity into dst (same ItemId) up to maxStackSize.
+        // Returns true if any quantity moved; leftover stays in src.
+        // Returns false when dst is already full — caller should swap instead.
+        public bool TryMergeIntoSlot(int srcIndex, bool srcHotbar, int dstIndex, bool dstHotbar, int maxStackSize)
+        {
+            var srcSlots = srcHotbar ? _hotbar : _backpack;
+            var dstSlots = dstHotbar ? _hotbar : _backpack;
+
+            if (srcIndex < 0 || srcIndex >= srcSlots.Length) return false;
+            if (dstIndex < 0 || dstIndex >= dstSlots.Length) return false;
+
+            var src = srcSlots[srcIndex];
+            var dst = dstSlots[dstIndex];
+
+            if (src.IsEmpty || src.ItemId != dst.ItemId) return false;
+
+            int canAccept = maxStackSize - dst.Quantity;
+            if (canAccept <= 0) return false;
+
+            int transfer = Math.Min(canAccept, src.Quantity);
+            dstSlots[dstIndex] = new ItemStack(dst.ItemId, dst.Quantity + transfer);
+            int remaining = src.Quantity - transfer;
+            srcSlots[srcIndex] = remaining <= 0 ? ItemStack.Empty : new ItemStack(src.ItemId, remaining);
+
+            FireSlotChanged(srcIndex, srcSlots[srcIndex], srcHotbar);
+            FireSlotChanged(dstIndex, dstSlots[dstIndex], dstHotbar);
+            return true;
+        }
+
+        // Splits floor(qty/2) from src into the first empty slot in the same section.
+        // Returns false if qty <= 1 or no empty slot is available.
+        public bool TrySplitStack(int srcIndex, bool isHotbar, out int dstIndex)
+        {
+            dstIndex = -1;
+            var slots = isHotbar ? _hotbar : _backpack;
+
+            if (srcIndex < 0 || srcIndex >= slots.Length) return false;
+            var src = slots[srcIndex];
+            if (src.IsEmpty || src.Quantity <= 1) return false;
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (i == srcIndex || !slots[i].IsEmpty) continue;
+
+                int half = src.Quantity / 2;
+                slots[srcIndex] = new ItemStack(src.ItemId, src.Quantity - half);
+                slots[i]        = new ItemStack(src.ItemId, half);
+
+                FireSlotChanged(srcIndex, slots[srcIndex], isHotbar);
+                FireSlotChanged(i,        slots[i],        isHotbar);
+
+                dstIndex = i;
+                return true;
+            }
+
+            return false;
         }
 
         public void SetSelectedHotbarSlot(int index)

@@ -191,7 +191,9 @@ MonoBehaviour:
   iconImage: {fileID: 1637726428032679764}
   quantityText: {fileID: 4820815941937736049}
   slotNumberText: {fileID: 1483696465522544785}
-  highlightBorder: {fileID: 5591162009092888096}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &89625410042849954
 GameObject:
   m_ObjectHideFlags: 0
@@ -413,7 +415,9 @@ MonoBehaviour:
   iconImage: {fileID: 4390725289252410640}
   quantityText: {fileID: 5842245606538766199}
   slotNumberText: {fileID: 2672805801771384194}
-  highlightBorder: {fileID: 7950433555232134653}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &524900698403446028
 GameObject:
   m_ObjectHideFlags: 0
@@ -742,7 +746,9 @@ MonoBehaviour:
   iconImage: {fileID: 7951043277218499866}
   quantityText: {fileID: 8385883982765001266}
   slotNumberText: {fileID: 810767024413581889}
-  highlightBorder: {fileID: 8905189460604534913}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &654268875486653553
 GameObject:
   m_ObjectHideFlags: 0
@@ -1420,7 +1426,9 @@ MonoBehaviour:
   iconImage: {fileID: 1658900269980369704}
   quantityText: {fileID: 7925360361372772269}
   slotNumberText: {fileID: 2471356537619278852}
-  highlightBorder: {fileID: 2108268118707035745}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &982156087051729313
 GameObject:
   m_ObjectHideFlags: 0
@@ -1612,7 +1620,9 @@ MonoBehaviour:
   iconImage: {fileID: 2035094008632172293}
   quantityText: {fileID: 1321558023055556833}
   slotNumberText: {fileID: 3173223424359343936}
-  highlightBorder: {fileID: 3706722396430049063}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &1245879647362697240
 GameObject:
   m_ObjectHideFlags: 0
@@ -1866,7 +1876,9 @@ MonoBehaviour:
   iconImage: {fileID: 796619050789366311}
   quantityText: {fileID: 977316182253488530}
   slotNumberText: {fileID: 8490616717918924328}
-  highlightBorder: {fileID: 1324341495408555921}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &1322414955337410807
 GameObject:
   m_ObjectHideFlags: 0
@@ -1983,7 +1995,9 @@ MonoBehaviour:
   iconImage: {fileID: 8392595306937596329}
   quantityText: {fileID: 4143221516725090923}
   slotNumberText: {fileID: 7476103062376324406}
-  highlightBorder: {fileID: 5297952874418435988}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &1324341495408555921
 GameObject:
   m_ObjectHideFlags: 0
@@ -3266,7 +3280,9 @@ MonoBehaviour:
   iconImage: {fileID: 1121350990281264298}
   quantityText: {fileID: 8975460602952565053}
   slotNumberText: {fileID: 2247963589441583817}
-  highlightBorder: {fileID: 4532501923791935873}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &2002003143256964501
 GameObject:
   m_ObjectHideFlags: 0
@@ -3383,7 +3399,9 @@ MonoBehaviour:
   iconImage: {fileID: 6581163033295604125}
   quantityText: {fileID: 8123126154534576161}
   slotNumberText: {fileID: 1882256109222040724}
-  highlightBorder: {fileID: 4247322698537687756}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &2066635856554002818
 GameObject:
   m_ObjectHideFlags: 0
@@ -4307,6 +4325,7 @@ GameObject:
   - component: {fileID: 1640631786090175172}
   - component: {fileID: 1093999241758557527}
   - component: {fileID: 8452790474979350428}
+  - component: {fileID: 1337000000000000001}
   m_Layer: 0
   m_Name: InventoryUI
   m_TagString: Untagged
@@ -4766,7 +4785,9 @@ MonoBehaviour:
   iconImage: {fileID: 4124648795805411766}
   quantityText: {fileID: 2774043922635313547}
   slotNumberText: {fileID: 3412151730840560611}
-  highlightBorder: {fileID: 6870469622952203287}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &2453232697702704669
 GameObject:
   m_ObjectHideFlags: 0
@@ -5170,7 +5191,9 @@ MonoBehaviour:
   iconImage: {fileID: 2925946738145533970}
   quantityText: {fileID: 16798706949530286}
   slotNumberText: {fileID: 4443361959436220446}
-  highlightBorder: {fileID: 5886085454945725491}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &2721701243907449757
 GameObject:
   m_ObjectHideFlags: 0
@@ -5636,7 +5659,9 @@ MonoBehaviour:
   iconImage: {fileID: 1094975589118609620}
   quantityText: {fileID: 7211384055900117704}
   slotNumberText: {fileID: 3444863909827644851}
-  highlightBorder: {fileID: 2235037208330574893}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &2830247355267926704
 GameObject:
   m_ObjectHideFlags: 0
@@ -5753,7 +5778,9 @@ MonoBehaviour:
   iconImage: {fileID: 5852937749843292265}
   quantityText: {fileID: 6360257423324582984}
   slotNumberText: {fileID: 1705400411034891473}
-  highlightBorder: {fileID: 6450533776521340888}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &2944931085094894277
 GameObject:
   m_ObjectHideFlags: 0
@@ -6082,7 +6109,9 @@ MonoBehaviour:
   iconImage: {fileID: 1472485331512108551}
   quantityText: {fileID: 3225189304540961314}
   slotNumberText: {fileID: 271342795186894448}
-  highlightBorder: {fileID: 6418985359398377735}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &3066782972463352378
 GameObject:
   m_ObjectHideFlags: 0
@@ -6627,7 +6656,9 @@ MonoBehaviour:
   iconImage: {fileID: 7724516608775055390}
   quantityText: {fileID: 705253645961773069}
   slotNumberText: {fileID: 6337194921155048893}
-  highlightBorder: {fileID: 9197889924419086075}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &3344060085429406557
 GameObject:
   m_ObjectHideFlags: 0
@@ -7403,7 +7434,9 @@ MonoBehaviour:
   iconImage: {fileID: 2767715715776992320}
   quantityText: {fileID: 6229248450810056358}
   slotNumberText: {fileID: 5331977525666081419}
-  highlightBorder: {fileID: 8706219945257617764}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &3664320611832155561
 GameObject:
   m_ObjectHideFlags: 0
@@ -8929,7 +8962,9 @@ MonoBehaviour:
   iconImage: {fileID: 4843687785479818733}
   quantityText: {fileID: 1991997592572422853}
   slotNumberText: {fileID: 1826710802256128369}
-  highlightBorder: {fileID: 7545565199969169035}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &4842724240868071848
 GameObject:
   m_ObjectHideFlags: 0
@@ -9258,7 +9293,9 @@ MonoBehaviour:
   iconImage: {fileID: 803900124493030813}
   quantityText: {fileID: 6563765904502904241}
   slotNumberText: {fileID: 143214293341803655}
-  highlightBorder: {fileID: 5595460156431597991}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &5071260021339408095
 GameObject:
   m_ObjectHideFlags: 0
@@ -11782,7 +11819,9 @@ MonoBehaviour:
   iconImage: {fileID: 8276691666073704051}
   quantityText: {fileID: 7278029794321646907}
   slotNumberText: {fileID: 1943807013111242849}
-  highlightBorder: {fileID: 1481675459876971628}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &6109217569407851297
 GameObject:
   m_ObjectHideFlags: 0
@@ -12473,7 +12512,9 @@ MonoBehaviour:
   iconImage: {fileID: 5294441802116076179}
   quantityText: {fileID: 8112141594781570504}
   slotNumberText: {fileID: 5880428649286213254}
-  highlightBorder: {fileID: 4410739570660275613}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &6796307204286598424
 GameObject:
   m_ObjectHideFlags: 0
@@ -13164,7 +13205,9 @@ MonoBehaviour:
   iconImage: {fileID: 5825338798259661275}
   quantityText: {fileID: 7944792700160253732}
   slotNumberText: {fileID: 8382409779453441361}
-  highlightBorder: {fileID: 5575283409112433658}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &7098295520872976735
 GameObject:
   m_ObjectHideFlags: 0
@@ -14295,7 +14338,9 @@ MonoBehaviour:
   iconImage: {fileID: 4101886465966170056}
   quantityText: {fileID: 1969782259581635640}
   slotNumberText: {fileID: 159703823692937963}
-  highlightBorder: {fileID: 7421098930310110791}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &7518463945357506696
 GameObject:
   m_ObjectHideFlags: 0
@@ -14562,7 +14607,9 @@ MonoBehaviour:
   iconImage: {fileID: 359417311050464696}
   quantityText: {fileID: 613024982342497049}
   slotNumberText: {fileID: 7006526441419345241}
-  highlightBorder: {fileID: 4989389759750178355}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &7636437782119298507
 GameObject:
   m_ObjectHideFlags: 0
@@ -14829,7 +14876,9 @@ MonoBehaviour:
   iconImage: {fileID: 7530154296798210214}
   quantityText: {fileID: 3199965034891421532}
   slotNumberText: {fileID: 3847424765582105696}
-  highlightBorder: {fileID: 7370171828270784329}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &7761722750517574462
 GameObject:
   m_ObjectHideFlags: 0
@@ -15167,7 +15216,9 @@ MonoBehaviour:
   iconImage: {fileID: 5861271224428681294}
   quantityText: {fileID: 640635499192380441}
   slotNumberText: {fileID: 5468312506144654724}
-  highlightBorder: {fileID: 2973593277860785216}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &7915771836123423738
 GameObject:
   m_ObjectHideFlags: 0
@@ -15928,7 +15979,9 @@ MonoBehaviour:
   iconImage: {fileID: 6291858146462336112}
   quantityText: {fileID: 4957192160720314269}
   slotNumberText: {fileID: 1078495192790946770}
-  highlightBorder: {fileID: 7636437782119298507}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &8101904730280243400
 GameObject:
   m_ObjectHideFlags: 0
@@ -16045,7 +16098,9 @@ MonoBehaviour:
   iconImage: {fileID: 6053772054732750771}
   quantityText: {fileID: 4005551954828194602}
   slotNumberText: {fileID: 3456851583062088082}
-  highlightBorder: {fileID: 6796307204286598424}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &8326895519648713951
 GameObject:
   m_ObjectHideFlags: 0
@@ -16436,7 +16491,9 @@ MonoBehaviour:
   iconImage: {fileID: 6926905894075583618}
   quantityText: {fileID: 97349734337047575}
   slotNumberText: {fileID: 8672844250775229579}
-  highlightBorder: {fileID: 5937919525663352862}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &8488609733249428223
 GameObject:
   m_ObjectHideFlags: 0
@@ -17114,7 +17171,9 @@ MonoBehaviour:
   iconImage: {fileID: 9191223642195804741}
   quantityText: {fileID: 6785698606830805472}
   slotNumberText: {fileID: 5864510822549931764}
-  highlightBorder: {fileID: 2490209897496520697}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &8878469456342566570
 GameObject:
   m_ObjectHideFlags: 0
@@ -17867,7 +17926,9 @@ MonoBehaviour:
   iconImage: {fileID: 6551179088811401993}
   quantityText: {fileID: 4663546000662815449}
   slotNumberText: {fileID: 1033312399497989712}
-  highlightBorder: {fileID: 4708865277678484274}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &9141176041363045340
 GameObject:
   m_ObjectHideFlags: 0
@@ -17984,7 +18045,9 @@ MonoBehaviour:
   iconImage: {fileID: 756715642895548720}
   quantityText: {fileID: 1163653700202890639}
   slotNumberText: {fileID: 8031690035862523280}
-  highlightBorder: {fileID: 5831157583298363560}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &9155049661462872854
 GameObject:
   m_ObjectHideFlags: 0
@@ -18137,7 +18200,9 @@ MonoBehaviour:
   iconImage: {fileID: 1583064601679787265}
   quantityText: {fileID: 8123944577817622358}
   slotNumberText: {fileID: 4125460542776152195}
-  highlightBorder: {fileID: 3319783204343504091}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dropTargetColor: {r: 0.2, g: 0.7, b: 1, a: 0.85}
 --- !u!1 &9197889924419086075
 GameObject:
   m_ObjectHideFlags: 0
@@ -18213,3 +18278,15 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1337000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2312419978950513306}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47fb4dbb241e928469f6db79ccac2bdc, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.UI.Inventory.InventoryDragController
