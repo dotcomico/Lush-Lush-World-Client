@@ -57,6 +57,10 @@ namespace StarterAssets
 		[Tooltip("When set, movement is relative to this camera transform and the player auto-rotates to face movement. Set by CameraViewController.")]
 		public Transform MovementCameraTransform;
 
+		// Slide integration — set by SlideController when it owns movement
+		[HideInInspector] public bool DisableHorizontalMovement = false;
+		public float CurrentSpeed => _speed;
+
 		// cinemachine
 		private float _cinemachineTargetPitch;
 
@@ -161,6 +165,8 @@ namespace StarterAssets
 
 		private void Move()
 		{
+			if (DisableHorizontalMovement) return;
+
 			// set target speed based on move speed, sprint speed and if sprint is pressed
 			float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
 

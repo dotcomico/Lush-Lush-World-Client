@@ -1812,6 +1812,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8650797432705633658}
+    - targetCorrespondingSourceObject: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2880209291464378640}
   m_SourcePrefab: {fileID: 100100000, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
 --- !u!4 &1719532525433075789 stripped
 Transform:
@@ -1846,6 +1849,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4452af70de92d94449d746830861d70a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Inventory.InventorySystem
+  _itemRegistry: {fileID: 0}
 --- !u!114 &3713508442791232946
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1886,6 +1890,30 @@ MonoBehaviour:
   pickupRadius: 4
   interactPrompt: {fileID: 721509093286942169}
   itemRegistry: {fileID: 11400000, guid: eb4469f6f44f4124fbbcff30e118c857, type: 2}
+--- !u!114 &2880209291464378640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2060063764280730359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b33937ebbc7a4aa438d4281c730538b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Player.SlideController
+  _minSlideAngle: 5
+  _maxSlideSpeed: 15
+  _flatFriction: 8
+  _stopSpeedThreshold: 0.5
+  _slideGravity: -15
+  _visualModel: {fileID: 2439477424306779874}
+  _flipDuration: 0.25
+  _flipEuler: {x: 0, y: 0, z: 180}
+  _groundRayDistance: 2
+  _groundLayers:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!114 &2060063764280730363 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8616685848737228376, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
