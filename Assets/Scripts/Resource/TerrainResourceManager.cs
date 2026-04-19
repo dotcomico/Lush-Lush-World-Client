@@ -273,7 +273,10 @@ namespace LushWorld.Resource
                 updated.Add(t);
             }
             if (removed)
+            {
                 td.treeInstances = updated.ToArray();
+                ForceTerrainColliderRebuild();
+            }
             else
                 Debug.LogWarning($"[TerrainResourceManager] RemoveTreeInstance: no terrain tree matched normalized pos {ti.position}. " +
                     "Terrain billboard may remain visible underneath the spawned prefab.");
@@ -288,6 +291,19 @@ namespace LushWorld.Resource
             current.CopyTo(updated, 0);
             updated[current.Length] = ti;
             td.treeInstances = updated;
+            ForceTerrainColliderRebuild();
+        }
+
+        private void ForceTerrainColliderRebuild()
+        {
+            // Setting treeInstances is asynchronous with respect to PhysX — the terrain tree
+            // capsule collider for the removed/added tree won't disappear until the terrain
+            // collider syncs. Toggling the TerrainCollider forces an immediate capsule rebuild
+            // so the player never walks into an invisible ghost collider after pickup.
+            var tc = _terrain.GetComponent<TerrainCollider>();
+            if (tc == null) return;
+            tc.enabled = false;
+            tc.enabled = true;
         }
 
         private GameObject GetPrefabForProto(int protoIndex)

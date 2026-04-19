@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d3d9a5c4344b7e408c3622d8129445e, type: 3}
-  m_Name: SmallRock
+  m_Name: Mushroom
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Inventory.ItemDefinition
-  <ItemId>k__BackingField: rock_small
-  <DisplayName>k__BackingField: Small Rock
-  <Icon>k__BackingField: {fileID: 21300000, guid: 9215f802cbcd069439f897fa3c7af47c, type: 3}
-  <MaxStackSize>k__BackingField: 64
+  <ItemId>k__BackingField: mushroom
+  <DisplayName>k__BackingField: Mushroom
+  <Icon>k__BackingField: {fileID: 21300000, guid: a400cb3fc1273cc4ca405b5914190348, type: 3}
+  <MaxStackSize>k__BackingField: 20
   <IsDroppable>k__BackingField: 1
-  <WorldPrefab>k__BackingField: {fileID: 1155885953258650821, guid: cafd09ce0dd33a34b9b6cfe5d83ca41c, type: 3}
+  <WorldPrefab>k__BackingField: {fileID: 6673660466117032401, guid: 211268216d231514686c81082dba0e41, type: 3}

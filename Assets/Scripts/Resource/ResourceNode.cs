@@ -20,6 +20,8 @@ namespace LushWorld.Resource
         {
             if (!InventorySystem.GiveItem(itemId, quantity)) return;
             OnPickedUp?.Invoke(this);
+            foreach (var col in GetComponentsInChildren<Collider>())
+                col.enabled = false;
             Destroy(gameObject);
         }
     }

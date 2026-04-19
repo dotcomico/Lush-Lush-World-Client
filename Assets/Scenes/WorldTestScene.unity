@@ -303,6 +303,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8650797432705633658, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
+      propertyPath: pickupRadius
+      value: 1.5
+      objectReference: {fileID: 0}
     - target: {fileID: 8897064847352149686, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 476.4165
@@ -442,6 +446,8 @@ MonoBehaviour:
   resourcePrototypes:
   - prototypeIndex: 1
     interactivePrefab: {fileID: 1744850591557716773, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
+  - prototypeIndex: 2
+    interactivePrefab: {fileID: 2158734629085341762, guid: 211268216d231514686c81082dba0e41, type: 3}
   spawnRadius: 25
   despawnRadius: 30
   playerTransform: {fileID: 789403553}
@@ -799,63 +805,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!1001 &1584693322
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 1404319284189843871, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 438.813
-      objectReference: {fileID: 0}
-    - target: {fileID: 1404319284189843871, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.0000126530695
-      objectReference: {fileID: 0}
-    - target: {fileID: 1404319284189843871, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 349.15283
-      objectReference: {fileID: 0}
-    - target: {fileID: 1404319284189843871, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 1404319284189843871, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 1404319284189843871, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1404319284189843871, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1404319284189843871, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 90
-      objectReference: {fileID: 0}
-    - target: {fileID: 1404319284189843871, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1404319284189843871, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1744850591557716773, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
-      propertyPath: m_Name
-      value: World_Tine_Rock_PT_Generic_Rock_01 Variant
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -867,4 +816,3 @@ SceneRoots:
   - {fileID: 1154466463}
   - {fileID: 582100331}
   - {fileID: 256456673}
-  - {fileID: 1584693322}

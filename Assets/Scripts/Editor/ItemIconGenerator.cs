@@ -13,6 +13,85 @@ namespace LushWorld.Editor
         // Instantiate far from the play area so it never affects gameplay.
         private static readonly Vector3 OffscreenPos = new Vector3(99000f, 99000f, 99000f);
 
+        // Right-click a prefab in the Project window → generate its icon directly,
+        // without needing WorldPrefab wired up in any ItemDefinition first.
+        [MenuItem("Assets/Lush World/Generate Icon For This Prefab")]
+        private static void GenerateIconForSelection()
+        {
+            var prefab = Selection.activeObject as GameObject;
+            if (prefab == null)
+            {
+                EditorUtility.DisplayDialog("Generate Icon", "Select a prefab first.", "OK");
+                return;
+            }
+
+            if (!Directory.Exists(IconOutputFolder))
+                Directory.CreateDirectory(IconOutputFolder);
+
+            string itemId = prefab.name
+                .Replace("World_", "")
+                .Replace("PT_", "")
+                .Replace(" Variant", "")
+                .Replace(" ", "_")
+                .ToLower();
+
+            string pngPath = $"{IconOutputFolder}/{itemId}.png";
+
+            Texture2D icon = RenderPrefabIcon(prefab);
+            if (icon == null)
+            {
+                EditorUtility.DisplayDialog("Generate Icon", "Could not render — prefab has no Renderers.", "OK");
+                return;
+            }
+
+            File.WriteAllBytes(pngPath, icon.EncodeToPNG());
+            Object.DestroyImmediate(icon);
+
+            AssetDatabase.ImportAsset(pngPath);
+            var importer = AssetImporter.GetAtPath(pngPath) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.alphaIsTransparency = true;
+                importer.filterMode = FilterMode.Bilinear;
+                importer.mipmapEnabled = false;
+                importer.SaveAndReimport();
+            }
+
+            AssetDatabase.Refresh();
+
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(pngPath);
+            int assigned = 0;
+            if (sprite != null)
+            {
+                foreach (string defGuid in AssetDatabase.FindAssets("t:ItemDefinition"))
+                {
+                    string defPath = AssetDatabase.GUIDToAssetPath(defGuid);
+                    var def = AssetDatabase.LoadAssetAtPath<ItemDefinition>(defPath);
+                    if (def == null || def.ItemId != itemId) continue;
+
+                    var so = new SerializedObject(def);
+                    so.FindProperty("<Icon>k__BackingField").objectReferenceValue = sprite;
+                    so.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(def);
+                    assigned++;
+                }
+                AssetDatabase.SaveAssets();
+            }
+
+            string result = assigned > 0
+                ? $"Icon saved and assigned to ItemDefinition '{itemId}'."
+                : $"Icon saved to {pngPath}\n\nNo ItemDefinition with ItemId '{itemId}' found — assign the icon manually.";
+
+            Debug.Log($"[ItemIconGenerator] {result}");
+            EditorUtility.DisplayDialog("Generate Icon", result, "OK");
+        }
+
+        [MenuItem("Assets/Lush World/Generate Icon For This Prefab", true)]
+        private static bool GenerateIconForSelectionValidate()
+            => Selection.activeObject is GameObject;
+
         [MenuItem("Lush World/Generate Item Icons")]
         public static void GenerateIcons()
         {
@@ -77,9 +156,16 @@ namespace LushWorld.Editor
 
         private static Texture2D RenderPrefabIcon(GameObject prefab)
         {
-            // Instantiate temporarily in the active scene at an offscreen position.
-            // Object.Instantiate is used (not PrefabUtility) to handle variant prefabs reliably.
-            var go = Object.Instantiate(prefab, OffscreenPos, Quaternion.identity);
+            // PrefabUtility.InstantiatePrefab is required in Editor mode — Object.Instantiate
+            // throws InvalidCastException on prefab assets outside play mode.
+            var go = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+            if (go == null)
+            {
+                Debug.LogWarning($"[ItemIconGenerator] PrefabUtility.InstantiatePrefab returned null for '{prefab.name}'.");
+                return null;
+            }
+            go.transform.position = OffscreenPos;
+            go.transform.rotation = Quaternion.identity;
 
             var renderers = go.GetComponentsInChildren<Renderer>();
             if (renderers.Length == 0)
@@ -97,7 +183,7 @@ namespace LushWorld.Editor
             var camGo = new GameObject("__IconCam__");
             var cam = camGo.AddComponent<UnityEngine.Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 1f);
+            cam.backgroundColor = Color.clear;
             cam.fieldOfView = 30f;
             cam.cullingMask = ~0;
             cam.transform.position = bounds.center + new Vector3(dist * 0.8f, dist * 0.8f, -dist * 3f);
