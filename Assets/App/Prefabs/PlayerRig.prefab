@@ -1902,18 +1902,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b33937ebbc7a4aa438d4281c730538b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Player.SlideController
-  _minSlideAngle: 5
-  _maxSlideSpeed: 15
-  _flatFriction: 8
-  _stopSpeedThreshold: 0.5
+  _minSlideAngle: 3
+  _maxSlideSpeed: 18
+  _flatFriction: 3
+  _stopSpeedThreshold: 4
   _slideGravity: -15
   _visualModel: {fileID: 2439477424306779874}
   _flipDuration: 0.25
-  _flipEuler: {x: 0, y: 0, z: 180}
+  _flipEuler: {x: -150, y: 0, z: 0}
   _groundRayDistance: 2
   _groundLayers:
     serializedVersion: 2
     m_Bits: 0
+  _minSlideDuration: 1
 --- !u!114 &2060063764280730363 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8616685848737228376, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
@@ -1969,15 +1970,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -236.3755
+      value: -37.20999
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -3.2353363
+      value: -6.176
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 154.24867
+      value: -53.906998
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalRotation.w
