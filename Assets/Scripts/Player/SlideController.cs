@@ -7,6 +7,8 @@ namespace LushWorld.Player
 {
     public enum SlideCameraMode { None, Medium, Cinematic }
 
+    // Must run after FirstPersonController (order 0) so LateUpdate wins the camera target
+    [DefaultExecutionOrder(1)]
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(FirstPersonController))]
     public class SlideController : MonoBehaviour
@@ -35,6 +37,7 @@ namespace LushWorld.Player
         [SerializeField] private SlideCameraMode _cameraMode = SlideCameraMode.Medium;
         [SerializeField] private float _mediumRollAngle = 15f;
         [SerializeField] private float _cameraRollSpeed = 5f;
+        [SerializeField] private float _cinematicHeadOffset = 0.5f;
 
         public bool IsSliding { get; private set; }
 
@@ -45,13 +48,23 @@ namespace LushWorld.Player
         private float _verticalVelocity;
         private float _slideEntryTime;
         private float _targetCameraRoll;
+        private float _currentSpinYaw;
         private Coroutine _flipCoroutine;
+
+        // Cached camera target state so we can restore it after Cinematic slide
+        private Transform _camTarget;
+        private Vector3 _camTargetOriginalLocalPos;
+        private Quaternion _camTargetOriginalLocalRot;
 
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
             _fpc = GetComponent<FirstPersonController>();
             _slideAction = GetComponent<PlayerInput>().actions["Player/Crouch"];
+
+            _camTarget = _fpc.CinemachineCameraTarget.transform;
+            _camTargetOriginalLocalPos = _camTarget.localPosition;
+            _camTargetOriginalLocalRot = _camTarget.localRotation;
         }
 
         private void OnEnable()
@@ -79,9 +92,22 @@ namespace LushWorld.Player
             ApplySlidePhysics();
         }
 
+        private void LateUpdate()
+        {
+            if (_cameraMode != SlideCameraMode.Cinematic || !IsSliding) return;
+
+            // Pure world-Y spin — no Z-flip bleed, no figure-8, horizon stays level
+            Quaternion levelSpin = Quaternion.Euler(0f, _currentSpinYaw, 0f);
+            Vector3 spinForward = levelSpin * Vector3.forward;
+
+            _camTarget.position = _visualModel.position + spinForward * _cinematicHeadOffset;
+            _camTarget.rotation = levelSpin;
+        }
+
         private void UpdateCameraRoll()
         {
-            if (_cameraMode == SlideCameraMode.None) return;
+            // Cinematic mode drives the camera directly in LateUpdate instead
+            if (_cameraMode == SlideCameraMode.None || _cameraMode == SlideCameraMode.Cinematic) return;
             _fpc.CameraRollOffset = Mathf.LerpAngle(_fpc.CameraRollOffset, _targetCameraRoll, Time.deltaTime * _cameraRollSpeed);
         }
 
@@ -90,12 +116,14 @@ namespace LushWorld.Player
             IsSliding = true;
             _slideEntryTime = Time.time;
             _fpc.DisableHorizontalMovement = true;
-            _targetCameraRoll = _cameraMode switch
+            _targetCameraRoll = _cameraMode == SlideCameraMode.Medium ? _mediumRollAngle : 0f;
+
+            // Cinematic: hand camera control fully to LateUpdate — stop FPC fighting us
+            if (_cameraMode == SlideCameraMode.Cinematic)
             {
-                SlideCameraMode.Medium   => _mediumRollAngle,
-                SlideCameraMode.Cinematic => 180f,
-                _                        => 0f
-            };
+                _fpc.EnableCameraRotation = false;
+                _currentSpinYaw = transform.eulerAngles.y;
+            }
 
             // Inherit current horizontal momentum so the slide feels continuous
             Vector3 currentVel = _controller.velocity;
@@ -111,6 +139,14 @@ namespace LushWorld.Player
             _fpc.DisableHorizontalMovement = false;
             _slideVelocity = Vector3.zero;
             _targetCameraRoll = 0f;
+
+            if (_cameraMode == SlideCameraMode.Cinematic)
+            {
+                _fpc.EnableCameraRotation = true;
+                _camTarget.localPosition = _camTargetOriginalLocalPos;
+                _camTarget.localRotation = _camTargetOriginalLocalRot;
+            }
+
             StartFlip(false);
         }
 
@@ -148,7 +184,9 @@ namespace LushWorld.Player
             if (_visualModel != null)
             {
                 float spinSpeed = _slideVelocity.magnitude * _spinSpeedMultiplier;
-                _visualModel.Rotate(Vector3.up, spinSpeed * Time.deltaTime, Space.Self);
+                float spinDelta = spinSpeed * Time.deltaTime;
+                _visualModel.Rotate(Vector3.up, spinDelta, Space.Self);
+                _currentSpinYaw += spinDelta;
             }
 
             // Exit slide if player leaves ground (e.g. slid off a ledge)
