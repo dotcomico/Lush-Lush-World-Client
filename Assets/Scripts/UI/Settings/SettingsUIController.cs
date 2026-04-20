@@ -198,13 +198,13 @@ namespace LushWorld.UI
             var card = Go("Card", _panel.transform);
             var cardRT = RT(card);
             cardRT.anchorMin = cardRT.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRT.sizeDelta = new Vector2(740, 490);
+            cardRT.sizeDelta = new Vector2(740, 540);
             cardRT.anchoredPosition = Vector2.zero;
             card.AddComponent<Image>().color = C_Bg;
 
             var vg = card.AddComponent<VerticalLayoutGroup>();
             vg.padding = new RectOffset(34, 34, 22, 22);
-            vg.spacing = 9;
+            vg.spacing = 6;
             vg.childControlWidth  = true;  vg.childForceExpandWidth  = true;
             vg.childControlHeight = false; vg.childForceExpandHeight = false;
 
@@ -226,6 +226,7 @@ namespace LushWorld.UI
 
             var slRow = SettingRow(card.transform, "Slide Effect");
             _slideModeLabel = Cycler(slRow.transform, SlideModeNames, 0, StepSlideMode);
+            HintLbl(card.transform, "First person only \u2014 no effect in TP or ISO");
 
             // ── Section: CAMERA TUNING ───────────────────────────────────────
             SectionHdr(card.transform, "CAMERA TUNING");
@@ -234,11 +235,13 @@ namespace LushWorld.UI
             var tdRow = SettingRow(card.transform, "TP Distance");
             _tpDistLabel = SliderRow(tdRow.transform, 2f, 10f, initDist, OnTPDist,
                 initDist.ToString("F1") + " m");
+            HintLbl(card.transform, "Third person only");
 
             float initFov = _fpVCam != null ? _fpVCam.m_Lens.FieldOfView : 80f;
             var fovRow = SettingRow(card.transform, "FP Field of View");
             _fpFovLabel = SliderRow(fovRow.transform, 60f, 110f, initFov, OnFPFov,
                 initFov.ToString("F0") + "\u00b0");
+            HintLbl(card.transform, "First person only");
 
             // ── Section: CONTROLS ────────────────────────────────────────────
             SectionHdr(card.transform, "CONTROLS");
@@ -337,6 +340,21 @@ namespace LushWorld.UI
             go.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.07f);
             var le = go.AddComponent<LayoutElement>();
             le.preferredHeight = 1; le.flexibleWidth = 1;
+        }
+
+        static void HintLbl(Transform parent, string text)
+        {
+            var go = Go("Hint", parent);
+            RT(go).sizeDelta = new Vector2(0, 15);
+            var le = go.AddComponent<LayoutElement>();
+            le.preferredHeight = 15; le.flexibleWidth = 1;
+            var t = go.AddComponent<TextMeshProUGUI>();
+            t.text = text;
+            t.fontSize = 10;
+            t.color = new Color(0.38f, 0.38f, 0.42f, 1f);
+            t.fontStyle = FontStyles.Italic;
+            t.alignment = TextAlignmentOptions.Right;
+            t.overflowMode = TextOverflowModes.Overflow;
         }
 
         // ◄ Value ► cycler — returns the center value label for later sync
