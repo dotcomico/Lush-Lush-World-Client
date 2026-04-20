@@ -4457,6 +4457,18 @@ MonoBehaviour:
   - {fileID: 2513925776833420700}
   - {fileID: 1167555501992870486}
   itemRegistry: {fileID: 11400000, guid: a0746dff3f6338b41ae5ddadb029029c, type: 2}
+--- !u!114 &1337000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2312419978950513306}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47fb4dbb241e928469f6db79ccac2bdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.UI.Inventory.InventoryDragController
 --- !u!1 &2341701708045753512
 GameObject:
   m_ObjectHideFlags: 0
@@ -14991,7 +15003,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -20, y: 150}
+  m_AnchoredPosition: {x: -543, y: 23}
   m_SizeDelta: {x: 90, y: 90}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &5052377386624146964
@@ -18278,15 +18290,3 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &1337000000000000001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2312419978950513306}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 47fb4dbb241e928469f6db79ccac2bdc, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.UI.Inventory.InventoryDragController

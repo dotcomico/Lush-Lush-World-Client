@@ -40,6 +40,12 @@ namespace LushWorld.Player
         [SerializeField] private float _cinematicHeadOffset = 0.5f;
 
         public bool IsSliding { get; private set; }
+        public SlideCameraMode CameraMode
+        {
+            get => _cameraMode;
+            set => _cameraMode = value;
+        }
+
 
         private CharacterController _controller;
         private FirstPersonController _fpc;
