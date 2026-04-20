@@ -179,6 +179,10 @@ PrefabInstance:
       propertyPath: _stopSpeedThreshold
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 2880209291464378640, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
+      propertyPath: _spinSpeedMultiplier
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 2911686942251196249, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0

@@ -59,6 +59,7 @@ namespace StarterAssets
 
 		// Slide integration — set by SlideController when it owns movement
 		[HideInInspector] public bool DisableHorizontalMovement = false;
+		[HideInInspector] public float CameraRollOffset = 0f;
 		public float CurrentSpeed => _speed;
 
 		// cinemachine
@@ -155,8 +156,8 @@ namespace StarterAssets
 				// clamp our pitch rotation
 				_cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
 
-				// Update Cinemachine camera target pitch
-				CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(_cinemachineTargetPitch, 0.0f, 0.0f);
+				// Update Cinemachine camera target pitch (Z roll injected by SlideController)
+				CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(_cinemachineTargetPitch, 0.0f, CameraRollOffset);
 
 				// rotate the player left and right
 				transform.Rotate(Vector3.up * _rotationVelocity);

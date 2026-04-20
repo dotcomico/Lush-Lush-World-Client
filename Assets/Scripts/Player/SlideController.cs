@@ -5,6 +5,8 @@ using StarterAssets;
 
 namespace LushWorld.Player
 {
+    public enum SlideCameraMode { None, Medium, Cinematic }
+
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(FirstPersonController))]
     public class SlideController : MonoBehaviour
@@ -20,6 +22,7 @@ namespace LushWorld.Player
         [SerializeField] private Transform _visualModel;
         [SerializeField] private float _flipDuration = 0.25f;
         [SerializeField] private Vector3 _flipEuler = new Vector3(0f, 0f, 180f);
+        [SerializeField] private float _spinSpeedMultiplier = 180f;
 
         [Header("Ground Detection")]
         [SerializeField] private float _groundRayDistance = 2f;
@@ -27,6 +30,11 @@ namespace LushWorld.Player
 
         [Header("Timing")]
         [SerializeField] private float _minSlideDuration = 0.5f;
+
+        [Header("Camera Effect")]
+        [SerializeField] private SlideCameraMode _cameraMode = SlideCameraMode.Medium;
+        [SerializeField] private float _mediumRollAngle = 15f;
+        [SerializeField] private float _cameraRollSpeed = 5f;
 
         public bool IsSliding { get; private set; }
 
@@ -36,6 +44,7 @@ namespace LushWorld.Player
         private Vector3 _slideVelocity;
         private float _verticalVelocity;
         private float _slideEntryTime;
+        private float _targetCameraRoll;
         private Coroutine _flipCoroutine;
 
         private void Awake()
@@ -65,8 +74,15 @@ namespace LushWorld.Player
 
         private void Update()
         {
+            UpdateCameraRoll();
             if (!IsSliding) return;
             ApplySlidePhysics();
+        }
+
+        private void UpdateCameraRoll()
+        {
+            if (_cameraMode == SlideCameraMode.None) return;
+            _fpc.CameraRollOffset = Mathf.LerpAngle(_fpc.CameraRollOffset, _targetCameraRoll, Time.deltaTime * _cameraRollSpeed);
         }
 
         private void EnterSlide()
@@ -74,6 +90,12 @@ namespace LushWorld.Player
             IsSliding = true;
             _slideEntryTime = Time.time;
             _fpc.DisableHorizontalMovement = true;
+            _targetCameraRoll = _cameraMode switch
+            {
+                SlideCameraMode.Medium   => _mediumRollAngle,
+                SlideCameraMode.Cinematic => 180f,
+                _                        => 0f
+            };
 
             // Inherit current horizontal momentum so the slide feels continuous
             Vector3 currentVel = _controller.velocity;
@@ -88,6 +110,7 @@ namespace LushWorld.Player
             IsSliding = false;
             _fpc.DisableHorizontalMovement = false;
             _slideVelocity = Vector3.zero;
+            _targetCameraRoll = 0f;
             StartFlip(false);
         }
 
@@ -120,6 +143,13 @@ namespace LushWorld.Player
             }
 
             _controller.Move((_slideVelocity + Vector3.up * _verticalVelocity) * Time.deltaTime);
+
+            // Spin the snail on its shell based on current slide speed
+            if (_visualModel != null)
+            {
+                float spinSpeed = _slideVelocity.magnitude * _spinSpeedMultiplier;
+                _visualModel.Rotate(Vector3.up, spinSpeed * Time.deltaTime, Space.Self);
+            }
 
             // Exit slide if player leaves ground (e.g. slid off a ledge)
             if (!_fpc.Grounded && _verticalVelocity < -5f)
