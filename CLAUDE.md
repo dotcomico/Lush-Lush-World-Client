@@ -171,7 +171,7 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 
 ### Player Movement
 - Scripts: `Assets/StarterAssets/FirstPersonController/Scripts/FirstPersonController.cs`, `Assets/Scripts/Player/SlideController.cs`
-- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (PlayerCapsule child holds both components)
+- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` — top-level children: MainCamera, PlayerFollowCamera, PlayerCapsule (holds FirstPersonController + SlideController), UI_Canvas_StarterAssetsInputs_Joysticks, UI_EventSystem, CameraViewManager, ThirdPerson_VirtualCamera, Isometric_VirtualCamera, InventoryUI, SettingsUI
 - Docs: `../Docs/shell-slide-system.md`
 
 ### Camera System
@@ -188,6 +188,8 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 ### Inventory UI
 - Scripts: `Assets/Scripts/UI/Inventory/BackpackUI.cs`, `Assets/Scripts/UI/Inventory/HotbarUI.cs`, `Assets/Scripts/UI/Inventory/InventorySlotUI.cs`, `Assets/Scripts/UI/Inventory/InventoryDragController.cs`, `Assets/Scripts/UI/Inventory/InventoryCharacterPreview.cs`
 - Prefabs: `Assets/App/Prefabs/InventoryUI.prefab` (nested inside PlayerRig.prefab)
+  - `InventoryUI > HotbarRoot > HotbarPanel` (8 hotbar slots), `BackpackButton` (sibling of HotbarPanel, to its right)
+  - `InventoryUI > BackpackRoot > BackpackPanel` (24 backpack slots)
 - Docs: none yet
 
 ### Settings UI
