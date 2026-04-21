@@ -38,6 +38,7 @@ You are a Senior Unity Lead & Game Engineer with deep expertise in Unity 6, C#, 
 
 Follow this order for every task before writing a single line of code:
 
+0. **Check Architecture Map** — scan the Architecture Map section at the bottom of this file; it lists every script, prefab, and doc tied to each feature. No codebase searching needed for known features.
 1. **Understand** — re-read the GDD section relevant to the feature
 2. **Scan** — search existing scripts in `Assets/Scripts/` for reusable utilities, base classes, or interfaces
 3. **Ask** — if Inspector values, scene hierarchy, or runtime state are needed and not visible, ask the user to provide them
@@ -45,6 +46,7 @@ Follow this order for every task before writing a single line of code:
 5. **Implement** — write the minimal code that satisfies the requirement; no speculative features
 6. **Validate** — provide a "How to test" section with exact steps and expected output
 7. **Commit** — always end with a ready-to-copy Conventional Commit message
+8. **Update Architecture Map** — if the task added, removed, or renamed any script, prefab, or doc, update the Architecture Map section at the bottom of this file before closing the task.
 
 **Folder conventions:**
 ```
@@ -143,9 +145,16 @@ To run the game, press **Play** in the Unity Editor with `SampleScene` open (`As
 
 ## Current State
 
-Implemented: first-person movement (walk/sprint/jump), terrain, URP lighting, fog, glTF model import (snail character with modular body+shell).
+**Implemented:**
+- First-person movement: walk, sprint, jump, shell-slide (C key) with momentum carry
+- Camera system: FP / Third-Person / Isometric toggle (V key + mobile button), Cinemachine v3
+- Inventory: grid-based hotbar (8 slots) + backpack (4×6), stackable items, drag-and-drop UI
+- Resource pickup: terrain LOD swap (billboards ↔ interactive prefabs within 25 u), E-key pickup
+- Settings UI: in-game panel for audio, camera effects, slide tuning
+- Mobile input scaffolding: virtual joystick + buttons wired to StarterAssetsInputs
+- Items defined: SmallRock, Mushroom (ItemDefinition ScriptableObjects)
 
-Not yet implemented: attack, interact, crouch, NPC/AI, dialogue, inventory, save/load, audio management, any server-side logic.
+**Not yet implemented:** crafting, building, farming, enemies/combat, day-night cycle, NPC/AI, dialogue, save/load, multiplayer networking.
 
 ## Conventions
 
@@ -153,3 +162,51 @@ Not yet implemented: attack, interact, crouch, NPC/AI, dialogue, inventory, save
 - Do not put game logic inside `Assets/StarterAssets/` or `Assets/Polytope Studio/` — those are third-party assets
 - Use `StarterAssetsInputs` for all input reads; do not call `Input.GetKey` directly
 - URP-only shaders and materials; avoid standard/legacy shader references
+
+---
+
+## Architecture Map
+
+Quick-reference for every implemented feature. Check this before searching. Update this after every task.
+
+### Player Movement
+- Scripts: `Assets/StarterAssets/FirstPersonController/Scripts/FirstPersonController.cs`, `Assets/Scripts/Player/SlideController.cs`
+- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (PlayerCapsule child holds both components)
+- Docs: `../Docs/shell-slide-system.md`
+
+### Camera System
+- Scripts: `Assets/Scripts/Camera/CameraViewController.cs`, `Assets/Scripts/Camera/ThirdPersonOrbitController.cs`
+- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (CameraViewManager child; ThirdPerson_VirtualCamera + Isometric_VirtualCamera children)
+- Docs: none yet
+
+### Inventory Logic
+- Scripts: `Assets/Scripts/Inventory/InventorySystem.cs`, `Assets/Scripts/Inventory/InventoryData.cs`, `Assets/Scripts/Inventory/InventoryInputHandler.cs`, `Assets/Scripts/Inventory/ItemDefinition.cs`, `Assets/Scripts/Inventory/ItemRegistry.cs`, `Assets/Scripts/Inventory/ItemStack.cs`, `Assets/Scripts/Inventory/CursorLockManager.cs`
+- Assets: `Assets/App/Items/SmallRock.asset`, `Assets/App/Items/Mushroom.asset` (ItemDefinition ScriptableObjects)
+- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (PlayerCapsule child holds InventorySystem + InventoryInputHandler + CursorLockManager)
+- Docs: `../Docs/adding-pickup-items.md`
+
+### Inventory UI
+- Scripts: `Assets/Scripts/UI/Inventory/BackpackUI.cs`, `Assets/Scripts/UI/Inventory/HotbarUI.cs`, `Assets/Scripts/UI/Inventory/InventorySlotUI.cs`, `Assets/Scripts/UI/Inventory/InventoryDragController.cs`, `Assets/Scripts/UI/Inventory/InventoryCharacterPreview.cs`
+- Prefabs: `Assets/App/Prefabs/InventoryUI.prefab` (nested inside PlayerRig.prefab)
+- Docs: none yet
+
+### Settings UI
+- Scripts: `Assets/Scripts/UI/Settings/SettingsUIController.cs`
+- Prefabs: `Assets/App/Prefabs/SettingsUI.prefab`
+- Docs: `../Docs/settings-ui.md`
+- Tech debt: `../Docs/TECH_DEBT.md` (3 items flagged)
+
+### Resource Pickup
+- Scripts: `Assets/Scripts/Resource/TerrainResourceManager.cs`, `Assets/Scripts/Resource/ResourceNode.cs`, `Assets/Scripts/Resource/ResourceInteractor.cs`
+- Prefabs: `Assets/App/Prefabs/Rocks/` (variants), `Assets/App/Prefabs/Mushrooms/` (variants)
+- Docs: `Assets/Docs/terrain-tree-pickup-system.md`, `../Docs/adding-pickup-items.md`
+
+### Mobile Input
+- Scripts: `Assets/StarterAssets/Mobile/Scripts/UICanvasControllerInput.cs`, `Assets/Scripts/UI/MobileInventoryButton.cs`, `Assets/Scripts/UI/MobilePickupButton.cs`
+- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (UI_Canvas_StarterAssetsInputs_Joysticks child)
+- Docs: none yet
+
+### Dev / Editor Tools
+- Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`
+- Prefabs: none
+- Docs: none
