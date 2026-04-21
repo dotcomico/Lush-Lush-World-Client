@@ -12,6 +12,7 @@ namespace StarterAssets
 		public Vector2 look;
 		public bool jump;
 		public bool sprint;
+		public bool slide;
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -65,7 +66,17 @@ namespace StarterAssets
 		{
 			sprint = newSprintState;
 		}
-		
+
+		// Fires once per press (rising edge) — SlideController subscribes for mobile input
+		public event System.Action SlidePerformed;
+
+		public void SlideInput(bool newSlideState)
+		{
+			if (newSlideState && !slide)
+				SlidePerformed?.Invoke();
+			slide = newSlideState;
+		}
+
 		private void OnApplicationFocus(bool hasFocus)
 		{
 			SetCursorState(cursorLocked);

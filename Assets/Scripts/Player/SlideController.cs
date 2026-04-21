@@ -50,6 +50,7 @@ namespace LushWorld.Player
         private CharacterController _controller;
         private FirstPersonController _fpc;
         private InputAction _slideAction;
+        private StarterAssetsInputs _inputs;
         private Vector3 _slideVelocity;
         private float _verticalVelocity;
         private float _slideEntryTime;
@@ -67,6 +68,7 @@ namespace LushWorld.Player
             _controller = GetComponent<CharacterController>();
             _fpc = GetComponent<FirstPersonController>();
             _slideAction = GetComponent<PlayerInput>().actions["Player/Crouch"];
+            _inputs = GetComponent<StarterAssetsInputs>();
 
             _camTarget = _fpc.CinemachineCameraTarget.transform;
             _camTargetOriginalLocalPos = _camTarget.localPosition;
@@ -76,19 +78,21 @@ namespace LushWorld.Player
         private void OnEnable()
         {
             _slideAction.performed += OnSlideInputPerformed;
+            if (_inputs != null) _inputs.SlidePerformed += ToggleSlide;
         }
 
         private void OnDisable()
         {
             _slideAction.performed -= OnSlideInputPerformed;
+            if (_inputs != null) _inputs.SlidePerformed -= ToggleSlide;
         }
 
-        private void OnSlideInputPerformed(InputAction.CallbackContext _)
+        private void OnSlideInputPerformed(InputAction.CallbackContext _) => ToggleSlide();
+
+        private void ToggleSlide()
         {
-            if (IsSliding)
-                ExitSlide();
-            else
-                EnterSlide();
+            if (IsSliding) ExitSlide();
+            else EnterSlide();
         }
 
         private void Update()
