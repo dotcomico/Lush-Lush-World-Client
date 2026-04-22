@@ -210,10 +210,10 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 
 ### Day / Night Cycle
 - Scripts: `Assets/Scripts/World/DayNightCycle.cs`
-- Scene object: `DayNightCycle` (root of WorldTestScene) — holds the component; `sun` field must be wired to the scene's `Directional Light`
+- Scene objects: `DayNightCycle` (root), `Directional Light` (sun)
+- Wire in Inspector: `DayNightCycle.sun` → `Directional Light`
 - Events: static `DayNightCycle.OnDayStarted` / `OnNightStarted` (C# events) + `onDayStart` / `onNightStart` (UnityEvents in Inspector)
 - Public API: `TimeOfDay` (0–1), `IsNight`, `IsDay`
-- Tunable in Inspector: `timeOfDay` slider, `dayDurationMinutes`, sun color Gradient, sun intensity Curve, ambient color Gradient, `sunOrbitYaw`
 - Note: sets `RenderSettings.ambientMode = Flat` in Awake — this overrides Lighting window ambient mode setting
 - Docs: none yet
 

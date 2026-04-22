@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.50454295, g: 0.46362877, b: 0.449986, a: 1}
+  m_AmbientSkyColor: {r: 0.756518, g: 0.73032635, b: 0.6894422, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -844,8 +844,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 1, g: 0.8666652, b: 0.6833304, a: 1}
-  m_Intensity: 1.0403454
+  m_Color: {r: 1, g: 0.9466605, b: 0.8433211, a: 1}
+  m_Intensity: 1.1552043
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -907,7 +907,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1408184615}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.039567903, y: 0.887616, z: -0.45226288, w: 0.07765639}
+  m_LocalRotation: {x: 0.050784864, y: 0.8096016, z: -0.58047324, w: 0.07083101}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -972,7 +972,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc1e868998b15234685c7f6d67d886d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.World.DayNightCycle
-  timeOfDay: 0.39999998
+  timeOfDay: 0.448
   dayDurationMinutes: 20
   running: 1
   sun: {fileID: 1408184616}
@@ -1078,13 +1078,13 @@ MonoBehaviour:
   _sunOrbitYaw: 170
   _ambientColor:
     serializedVersion: 2
-    key0: {r: 0.02, g: 0.02, b: 0.08, a: 1}
-    key1: {r: 0.12, g: 0.06, b: 0.02, a: 1}
-    key2: {r: 0.45, g: 0.3, b: 0.15, a: 0}
-    key3: {r: 0.55, g: 0.6, b: 0.7, a: 0}
-    key4: {r: 0.45, g: 0.3, b: 0.15, a: 0}
-    key5: {r: 0.12, g: 0.06, b: 0.02, a: 0}
-    key6: {r: 0.02, g: 0.02, b: 0.08, a: 0}
+    key0: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+    key1: {r: 0.43529415, g: 0.35686275, b: 0.26666668, a: 1}
+    key2: {r: 0.4641509, g: 0.29745495, b: 0.10071193, a: 0}
+    key3: {r: 0.8470274, g: 0.8643324, b: 0.87169814, a: 0}
+    key4: {r: 0.38, g: 0.26, b: 0.1, a: 0}
+    key5: {r: 0.43529415, g: 0.35686275, b: 0.26666668, a: 0}
+    key6: {r: 0.5999999, g: 0.5999999, b: 0.5999999, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 0
     ctime1: 15073
@@ -1112,6 +1112,7 @@ MonoBehaviour:
   onNightStart:
     m_PersistentCalls:
       m_Calls: []
+  _defaultsVersion: 2
 --- !u!4 &2059522543
 Transform:
   m_ObjectHideFlags: 0
