@@ -208,6 +208,15 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (UI_Canvas_StarterAssetsInputs_Joysticks child)
 - Docs: none yet
 
+### Day / Night Cycle
+- Scripts: `Assets/Scripts/World/DayNightCycle.cs`
+- Scene object: `DayNightCycle` (root of WorldTestScene) — holds the component; `sun` field must be wired to the scene's `Directional Light`
+- Events: static `DayNightCycle.OnDayStarted` / `OnNightStarted` (C# events) + `onDayStart` / `onNightStart` (UnityEvents in Inspector)
+- Public API: `TimeOfDay` (0–1), `IsNight`, `IsDay`
+- Tunable in Inspector: `timeOfDay` slider, `dayDurationMinutes`, sun color Gradient, sun intensity Curve, ambient color Gradient, `sunOrbitYaw`
+- Note: sets `RenderSettings.ambientMode = Flat` in Awake — this overrides Lighting window ambient mode setting
+- Docs: none yet
+
 ### Dev / Editor Tools
 - Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`
 - Prefabs: none
