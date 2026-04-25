@@ -194,6 +194,11 @@ namespace LushWorld.UI
             Stretch(RT(_panel));
             _panel.AddComponent<Image>().color = C_Dimmer;
 
+            // Clicking the dimmer (outside the card) dismisses the panel
+            var dimmerBtn = _panel.AddComponent<Button>();
+            dimmerBtn.transition = Selectable.Transition.None;
+            dimmerBtn.onClick.AddListener(TogglePanel);
+
             // ── Card ─────────────────────────────────────────────────────────
             var card = Go("Card", _panel.transform);
             var cardRT = RT(card);
