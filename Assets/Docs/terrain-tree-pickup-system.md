@@ -62,7 +62,10 @@ Select the Terrain → Inspector → **Terrain Settings** tab → **Tree & Detai
 |---|---|---|
 | Spawn Radius | 25 | Player must be within this distance for prefab to spawn |
 | Despawn Radius | 30 | Prefab is destroyed and tree re-added when player moves past this |
-| Resource Prototypes → Prototype Index | — | Must match the 0-based index of the tree prototype in Paint Trees (first prototype = 0, second = 1, etc.) |
+| Resource Prototypes → Tree Prefab | — | The exact prefab used in Terrain → Paint Trees for this item type |
+| Resource Prototypes → Interactive Prefab | — | The pickup prefab to spawn near the player |
+
+The prototype index is **resolved automatically at runtime** by comparing `Tree Prefab` against `terrainData.treePrototypes`. No manual index counting needed — reordering Paint Trees entries won't break anything.
 
 ---
 
@@ -74,7 +77,7 @@ On Play, the system logs:
 [TerrainResourceManager] Found N resource spots on terrain.
 ```
 
-- **N = 0** → Prototype Index is wrong. Count the tree prototypes in Paint Trees (0-based) and fix the index in the Inspector.
+- **N = 0** → No `Tree Prefab` in Resource Prototypes matched any prototype in Paint Trees. Make sure the `Tree Prefab` field is the exact same prefab dragged into Paint Trees — not a variant or a copy.
 - **treeDistance warning** → Terrain's Tree Distance is too small. Fix in Terrain Settings.
 - **widthScale < 1 warning** → Rocks were painted too small. Repaint at Width = 1.
 - **RemoveTreeInstance warning** → Float position mismatch. Report to developer.

@@ -18,8 +18,8 @@ namespace LushWorld.Resource
         [Serializable]
         public struct ResourcePrototypeEntry
         {
-            public int prototypeIndex;
-            public GameObject interactivePrefab;
+            public GameObject treePrefab;          // same prefab used in Terrain → Paint Trees
+            public GameObject interactivePrefab;   // interactive pickup prefab to spawn near player
         }
 
         [SerializeField] private ResourcePrototypeEntry[] resourcePrototypes;
@@ -37,6 +37,7 @@ namespace LushWorld.Resource
         }
 
         private readonly List<ResourceSpot> _spots = new List<ResourceSpot>();
+        private Dictionary<int, GameObject> _protoLookup; // protoIndex → interactivePrefab
         private Terrain _terrain;
         private TreeInstance[] _originalTreeInstances;
         private float _updateTimer;
@@ -53,13 +54,13 @@ namespace LushWorld.Resource
 
             // Cache before any modifications so OnDestroy can fully restore
             _originalTreeInstances = _terrain.terrainData.treeInstances;
+            BuildProtoLookup();
             BuildSpotList();
 
             Debug.Log($"[TerrainResourceManager] Found {_spots.Count} resource spots on terrain.");
             if (_spots.Count == 0)
                 Debug.LogWarning("[TerrainResourceManager] No resource spots found. " +
-                    "Check that 'Resource Prototypes' prototypeIndex values match your terrain's tree prototype indices " +
-                    "(0-based order in the Terrain Inspector under Paint Trees).");
+                    "Check that each 'Tree Prefab' in Resource Prototypes is the exact prefab used in Terrain → Paint Trees.");
 
             if (_terrain.treeDistance < despawnRadius * 2f)
                 Debug.LogWarning($"[TerrainResourceManager] Terrain treeDistance ({_terrain.treeDistance}) is too small — " +
@@ -146,13 +147,37 @@ namespace LushWorld.Resource
             // so distant rocks remain visible as terrain billboards until approached.
         }
 
+        private void BuildProtoLookup()
+        {
+            _protoLookup = new Dictionary<int, GameObject>();
+            if (resourcePrototypes == null || resourcePrototypes.Length == 0) return;
+
+            var treeProtos = _terrain.terrainData.treePrototypes;
+            foreach (var entry in resourcePrototypes)
+            {
+                if (entry.treePrefab == null || entry.interactivePrefab == null) continue;
+                for (int i = 0; i < treeProtos.Length; i++)
+                {
+                    if (treeProtos[i].prefab == entry.treePrefab)
+                    {
+                        _protoLookup[i] = entry.interactivePrefab;
+                        Debug.Log($"[TerrainResourceManager] '{entry.treePrefab.name}' → prototype index {i} → '{entry.interactivePrefab.name}'");
+                        break;
+                    }
+                }
+            }
+
+            if (_protoLookup.Count == 0)
+                Debug.LogWarning("[TerrainResourceManager] No tree prototypes matched. " +
+                    "Drag the exact prefab used in Terrain → Paint Trees into each 'Tree Prefab' slot.");
+            else if (_protoLookup.Count < resourcePrototypes.Length)
+                Debug.LogWarning($"[TerrainResourceManager] Only {_protoLookup.Count}/{resourcePrototypes.Length} entries matched — " +
+                    "check that Tree Prefab fields point to the exact prefab in Paint Trees.");
+        }
+
         private HashSet<int> BuildProtoIndexSet()
         {
-            var set = new HashSet<int>();
-            if (resourcePrototypes == null) return set;
-            foreach (var entry in resourcePrototypes)
-                set.Add(entry.prototypeIndex);
-            return set;
+            return new HashSet<int>(_protoLookup.Keys);
         }
 
         private void Update()
@@ -308,11 +333,8 @@ namespace LushWorld.Resource
 
         private GameObject GetPrefabForProto(int protoIndex)
         {
-            if (resourcePrototypes == null) return null;
-            foreach (var entry in resourcePrototypes)
-                if (entry.prototypeIndex == protoIndex)
-                    return entry.interactivePrefab;
-            return null;
+            _protoLookup.TryGetValue(protoIndex, out var prefab);
+            return prefab;
         }
     }
 }
