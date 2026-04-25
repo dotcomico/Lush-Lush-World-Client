@@ -152,7 +152,7 @@ To run the game, press **Play** in the Unity Editor with `SampleScene` open (`As
 - Resource pickup: terrain LOD swap (billboards ↔ interactive prefabs within 25 u), E-key pickup
 - Settings UI: in-game panel for audio, camera effects, slide tuning
 - Mobile input scaffolding: virtual joystick + buttons wired to StarterAssetsInputs
-- Items defined: SmallRock, Mushroom (ItemDefinition ScriptableObjects)
+- Items defined: SmallRock, Mushroom, Branch (ItemDefinition ScriptableObjects)
 
 **Not yet implemented:** crafting, building, farming, enemies/combat, day-night cycle, NPC/AI, dialogue, save/load, multiplayer networking.
 
@@ -181,7 +181,7 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 
 ### Inventory Logic
 - Scripts: `Assets/Scripts/Inventory/InventorySystem.cs`, `Assets/Scripts/Inventory/InventoryData.cs`, `Assets/Scripts/Inventory/InventoryInputHandler.cs`, `Assets/Scripts/Inventory/ItemDefinition.cs`, `Assets/Scripts/Inventory/ItemRegistry.cs`, `Assets/Scripts/Inventory/ItemStack.cs`, `Assets/Scripts/Inventory/CursorLockManager.cs`
-- Assets: `Assets/App/Items/SmallRock.asset`, `Assets/App/Items/Mushroom.asset` (ItemDefinition ScriptableObjects)
+- Assets: `Assets/App/Items/SmallRock.asset`, `Assets/App/Items/Mushroom.asset`, `Assets/App/Items/Branch.asset` (ItemDefinition ScriptableObjects)
 - Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (PlayerCapsule child holds InventorySystem + InventoryInputHandler + CursorLockManager)
 - Docs: `../Docs/adding-pickup-items.md`
 
@@ -200,7 +200,7 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 
 ### Resource Pickup
 - Scripts: `Assets/Scripts/Resource/TerrainResourceManager.cs`, `Assets/Scripts/Resource/ResourceNode.cs`, `Assets/Scripts/Resource/ResourceInteractor.cs`
-- Prefabs: `Assets/App/Prefabs/Rocks/` (variants), `Assets/App/Prefabs/Mushrooms/` (variants)
+- Prefabs: `Assets/App/Prefabs/Rocks/` (variants), `Assets/App/Prefabs/Mushrooms/` (variants), `Assets/App/Prefabs/Sticks/` (variants)
 - Docs: `Assets/Docs/terrain-tree-pickup-system.md`, `../Docs/adding-pickup-items.md`
 
 ### Mobile Input

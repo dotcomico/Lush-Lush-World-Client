@@ -407,6 +407,8 @@ MonoBehaviour:
     interactivePrefab: {fileID: 1744850591557716773, guid: d9743f0eaa45a1441b4cbdf960f1c762, type: 3}
   - prototypeIndex: 2
     interactivePrefab: {fileID: 2158734629085341762, guid: 211268216d231514686c81082dba0e41, type: 3}
+  - prototypeIndex: 3
+    interactivePrefab: {fileID: 1001001001001001001, guid: 2f210a8b3247ed14aa3589d5251cf17a, type: 3}
   spawnRadius: 25
   despawnRadius: 30
   playerTransform: {fileID: 789403553}
