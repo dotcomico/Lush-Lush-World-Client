@@ -224,29 +224,30 @@ namespace LushWorld.Resource
             spot.activeGO = Instantiate(prefab, spot.worldPos, Quaternion.identity);
             Debug.Log($"[TerrainResourceManager] Spawned '{prefab.name}' at {spot.worldPos} | scale ws={spot.originalInstance.widthScale:F2} hs={spot.originalInstance.heightScale:F2}");
 
-            // Read the prefab's authored LODGroup size while localScale is still (1,1,1).
-            // We need this reference before we change localScale so we can correct it afterward.
+            // Capture the prefab's authored scale and LODGroup size before we touch localScale.
+            Vector3 authoredScale = spot.activeGO.transform.localScale;
             var lodGroup = spot.activeGO.GetComponentInChildren<LODGroup>();
             float authoredLodSize = (lodGroup != null) ? lodGroup.size : 0f;
 
-            // Apply terrain tree scale. Clamp to a minimum of 1.0 so rocks never shrink
-            // below their authored design size. A widthScale < 1 (e.g. 0.44) produces
-            // sub-centimetre pebbles that are invisible from any normal gameplay distance;
-            // this happens when the terrain brush Width slider was left below 1.0.
+            // Use terrain widthScale/heightScale as a multiplier on top of the prefab's own scale.
+            // This preserves the scale authored in the prefab (e.g. 0.3,0.3,0.3) while still
+            // respecting terrain brush size variation (e.g. width=1.5 for a large rock variant).
             float ws = Mathf.Max(spot.originalInstance.widthScale, 1f);
             float hs = Mathf.Max(spot.originalInstance.heightScale, 1f);
 
             if (spot.originalInstance.widthScale < 1f)
                 Debug.LogWarning($"[TerrainResourceManager] Rock at {spot.worldPos} has widthScale={spot.originalInstance.widthScale:F2} (<1). " +
-                    "Rocks will be invisible. Fix: select the Terrain, open Paint Trees, click your rock prototype, and set Width to at least 1.");
+                    "Fix: select the Terrain, open Paint Trees, click your rock prototype, and set Width to at least 1.");
 
-            spot.activeGO.transform.localScale = new Vector3(ws, hs, ws);
+            spot.activeGO.transform.localScale = new Vector3(
+                authoredScale.x * ws,
+                authoredScale.y * hs,
+                authoredScale.z * ws
+            );
 
-            // LODGroup.size is a world-space reference diameter that does NOT update automatically
-            // when the transform's localScale is changed. Scale it proportionally so LOD transition
-            // distances stay calibrated to the actual visual size of the spawned rock.
+            // LODGroup.size is a world-space reference diameter — scale it to match the final world size.
             if (lodGroup != null && authoredLodSize > 0f)
-                lodGroup.size = authoredLodSize * ws;
+                lodGroup.size = authoredLodSize * authoredScale.x * ws;
 
             var node = spot.activeGO.GetComponent<ResourceNode>();
             if (node != null)
