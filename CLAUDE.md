@@ -217,7 +217,17 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Note: sets `RenderSettings.ambientMode = Flat` in Awake — this overrides Lighting window ambient mode setting
 - Docs: none yet
 
+### Health & Hunger (PlayerStats)
+- Scripts: `Assets/Scripts/Player/PlayerStats.cs`, `Assets/Scripts/UI/Stats/StatsUI.cs`
+- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (PlayerCapsule child holds `PlayerStats`); `Assets/App/Prefabs/InventoryUI.prefab` (`StatsRoot` child of Canvas — health bar left/red, hunger bar right/orange, anchored bottom-center above hotbar at Y=130)
+- Static events: `OnStatsReady(float health, float hunger)`, `OnHealthChanged(float)`, `OnHungerChanged(float)`, `OnPlayerDied`
+- Static entry points: `PlayerStats.ConsumeFood(float)`, `PlayerStats.TakeDamage(float)`, `PlayerStats.Heal(float)`
+- Food items: `ItemDefinition.FoodValue` (float) — set > 0 on food SO assets (Mushroom.asset); consumed via `PlayerStats.ConsumeFood()` from item-use system (not yet wired)
+- Hunger drains passively (`_passiveHungerDrain` /sec); doubles when `StarterAssetsInputs.sprint == true`; at 0 health drains at `_starvationDamageRate` /sec
+- Setup tool: `Lush World > Setup > Add Player Stats & Bars` (run once, idempotent)
+- Docs: `../Docs/health-hunger-system.md`
+
 ### Dev / Editor Tools
-- Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`
+- Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`, `Assets/Scripts/Editor/StatsSetupTool.cs`
 - Prefabs: none
 - Docs: none
