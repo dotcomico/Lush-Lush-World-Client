@@ -22,6 +22,10 @@ namespace LushWorld.Inventory
 
         [SerializeField] private ItemRegistry _itemRegistry;
 
+        [Header("Drop Settings")]
+        [SerializeField] private float _dropMaxDistance  = 2.5f;
+        [SerializeField] private float _dropAngularDrag  = 5f;
+
         private bool _backpackOpen;
 
         private void Start()
@@ -158,11 +162,11 @@ namespace LushWorld.Inventory
             // Add physics only on the dropped clone; the original prefab stays static for terrain spawns.
             if (!dropped.TryGetComponent(out Rigidbody rb))
                 rb = dropped.AddComponent<Rigidbody>();
-            rb.mass = 1f;
-            rb.linearDamping = 0.3f;
-            rb.angularDamping = 0.05f;
-            Vector3 throwDir = transform.forward + Vector3.up * 0.5f;
-            rb.AddForce(throwDir.normalized * 3f, ForceMode.Impulse);
+            rb.mass           = 1f;
+            rb.linearDamping  = 0.5f;
+            rb.angularDamping = _dropAngularDrag;
+            Vector3 throwDir  = transform.forward + Vector3.up * 0.2f;
+            rb.AddForce(throwDir.normalized * 2f, ForceMode.Impulse);
         }
 
         private Vector3 GetDropSpawnPosition()
@@ -176,15 +180,25 @@ namespace LushWorld.Inventory
                 {
                     Ray ray = cam.ScreenPointToRay(mouse.position.ReadValue());
                     if (Physics.Raycast(ray, out RaycastHit hit, 20f))
-                        return hit.point + Vector3.up * 0.1f;
+                        return ClampDropPoint(hit.point + Vector3.up * 0.1f);
                 }
 #else
                 Ray ray = cam.ScreenPointToRay(Input.mousePosition);
                 if (Physics.Raycast(ray, out RaycastHit hit, 20f))
-                    return hit.point + Vector3.up * 0.1f;
+                    return ClampDropPoint(hit.point + Vector3.up * 0.1f);
 #endif
             }
-            return transform.position + transform.forward * 1.5f + Vector3.up * 0.5f;
+            return transform.position + transform.forward * Mathf.Min(1.5f, _dropMaxDistance) + Vector3.up * 0.3f;
+        }
+
+        // Clamps the drop point to _dropMaxDistance on the XZ plane so items never land far away.
+        private Vector3 ClampDropPoint(Vector3 point)
+        {
+            Vector3 toPoint = point - transform.position;
+            Vector3 toPointXZ = new Vector3(toPoint.x, 0f, toPoint.z);
+            if (toPointXZ.magnitude > _dropMaxDistance)
+                point = transform.position + toPointXZ.normalized * _dropMaxDistance + Vector3.up * 0.3f;
+            return point;
         }
     }
 }
