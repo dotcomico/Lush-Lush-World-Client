@@ -32,12 +32,14 @@ namespace LushWorld.Player
         private bool _isDead;
         private StarterAssetsInputs _inputs;
 
-        public float HealthNormalized => _health / _maxHealth;
-        public float HungerNormalized => _hunger / _maxHunger;
+        public float HealthNormalized => _health / Mathf.Max(1f, _maxHealth);
+        public float HungerNormalized => _hunger / Mathf.Max(1f, _maxHunger);
 
         private void Awake()
         {
             _inputs = GetComponent<StarterAssetsInputs>();
+            if (_inputs == null)
+                Debug.LogWarning("[PlayerStats] StarterAssetsInputs not found on this GameObject — sprint drain disabled.", this);
         }
 
         private void Start()
@@ -109,13 +111,22 @@ namespace LushWorld.Player
         public static void TakeDamage(float amount)  => LocalPlayer?.RequestTakeDamage(amount);
         public static void Heal(float amount)         => LocalPlayer?.RequestHeal(amount);
 
-        // ── Death ─────────────────────────────────────────────────────────────
+        // ── Death & Respawn ───────────────────────────────────────────────────
 
         private void HandleDeath()
         {
             _isDead = true;
             OnPlayerDied?.Invoke();
             Debug.Log("[PlayerStats] Player died.");
+        }
+
+        public void Respawn()
+        {
+            _isDead = false;
+            _health = _maxHealth;
+            _hunger = _maxHunger;
+            OnHealthChanged?.Invoke(HealthNormalized);
+            OnHungerChanged?.Invoke(HungerNormalized);
         }
     }
 }

@@ -1388,6 +1388,10 @@ PrefabInstance:
       propertyPath: m_ActiveFontFeatures.Array.size
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1163278623337670508, guid: a66dbf59885bb34478bc067b4915690a, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 1163653700202890639, guid: a66dbf59885bb34478bc067b4915690a, type: 3}
       propertyPath: m_fontAsset
       value: 
@@ -3144,6 +3148,10 @@ PrefabInstance:
       propertyPath: m_ActiveFontFeatures.Array.size
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7812488571283165103, guid: a66dbf59885bb34478bc067b4915690a, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 7869736456727088433, guid: a66dbf59885bb34478bc067b4915690a, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -3610,7 +3618,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8762286023885395322, guid: 9c489a8547f4d9e4387da15a4ff82c81, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -37.209984
+      value: -37.20999
       objectReference: {fileID: 0}
     - target: {fileID: 8762286023885395322, guid: 9c489a8547f4d9e4387da15a4ff82c81, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3618,7 +3626,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8762286023885395322, guid: 9c489a8547f4d9e4387da15a4ff82c81, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -53.90699
+      value: -53.906998
       objectReference: {fileID: 0}
     - target: {fileID: 8762286023885395322, guid: 9c489a8547f4d9e4387da15a4ff82c81, type: 3}
       propertyPath: m_LocalRotation.w
@@ -4205,9 +4213,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Player.PlayerStats
   _maxHealth: 100
   _maxHunger: 100
-  _passiveHungerDrain: 1
-  _sprintHungerMultiplier: 2
-  _starvationDamageRate: 2
+  _passiveHungerDrain: 0.5
+  _sprintHungerMultiplier: 0.5
+  _starvationDamageRate: 1
 --- !u!114 &2060063764280730363 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8616685848737228376, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}

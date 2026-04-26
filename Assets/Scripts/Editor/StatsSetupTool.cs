@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -59,9 +60,10 @@ namespace LushWorld.Editor
                 return;
             }
 
-            if (canvasTransform.Find("StatsRoot") != null)
+            var existing = canvasTransform.Find("StatsRoot");
+            if (existing != null)
             {
-                Debug.Log("[StatsSetupTool] StatsRoot already exists — skipping.");
+                PatchTextLabels(existing);
                 return;
             }
 
@@ -80,18 +82,75 @@ namespace LushWorld.Editor
             var statsUI = statsRootGO.AddComponent<StatsUI>();
 
             // Health bar — left, red ─────────────────────────────────────────────
-            var healthFill = CreateBar(statsRootGO.transform, "HealthBar",
+            var healthFill  = CreateBar(statsRootGO.transform, "HealthBar",
                 new Vector2(-107f, 0f), new Color(0.85f, 0.15f, 0.15f));
+            var healthLabel = AddLabel(healthFill.transform.parent);
 
             // Hunger bar — right, orange ─────────────────────────────────────────
-            var hungerFill = CreateBar(statsRootGO.transform, "HungerBar",
+            var hungerFill  = CreateBar(statsRootGO.transform, "HungerBar",
                 new Vector2(107f, 0f), new Color(0.95f, 0.55f, 0.10f));
+            var hungerLabel = AddLabel(hungerFill.transform.parent);
 
-            // Wire private [SerializeField] Image refs ───────────────────────────
+            // Wire private [SerializeField] refs ─────────────────────────────────
             var so = new SerializedObject(statsUI);
             so.FindProperty("_healthFill").objectReferenceValue = healthFill;
             so.FindProperty("_hungerFill").objectReferenceValue = hungerFill;
+            so.FindProperty("_healthText").objectReferenceValue = healthLabel;
+            so.FindProperty("_hungerText").objectReferenceValue = hungerLabel;
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        // ── Text-label patcher (runs when StatsRoot already exists) ──────────
+
+        private static void PatchTextLabels(Transform statsRoot)
+        {
+            var statsUI = statsRoot.GetComponent<StatsUI>();
+            if (statsUI == null) return;
+
+            var so             = new SerializedObject(statsUI);
+            var healthTextProp = so.FindProperty("_healthText");
+            var hungerTextProp = so.FindProperty("_hungerText");
+
+            if (healthTextProp == null || hungerTextProp == null)
+            {
+                Debug.LogWarning("[StatsSetupTool] _healthText/_hungerText not found — recompile StatsUI first.");
+                return;
+            }
+
+            if (healthTextProp.objectReferenceValue == null)
+            {
+                var bar = statsRoot.Find("HealthBar");
+                if (bar != null) healthTextProp.objectReferenceValue = AddLabel(bar);
+            }
+
+            if (hungerTextProp.objectReferenceValue == null)
+            {
+                var bar = statsRoot.Find("HungerBar");
+                if (bar != null) hungerTextProp.objectReferenceValue = AddLabel(bar);
+            }
+
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Debug.Log("[StatsSetupTool] Text labels patched into existing StatsRoot.");
+        }
+
+        private static TextMeshProUGUI AddLabel(Transform barRoot)
+        {
+            var existingGO = barRoot.Find("Label");
+            if (existingGO != null) return existingGO.GetComponent<TextMeshProUGUI>();
+
+            var labelGO = new GameObject("Label");
+            labelGO.transform.SetParent(barRoot, false);
+            var rect       = labelGO.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            var tmp        = labelGO.AddComponent<TextMeshProUGUI>();
+            tmp.alignment  = TextAlignmentOptions.Center;
+            tmp.fontSize   = 11f;
+            tmp.color      = Color.white;
+            tmp.text       = "100%";
+            return tmp;
         }
 
         // ── Bar builder ───────────────────────────────────────────────────────
