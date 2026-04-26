@@ -1,5 +1,7 @@
 using System;
 using LushWorld.Resource;
+using LushWorld.World;
+using TMPro;
 using UnityEngine;
 
 namespace LushWorld.Inventory
@@ -23,7 +25,7 @@ namespace LushWorld.Inventory
         [SerializeField] private ItemRegistry _itemRegistry;
 
         [Header("Drop Settings")]
-        [SerializeField] private float _dropMaxDistance  = 2.5f;
+        [SerializeField] private float _dropMaxDistance = 2.5f;
         [SerializeField] private float _dropAngularDrag  = 5f;
 
         private bool _backpackOpen;
@@ -133,19 +135,29 @@ namespace LushWorld.Inventory
             OnBackpackToggleRequested?.Invoke(_backpackOpen);
         }
 
+        // Q key — always drops exactly 1 unit, leaving the rest in the slot.
         public void RequestDropActiveItem()
         {
-            RequestDropSlotItem(Data.SelectedHotbarSlot, isHotbar: true);
+            DropFromSlot(Data.SelectedHotbarSlot, isHotbar: true, quantity: 1);
         }
 
+        // Drag-to-world — drops the full stack as a single world object.
         public void RequestDropSlotItem(int slotIndex, bool isHotbar)
+        {
+            ItemStack stack = Data.GetSlot(slotIndex, isHotbar);
+            if (!stack.IsEmpty)
+                DropFromSlot(slotIndex, isHotbar, quantity: stack.Quantity);
+        }
+
+        private void DropFromSlot(int slotIndex, bool isHotbar, int quantity)
         {
             ItemStack stack = Data.GetSlot(slotIndex, isHotbar);
             if (stack.IsEmpty) return;
             if (_itemRegistry == null || !_itemRegistry.TryGetById(stack.ItemId, out ItemDefinition def)) return;
             if (!def.IsDroppable || def.WorldPrefab == null) return;
 
-            Data.TryRemoveItem(slotIndex, isHotbar, stack.Quantity);
+            int toDrop = Mathf.Min(quantity, stack.Quantity);
+            Data.TryRemoveItem(slotIndex, isHotbar, toDrop);
 
             Vector3 spawnPos = GetDropSpawnPosition();
             var spawned = UnityEngine.Object.Instantiate((UnityEngine.Object)def.WorldPrefab, spawnPos, UnityEngine.Random.rotation);
@@ -153,7 +165,7 @@ namespace LushWorld.Inventory
             if (dropped == null) return;
 
             if (dropped.TryGetComponent(out ResourceNode node))
-                node.SetQuantity(stack.Quantity);
+                node.SetQuantity(toDrop);
 
             // Concave MeshColliders are incompatible with dynamic Rigidbodies — fix before adding.
             foreach (var mc in dropped.GetComponentsInChildren<MeshCollider>())
@@ -167,6 +179,28 @@ namespace LushWorld.Inventory
             rb.angularDamping = _dropAngularDrag;
             Vector3 throwDir  = transform.forward + Vector3.up * 0.2f;
             rb.AddForce(throwDir.normalized * 2f, ForceMode.Impulse);
+
+            SpawnQuantityLabel(dropped, toDrop);
+        }
+
+        private void SpawnQuantityLabel(GameObject parent, int quantity)
+        {
+            if (quantity <= 1) return;
+
+            var go = new GameObject("QuantityLabel");
+            go.transform.SetParent(parent.transform, false);
+            go.transform.localPosition = Vector3.up * 0.45f;
+
+            var tmp = go.AddComponent<TextMeshPro>();
+            tmp.text      = quantity.ToString();
+            tmp.fontSize  = 2.5f;
+            tmp.fontStyle = FontStyles.Bold;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color     = Color.white;
+            tmp.outlineWidth = 0.25f;
+            tmp.outlineColor = Color.black;
+
+            go.AddComponent<ItemDropLabel>();
         }
 
         private Vector3 GetDropSpawnPosition()
@@ -194,7 +228,7 @@ namespace LushWorld.Inventory
         // Clamps the drop point to _dropMaxDistance on the XZ plane so items never land far away.
         private Vector3 ClampDropPoint(Vector3 point)
         {
-            Vector3 toPoint = point - transform.position;
+            Vector3 toPoint   = point - transform.position;
             Vector3 toPointXZ = new Vector3(toPoint.x, 0f, toPoint.z);
             if (toPointXZ.magnitude > _dropMaxDistance)
                 point = transform.position + toPointXZ.normalized * _dropMaxDistance + Vector3.up * 0.3f;
