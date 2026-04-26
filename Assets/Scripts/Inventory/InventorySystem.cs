@@ -1,4 +1,5 @@
 using System;
+using LushWorld.Resource;
 using UnityEngine;
 
 namespace LushWorld.Inventory
@@ -130,12 +131,60 @@ namespace LushWorld.Inventory
 
         public void RequestDropActiveItem()
         {
-            var active = Data.ActiveItem;
-            if (active.IsEmpty) return;
+            RequestDropSlotItem(Data.SelectedHotbarSlot, isHotbar: true);
+        }
 
-            // Spawn world prefab — registry lookup handled by caller context
-            // Full drop logic (with ItemRegistry) wired in Phase 2 resource system
-            Data.TryRemoveItem(Data.SelectedHotbarSlot, isHotbar: true, qty: 1);
+        public void RequestDropSlotItem(int slotIndex, bool isHotbar)
+        {
+            ItemStack stack = Data.GetSlot(slotIndex, isHotbar);
+            if (stack.IsEmpty) return;
+            if (_itemRegistry == null || !_itemRegistry.TryGetById(stack.ItemId, out ItemDefinition def)) return;
+            if (!def.IsDroppable || def.WorldPrefab == null) return;
+
+            Data.TryRemoveItem(slotIndex, isHotbar, stack.Quantity);
+
+            Vector3 spawnPos = GetDropSpawnPosition();
+            var spawned = UnityEngine.Object.Instantiate((UnityEngine.Object)def.WorldPrefab, spawnPos, UnityEngine.Random.rotation);
+            GameObject dropped = spawned as GameObject ?? (spawned as Component)?.gameObject;
+            if (dropped == null) return;
+
+            if (dropped.TryGetComponent(out ResourceNode node))
+                node.SetQuantity(stack.Quantity);
+
+            // Concave MeshColliders are incompatible with dynamic Rigidbodies — fix before adding.
+            foreach (var mc in dropped.GetComponentsInChildren<MeshCollider>())
+                mc.convex = true;
+
+            // Add physics only on the dropped clone; the original prefab stays static for terrain spawns.
+            if (!dropped.TryGetComponent(out Rigidbody rb))
+                rb = dropped.AddComponent<Rigidbody>();
+            rb.mass = 1f;
+            rb.linearDamping = 0.3f;
+            rb.angularDamping = 0.05f;
+            Vector3 throwDir = transform.forward + Vector3.up * 0.5f;
+            rb.AddForce(throwDir.normalized * 3f, ForceMode.Impulse);
+        }
+
+        private Vector3 GetDropSpawnPosition()
+        {
+            UnityEngine.Camera cam = UnityEngine.Camera.main;
+            if (cam != null)
+            {
+#if ENABLE_INPUT_SYSTEM
+                var mouse = UnityEngine.InputSystem.Mouse.current;
+                if (mouse != null)
+                {
+                    Ray ray = cam.ScreenPointToRay(mouse.position.ReadValue());
+                    if (Physics.Raycast(ray, out RaycastHit hit, 20f))
+                        return hit.point + Vector3.up * 0.1f;
+                }
+#else
+                Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out RaycastHit hit, 20f))
+                    return hit.point + Vector3.up * 0.1f;
+#endif
+            }
+            return transform.position + transform.forward * 1.5f + Vector3.up * 0.5f;
         }
     }
 }

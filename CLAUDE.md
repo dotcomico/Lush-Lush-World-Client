@@ -203,6 +203,24 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Prefabs: `Assets/App/Prefabs/Rocks/` (variants), `Assets/App/Prefabs/Mushrooms/` (variants), `Assets/App/Prefabs/Sticks/` (variants)
 - Docs: `Assets/Docs/terrain-tree-pickup-system.md`, `../Docs/adding-pickup-items.md`
 
+### Inventory Drop System (drag slot outside UI → spawn world item with gravity)
+- Scripts:
+  - `Assets/Scripts/Inventory/InventorySystem.cs` — `RequestDropSlotItem(int, bool)`, `RequestDropActiveItem()`, `GetDropSpawnPosition()`
+  - `Assets/Scripts/UI/Inventory/WorldDropZone.cs` — full-screen IDropHandler behind all panels; **primary** world-drop trigger for drag-to-drop
+  - `Assets/Scripts/UI/Inventory/InventorySlotUI.cs` — `OnEndDrag` only cancels visual; drop logic moved to WorldDropZone
+  - `Assets/Scripts/Resource/ResourceNode.cs` — `SetQuantity(int)` stamps quantity on spawned clone
+  - `Assets/Scripts/Inventory/InventoryInputHandler.cs` — Q key calls `RequestDropActiveItem()` (drops selected hotbar slot)
+- Prefabs: world prefabs in `Assets/App/Prefabs/Rocks|Mushrooms|Sticks/` — **no Rigidbody on prefab**; Rigidbody + MeshCollider.convex added dynamically by `RequestDropSlotItem` on the clone only
+- UI setup: `InventoryUI.prefab` needs a **WorldDropZone** child — full-stretch Image (alpha=0, RaycastTarget=ON), sibling index 0 (behind all panels), with `WorldDropZone` component attached
+- Inspector setup (one-time, must be done manually):
+  - `InventorySystem._itemRegistry` → drag `Assets/App/Items/ItemRegistry.asset` onto PlayerCapsule → InventorySystem in the Inspector
+  - Each `ItemDefinition.WorldPrefab` → **must be assigned from the Project window** (not from Hierarchy) to avoid a Component reference that breaks `Instantiate`
+- Data: `ItemDefinition.WorldPrefab` (GameObject prefab), `ItemDefinition.IsDroppable` (default true)
+- Docs: `Assets/Docs/inventory-drop-system.md`, `../Docs/adding-pickup-items.md`
+- Key drop (Q): `InventoryInputHandler.Update` → `RequestDropActiveItem` → `RequestDropSlotItem(SelectedHotbarSlot, isHotbar:true)`
+- Drag drop: `WorldDropZone.OnDrop` → `TryConsumeDrag` → `RequestDropSlotItem`
+- Spawn: camera raycast through `Mouse.current.position` to find ground; fallback = `player.forward * 1.5f + up * 0.5f`
+
 ### Mobile Input
 - Scripts: `Assets/StarterAssets/Mobile/Scripts/UICanvasControllerInput.cs`, `Assets/Scripts/UI/MobileInventoryButton.cs`, `Assets/Scripts/UI/MobilePickupButton.cs`
 - Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (UI_Canvas_StarterAssetsInputs_Joysticks child)

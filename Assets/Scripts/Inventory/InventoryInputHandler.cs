@@ -43,5 +43,16 @@ namespace LushWorld.Inventory
             if (value.isPressed) _inventory.RequestToggleBackpack();
         }
 #endif
+
+        private void Update()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
+                _inventory.RequestDropActiveItem();
+#else
+            if (Input.GetKeyDown(KeyCode.Q))
+                _inventory.RequestDropActiveItem();
+#endif
+        }
     }
 }

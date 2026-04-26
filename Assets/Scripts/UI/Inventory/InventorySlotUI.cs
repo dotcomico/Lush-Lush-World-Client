@@ -169,13 +169,12 @@ namespace LushWorld.UI.Inventory
         {
             if (InventoryDragController.Instance == null) return;
 
+            // World-drop is handled by WorldDropZone (IDropHandler on the full-screen background panel).
+            // Here we only need to clean up if the drag was not consumed by any drop target.
             if (InventoryDragController.Instance.IsDragging)
-            {
-                // Drag cancelled (released over empty space) — restore full opacity and visibility.
-                ApplyStackVisuals();
-                InventoryDragController.Instance.EndDrag();
-            }
-            // else: OnDrop already consumed the drag; data events call SetStack on both slots.
+                ApplyStackVisuals(); // restore ghost opacity on uncaught drag cancel
+
+            InventoryDragController.Instance.EndDrag();
         }
 
         public void OnDrop(PointerEventData eventData)

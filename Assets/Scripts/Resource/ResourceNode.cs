@@ -14,6 +14,8 @@ namespace LushWorld.Resource
         public string ItemId => itemId;
         public string DisplayName => itemId; // overridden by caller using ItemRegistry if needed
 
+        public void SetQuantity(int qty) => quantity = qty;
+
         public event Action<ResourceNode> OnPickedUp;
 
         public void TryPickup()

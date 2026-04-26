@@ -547,10 +547,10 @@ MonoBehaviour:
   resourcePrototypes:
   - treePrefab: {fileID: 1713665613519977965, guid: c2a96ea34e03a434a9404d7da8bcdc1c, type: 3}
     interactivePrefab: {fileID: 1713665613519977965, guid: c2a96ea34e03a434a9404d7da8bcdc1c, type: 3}
-  - treePrefab: {fileID: 2158734629085341762, guid: 211268216d231514686c81082dba0e41, type: 3}
-    interactivePrefab: {fileID: 2158734629085341762, guid: 211268216d231514686c81082dba0e41, type: 3}
-  - treePrefab: {fileID: 1001001001001001001, guid: 2f210a8b3247ed14aa3589d5251cf17a, type: 3}
-    interactivePrefab: {fileID: 1001001001001001001, guid: 2f210a8b3247ed14aa3589d5251cf17a, type: 3}
+  - treePrefab: {fileID: 1122301989070356508, guid: 211268216d231514686c81082dba0e41, type: 3}
+    interactivePrefab: {fileID: 1122301989070356508, guid: 211268216d231514686c81082dba0e41, type: 3}
+  - treePrefab: {fileID: 5717187289026386971, guid: 2f210a8b3247ed14aa3589d5251cf17a, type: 3}
+    interactivePrefab: {fileID: 5717187289026386971, guid: 2f210a8b3247ed14aa3589d5251cf17a, type: 3}
   spawnRadius: 25
   despawnRadius: 30
   playerTransform: {fileID: 789403553}
