@@ -2,161 +2,132 @@
 
 ## Overview
 
-Allows the player to drop items from the inventory by dragging a slot icon outside the inventory UI panel. The item spawns as a world object at the ground position under the cursor and falls with gravity. The player can walk up to it and press E to pick it back up.
+Allows the player to drop items from the inventory in two ways:
+
+| Input | Behaviour |
+|-------|-----------|
+| **Q key** | Drops **1 item** from the selected hotbar slot. The rest of the stack stays. |
+| **Drag slot → game viewport** | Drops the **full stack** as a single world object. If qty > 1, a floating label shows the count. |
+
+The item spawns at the ground point under the cursor, clamped to a max radius from the player, falls with gravity, and is picked back up with E.
 
 ---
 
 ## Architecture
 
-### How Drag-to-Drop Detection Works
+### Drop Flow
 
-Unity's EventSystem fires events in this order during a drag:
+**Q key path:**
+```
+InventoryInputHandler.Update (Q pressed)
+  → InventorySystem.RequestDropActiveItem()
+  → DropFromSlot(selectedHotbarSlot, isHotbar:true, quantity:1)
+```
 
-1. `OnDrop()` fires on the **target slot** (only if drag was released over a valid slot)
-2. `OnEndDrag()` fires on the **source slot** always
+**Drag-to-world path:**
+```
+WorldDropZone.OnDrop (IDropHandler on full-screen background panel)
+  → InventoryDragController.TryConsumeDrag()
+  → InventorySystem.RequestDropSlotItem(srcIndex, srcIsHotbar)
+  → DropFromSlot(srcIndex, srcIsHotbar, quantity:stack.Quantity)
+```
 
-When released on a valid slot:
-- `OnDrop()` → `InventoryDragController.TryConsumeDrag()` → `IsDragging = false`
-- `OnEndDrag()` sees `IsDragging == false` → successful swap, nothing more to do
+Both paths converge in the private `DropFromSlot(int slotIndex, bool isHotbar, int quantity)` method.
 
-When released **outside the inventory UI**:
-- No `OnDrop()` fires
-- `OnEndDrag()` sees `IsDragging == true` → drag was NOT consumed
-- `EventSystem.current.IsPointerOverGameObject()` returns `false` → pointer is over game viewport
-- This is the world-drop trigger → call `RequestDropSlotItem()`
+### Why WorldDropZone, not OnEndDrag
 
-### Spawn Position
+`OnEndDrag` + `IsPointerOverGameObject()` is unreliable with Unity's new Input System (pointer events don't always fire over the game viewport). `WorldDropZone` is a full-stretch `Image` (alpha 0, Raycast Target ON) at sibling index 0 inside the `InventoryUI` canvas root. Unity's EventSystem routes `OnDrop` there whenever the drag ends outside any slot, making it the single reliable entry point.
 
-`InventorySystem.GetDropSpawnPosition()` raycasts from the camera through `Input.mousePosition` to find the exact ground point under the cursor. Falls back to `player.position + player.forward * 1.5f + Vector3.up * 0.5f` if the raycast misses.
+### Spawn Position & Radius Clamp
 
-### Quantity Preservation
+`GetDropSpawnPosition()` raycasts from the camera through `Mouse.current.position` (new Input System) to the ground. `ClampDropPoint()` then enforces a max XZ distance of `_dropMaxDistance` (default 2.5 m) from the player, preventing items from spawning on distant terrain when the cursor is far away.
 
-`ItemDefinition.WorldPrefab` has `ResourceNode.quantity = 1` baked in. After instantiation, `ResourceNode.SetQuantity(stack.Quantity)` overrides it — so dropping a stack of 5 rocks and picking it back up gives 5, not 1.
+### Stack Quantity Label
+
+When dropping qty > 1 via drag, `SpawnQuantityLabel()` creates a child `GameObject` with `TextMeshPro` (bold white, black outline) and `ItemDropLabel` (billboards toward camera each `LateUpdate`). Q key drops always spawn qty = 1, so they never show a label.
 
 ---
 
 ## Components Required on World Prefabs
 
-Every droppable item's `WorldPrefab` must have:
-
 | Component | Purpose |
 |-----------|---------|
-| `ResourceNode` | itemId + pickup logic (already present on all world prefabs) |
-| `Collider` (SphereCollider) | Physics contact + pickup trigger (already present) |
-| `Rigidbody` | Gravity and tumble on drop — **must be added manually** |
+| `ResourceNode` | itemId + pickup logic |
+| `Collider` (SphereCollider) | Physics + pickup trigger |
+| **No Rigidbody on the prefab** | Added dynamically by `DropFromSlot` on the clone only |
 
-### Rigidbody Settings (Standard for all droppable items)
+`DropFromSlot` sets `MeshCollider.convex = true` on all child MeshColliders before adding the Rigidbody (Unity disallows concave MeshColliders on dynamic Rigidbodies).
+
+### Rigidbody values applied in code
+
+| Property | Value |
+|----------|-------|
+| Mass | 1 |
+| Linear Damping | 0.5 |
+| Angular Damping | `_dropAngularDrag` (Inspector, default 5) |
+| Throw impulse | `(forward + up*0.2).normalized * 2` |
+
+---
+
+## Player Push
+
+`BasicRigidBodyPush` (StarterAssets) uses `OnControllerColliderHit` to push any Rigidbody the CharacterController walks into.
+
+**Add to PlayerCapsule (one-time Inspector setup):**
 
 | Field | Value |
 |-------|-------|
-| Mass | 1 |
-| Drag | 0.3 |
-| Angular Drag | 0.05 |
-| Use Gravity | checked |
-| Is Kinematic | unchecked |
-| Collision Detection | Discrete |
-
-**Prefabs that need Rigidbody added:**
-- `Assets/App/Prefabs/Rocks/World_Small_Rock_HardRock_13 Variant.prefab`
-- `Assets/App/Prefabs/Mushrooms/World_Mushroom_PT_Caesars_Mushroom_01 Variant.prefab`
-- `Assets/App/Prefabs/Sticks/World_Branch_01 Variant.prefab`
-
-How to add: open the prefab → select root GameObject → Add Component → Physics → Rigidbody → set values above → Ctrl+S.
+| Can Push | ✅ |
+| Push Layers | Default |
+| Strength | 2.5 |
 
 ---
 
-## Files to Modify
+## Inspector-Tunable Settings (InventorySystem on PlayerCapsule)
 
-| File | Change |
-|------|--------|
-| `Assets/Scripts/Resource/ResourceNode.cs` | Add `public void SetQuantity(int qty) => quantity = qty;` |
-| `Assets/Scripts/Inventory/InventorySystem.cs` | Add `RequestDropSlotItem(int slotIndex, bool isHotbar)` and `GetDropSpawnPosition()` |
-| `Assets/Scripts/UI/Inventory/InventorySlotUI.cs` | Modify `OnEndDrag()` to detect world drop and call `RequestDropSlotItem` |
+| Field | Default | Effect |
+|-------|---------|--------|
+| Drop Max Distance | 2.5 m | XZ clamp radius for spawn position |
+| Drop Angular Drag | 5 | Higher = items stop rolling sooner |
 
 ---
 
-## Key Code to Add
+## Key Files
 
-### ResourceNode.cs — new method
-
-```csharp
-public void SetQuantity(int qty) => quantity = qty;
-```
-
-### InventorySystem.cs — new methods
-
-```csharp
-public void RequestDropSlotItem(int slotIndex, bool isHotbar)
-{
-    ItemStack stack = Data.GetSlot(slotIndex, isHotbar);
-    if (stack.IsEmpty) return;
-    if (!_itemRegistry.TryGetById(stack.ItemId, out ItemDefinition def)) return;
-    if (!def.IsDroppable || def.WorldPrefab == null) return;
-
-    Data.TryRemoveItem(slotIndex, isHotbar, stack.Quantity);
-
-    Vector3 spawnPos = GetDropSpawnPosition();
-    GameObject dropped = Object.Instantiate(def.WorldPrefab, spawnPos, Random.rotation);
-
-    if (dropped.TryGetComponent(out ResourceNode node))
-        node.SetQuantity(stack.Quantity);
-
-    if (dropped.TryGetComponent(out Rigidbody rb))
-    {
-        Vector3 throwDir = transform.forward + Vector3.up * 0.5f;
-        rb.AddForce(throwDir.normalized * 3f, ForceMode.Impulse);
-    }
-}
-
-private Vector3 GetDropSpawnPosition()
-{
-    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-    if (Physics.Raycast(ray, out RaycastHit hit, 20f))
-        return hit.point + Vector3.up * 0.3f;
-
-    return transform.position + transform.forward * 1.5f + Vector3.up * 0.5f;
-}
-```
-
-Note: verify `_itemRegistry` is already a `[SerializeField] private ItemRegistry` on `InventorySystem`. If not, add it and wire it in the PlayerCapsule prefab Inspector.
-
-### InventorySlotUI.cs — modified OnEndDrag
-
-Replace the current `OnEndDrag` body with:
-
-```csharp
-public void OnEndDrag(PointerEventData eventData)
-{
-    bool dragWasConsumed = !InventoryDragController.Instance.IsDragging;
-
-    InventoryDragController.Instance.EndDrag();
-    _iconImage.color = new Color(1, 1, 1, 1); // restore ghost opacity
-
-    if (!dragWasConsumed && !EventSystem.current.IsPointerOverGameObject())
-        InventorySystem.LocalPlayer.RequestDropSlotItem(_slotIndex, _isHotbarSlot);
-}
-```
-
-Confirm `_slotIndex` and `_isHotbarSlot` match the actual private field names in `Initialize()`.
+| File | Role |
+|------|------|
+| `Assets/Scripts/Inventory/InventorySystem.cs` | Core drop logic: `RequestDropActiveItem`, `RequestDropSlotItem`, `DropFromSlot`, `GetDropSpawnPosition`, `ClampDropPoint`, `SpawnQuantityLabel` |
+| `Assets/Scripts/World/ItemDropLabel.cs` | Billboard MonoBehaviour for the quantity label |
+| `Assets/Scripts/UI/Inventory/WorldDropZone.cs` | Full-screen IDropHandler — drag-to-world entry point |
+| `Assets/Scripts/UI/Inventory/InventoryDragController.cs` | Drag state + `TryConsumeDrag()` |
+| `Assets/Scripts/Inventory/InventoryInputHandler.cs` | Q key → `RequestDropActiveItem()` |
+| `Assets/Scripts/Resource/ResourceNode.cs` | `SetQuantity(int)` stamps qty on spawned clone |
+| `Assets/StarterAssets/…/BasicRigidBodyPush.cs` | Player push — enable on PlayerCapsule |
 
 ---
 
 ## Adding a New Droppable Item
 
-1. Create the world prefab (see `adding-pickup-items.md`)
-2. Add a Rigidbody with the standard settings from this doc
-3. Set `ItemDefinition.WorldPrefab` to that prefab
-4. Set `ItemDefinition.IsDroppable = true`
-5. Done — the drop system handles it automatically
+1. Create world prefab (see `adding-pickup-items.md`) — **no Rigidbody**
+2. Assign `ItemDefinition.WorldPrefab` **from the Project window** (Hierarchy drag stores a Component ref, which breaks `Instantiate`)
+3. Set `ItemDefinition.IsDroppable = true` (default)
+4. Done — everything else is automatic
+
+## One-Time Inspector Setup
+
+| What | Where | Value |
+|------|-------|-------|
+| `InventorySystem._itemRegistry` | PlayerCapsule → InventorySystem | `Assets/App/Items/ItemRegistry.asset` |
+| `ItemDefinition.WorldPrefab` (each SO) | Each asset in `Assets/App/Items/` | Project window drag |
+| `BasicRigidBodyPush` | PlayerCapsule | Can Push ✅, Layers = Default, Strength = 2.5 |
+| `WorldDropZone` | InventoryUI prefab child (full-stretch, alpha 0, Raycast ON, index 0) | Add `WorldDropZone` component |
 
 ---
 
 ## Testing
 
-1. Enter Play mode
-2. Pick up any item (walk near it, press E)
-3. Drag the item's slot icon outside the inventory panel into the game viewport
-4. **Expected:** item disappears from slot; world object spawns at ground under cursor and falls with gravity
-5. Walk up to the dropped item and press E
-6. **Expected:** item returns to inventory with correct quantity
-7. Test with a stack (qty > 1) — confirm full stack is recovered, not just 1
+1. Pick up a stack of 5 rocks → press **Q** five times → each press drops 1, slot empties after 5
+2. Pick up 5 rocks → drag slot to game viewport → single mesh drops with **"5"** label floating above
+3. Drop a qty-1 item by drag → no label
+4. Walk into a dropped item → it slides away
+5. Press E near any dropped item → correct quantity restored to inventory

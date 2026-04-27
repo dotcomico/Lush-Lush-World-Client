@@ -154,7 +154,8 @@ To run the game, press **Play** in the Unity Editor with `SampleScene` open (`As
 - Mobile input scaffolding: virtual joystick + buttons wired to StarterAssetsInputs
 - Items defined: SmallRock, Mushroom, Branch (ItemDefinition ScriptableObjects)
 
-**Not yet implemented:** crafting, building, farming, enemies/combat, day-night cycle, NPC/AI, dialogue, save/load, multiplayer networking.
+**Not yet implemented:** crafting, building, farming, combat (weapons/ranged), dialogue, save/load, multiplayer networking.
+**Partially implemented:** enemy system (scripts complete — prefabs + NavMesh bake pending user setup).
 
 ## Conventions
 
@@ -203,23 +204,26 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Prefabs: `Assets/App/Prefabs/Rocks/` (variants), `Assets/App/Prefabs/Mushrooms/` (variants), `Assets/App/Prefabs/Sticks/` (variants)
 - Docs: `Assets/Docs/terrain-tree-pickup-system.md`, `../Docs/adding-pickup-items.md`
 
-### Inventory Drop System (drag slot outside UI → spawn world item with gravity)
+### Inventory Drop System
 - Scripts:
-  - `Assets/Scripts/Inventory/InventorySystem.cs` — `RequestDropSlotItem(int, bool)`, `RequestDropActiveItem()`, `GetDropSpawnPosition()`
-  - `Assets/Scripts/UI/Inventory/WorldDropZone.cs` — full-screen IDropHandler behind all panels; **primary** world-drop trigger for drag-to-drop
-  - `Assets/Scripts/UI/Inventory/InventorySlotUI.cs` — `OnEndDrag` only cancels visual; drop logic moved to WorldDropZone
+  - `Assets/Scripts/Inventory/InventorySystem.cs` — `RequestDropActiveItem()` (Q, qty 1), `RequestDropSlotItem(int, bool)` (drag, full stack), private `DropFromSlot(int, bool, int)` (shared impl), `GetDropSpawnPosition()`, `ClampDropPoint()`, `SpawnQuantityLabel()`
+  - `Assets/Scripts/World/ItemDropLabel.cs` — billboard `TextMeshPro` label on dropped stacks (qty > 1 only)
+  - `Assets/Scripts/UI/Inventory/WorldDropZone.cs` — full-screen IDropHandler behind all panels; sole entry point for drag-to-world drop
+  - `Assets/Scripts/UI/Inventory/InventorySlotUI.cs` — `OnEndDrag` cancels visual only; drop logic is in WorldDropZone
   - `Assets/Scripts/Resource/ResourceNode.cs` — `SetQuantity(int)` stamps quantity on spawned clone
-  - `Assets/Scripts/Inventory/InventoryInputHandler.cs` — Q key calls `RequestDropActiveItem()` (drops selected hotbar slot)
-- Prefabs: world prefabs in `Assets/App/Prefabs/Rocks|Mushrooms|Sticks/` — **no Rigidbody on prefab**; Rigidbody + MeshCollider.convex added dynamically by `RequestDropSlotItem` on the clone only
-- UI setup: `InventoryUI.prefab` needs a **WorldDropZone** child — full-stretch Image (alpha=0, RaycastTarget=ON), sibling index 0 (behind all panels), with `WorldDropZone` component attached
-- Inspector setup (one-time, must be done manually):
-  - `InventorySystem._itemRegistry` → drag `Assets/App/Items/ItemRegistry.asset` onto PlayerCapsule → InventorySystem in the Inspector
-  - Each `ItemDefinition.WorldPrefab` → **must be assigned from the Project window** (not from Hierarchy) to avoid a Component reference that breaks `Instantiate`
-- Data: `ItemDefinition.WorldPrefab` (GameObject prefab), `ItemDefinition.IsDroppable` (default true)
+  - `Assets/Scripts/Inventory/InventoryInputHandler.cs` — Q key → `RequestDropActiveItem()` → drops exactly 1 item
+- Prefabs: world prefabs in `Assets/App/Prefabs/Rocks|Mushrooms|Sticks/` — **no Rigidbody on prefab**; Rigidbody + MeshCollider.convex added dynamically on clone only
+- UI setup: `InventoryUI.prefab` needs a **WorldDropZone** child — full-stretch Image (alpha=0, RaycastTarget=ON), sibling index 0, with `WorldDropZone` component
+- Inspector setup (one-time):
+  - `InventorySystem._itemRegistry` → `Assets/App/Items/ItemRegistry.asset` on PlayerCapsule → InventorySystem
+  - Each `ItemDefinition.WorldPrefab` → assign **from Project window** (not Hierarchy) to avoid Component ref breaking `Instantiate`
+  - `BasicRigidBodyPush` on PlayerCapsule → Can Push ✅, Push Layers = Default, Strength = 2.5 (enables player to push dropped items)
+- Inspector-tunable on InventorySystem: `Drop Max Distance` (spawn radius clamp, default 2.5 m), `Drop Angular Drag` (rolling damping, default 5)
+- Data: `ItemDefinition.WorldPrefab` (GameObject), `ItemDefinition.IsDroppable` (default true)
 - Docs: `Assets/Docs/inventory-drop-system.md`, `../Docs/adding-pickup-items.md`
-- Key drop (Q): `InventoryInputHandler.Update` → `RequestDropActiveItem` → `RequestDropSlotItem(SelectedHotbarSlot, isHotbar:true)`
-- Drag drop: `WorldDropZone.OnDrop` → `TryConsumeDrag` → `RequestDropSlotItem`
-- Spawn: camera raycast through `Mouse.current.position` to find ground; fallback = `player.forward * 1.5f + up * 0.5f`
+- Q key: `InventoryInputHandler` → `RequestDropActiveItem` → `DropFromSlot(slot, hotbar, qty:1)` — always 1 unit regardless of stack size
+- Drag drop: `WorldDropZone.OnDrop` → `TryConsumeDrag` → `RequestDropSlotItem` → `DropFromSlot(slot, hotbar, qty:fullStack)`
+- Spawn: camera raycast through `Mouse.current.position` → clamped to `_dropMaxDistance` XZ radius from player; fallback = `player.forward * 1.5f + up * 0.3f`
 
 ### Mobile Input
 - Scripts: `Assets/StarterAssets/Mobile/Scripts/UICanvasControllerInput.cs`, `Assets/Scripts/UI/MobileInventoryButton.cs`, `Assets/Scripts/UI/MobilePickupButton.cs`
@@ -244,6 +248,23 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Hunger drains passively (`_passiveHungerDrain` /sec); doubles when `StarterAssetsInputs.sprint == true`; at 0 health drains at `_starvationDamageRate` /sec
 - Setup tool: `Lush World > Setup > Add Player Stats & Bars` (run once, idempotent)
 - Docs: `../Docs/health-hunger-system.md`
+
+### Enemy System
+- Scripts:
+  - `Assets/Scripts/Enemies/EnemyDefinition.cs` — ScriptableObject config (health, speed, radii, damage, day/night aggression flag)
+  - `Assets/Scripts/Enemies/EnemyBase.cs` — health, TakeDamage, Die; fires static `OnEnemyDied(EnemyBase)`
+  - `Assets/Scripts/Enemies/EnemyAI.cs` — state machine (Patrol/Chase/Attack/Dead) + NavMeshAgent; ThinkLoop coroutine every 0.25 s; subscribes to DayNightCycle events for live aggression gating
+  - `Assets/Scripts/Enemies/Attacks/ZombieSnailAttack.cs` — touch melee; place on child `AttackZone` GO with SphereCollider (trigger); OnTriggerStay → `PlayerStats.TakeDamage` on cooldown
+  - `Assets/Scripts/Enemies/EnemySpawner.cs` — day/night-aware spawner; `maxEnemiesDay` / `maxEnemiesNight` caps; reacts to `DayNightCycle.OnNightStarted` / `OnDayStarted`
+- Prefabs (to be created by user): `Assets/App/Prefabs/Enemies/ZombieSnailMan.prefab`, `Assets/App/Prefabs/Enemies/ZombieSnailWoman.prefab`
+- Definition assets (to be created by user): `Assets/App/Enemies/Definitions/ZombieSnailDefinition.asset`
+- Models: `Assets/App/Enemies/Zombie_Snail_Man.glb`, `Assets/App/Enemies/Zombie_Snail_Woman.glb`
+- Static events: `EnemyBase.OnEnemyDied(EnemyBase)` — fires before GO is deactivated
+- Static damage entry: `PlayerStats.TakeDamage(float)` (existing) — called by ZombieSnailAttack
+- Day/night integration: `DayNightCycle.OnNightStarted` / `OnDayStarted` (existing static events) — consumed by EnemyAI + EnemySpawner
+- EnemyDefinition `isAlwaysAggressive = false` (default): passive during day, aggressive at night; set to true on SO asset for daytime testing
+- Prefab structure: root has NavMeshAgent + CapsuleCollider + EnemyBase + EnemyAI; child `AttackZone` GO has SphereCollider (trigger) + ZombieSnailAttack
+- Docs: `../Docs/enemy-system.md`
 
 ### Dev / Editor Tools
 - Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`, `Assets/Scripts/Editor/StatsSetupTool.cs`
