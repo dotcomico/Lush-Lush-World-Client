@@ -26,6 +26,6 @@ namespace LushWorld.Enemies
 
         [Header("Behavior")]
         [Tooltip("If true, chases and attacks regardless of time of day. If false, only aggressive at night (GDD default).")]
-        public bool isAlwaysAggressive = false;
+        public bool isAlwaysAggressive = true;
     }
 }
