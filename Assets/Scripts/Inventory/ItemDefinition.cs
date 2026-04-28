@@ -11,6 +11,7 @@ namespace LushWorld.Inventory
         [field: SerializeField] public int MaxStackSize { get; private set; } = 64;
         [field: SerializeField] public bool IsDroppable { get; private set; } = true;
         [field: SerializeField] public GameObject WorldPrefab { get; private set; }
+        [field: SerializeField] public float HeldScale { get; private set; } = 1f;
         [field: SerializeField] public float FoodValue { get; private set; }  // 0 = not food; positive = hunger restored on consume
     }
 }

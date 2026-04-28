@@ -208,6 +208,13 @@ Quick-reference for every implemented feature. Check this before searching. Upda
   - `InventoryUI > BackpackRoot > BackpackPanel` (24 backpack slots)
 - Docs: none yet
 
+### Held Item View (Minecraft-style)
+- Script: `Assets/Scripts/Player/HeldItemView.cs` — on `PlayerCapsule`; subscribes to `InventoryData.OnSelectedHotbarSlotChanged` + `OnHotbarSlotChanged`; instantiates `ItemDefinition.WorldPrefab` as a child of `HeldItemAnchor`; disables colliders + makes Rigidbodies kinematic on the clone so it never blocks gameplay
+- Scene setup: `HeldItemAnchor` — empty child of `MainCamera` inside `PlayerRig.prefab`; local position `(0.25, -0.22, 0.55)`, local rotation `(10, 335, 0)` — controls where the item appears on screen (bottom-right, like Minecraft)
+- Inspector wiring on `HeldItemView`: `_itemRegistry` → `Assets/App/Items/ItemRegistry.asset` (**not** `Assets/Scripts/Inventory/ItemRegistry.asset`); `_heldItemAnchor` → `HeldItemAnchor` (child of `MainCamera`)
+- Per-item scale: `ItemDefinition.HeldScale` (float, default `1`) — set on each `.asset` to control how large the item appears in hand (e.g. SmallRock `0.15`, Mushroom `0.25`, Branch `0.2`)
+- Docs: `../Docs/adding-pickup-items.md` (Step 3 — HeldScale field)
+
 ### Settings UI
 - Scripts: `Assets/Scripts/UI/Settings/SettingsUIController.cs`
 - Prefabs: `Assets/App/Prefabs/SettingsUI.prefab`
@@ -295,12 +302,12 @@ Quick-reference for every implemented feature. Check this before searching. Upda
   - `Assets/Scripts/Utilities/IInteractable.cs` — interface (`InteractionLabel`, `Interact(GameObject)`) for any E-key world interactable; implemented by `BlueprintInstance` (Subtask 4); used by `ResourceInteractor`
   - `Assets/Scripts/Crafting/RecipeDefinition.cs` — ScriptableObject; fields: `RecipeId`, `DisplayName`, `Category` (enum), `Ingredients` (List<Ingredient>), `OutputItemId`, `OutputQuantity`; nested `Ingredient` struct `{ string ItemId; int Quantity }`
   - `Assets/Scripts/Crafting/RecipeRegistry.cs` — ScriptableObject singleton; `List<RecipeDefinition>`, dictionary lookup via `TryGetRecipe(id)`
-  - `Assets/Scripts/Crafting/CraftingSystem.cs` — MonoBehaviour on `PlayerCapsule`; static `LocalPlayer`; `RequestCraft(recipeId, qty)` consumes ingredients + calls `InventorySystem.GiveItem`; `GetMaxCraftable(recipe)` + `CountItem(itemId)` are public helpers; static events `OnCraftSuccess`, `OnCraftFailed`, `OnCraftingMenuToggleRequested`; C key → `ToggleCraftingMenu()` (called from `InventoryInputHandler`)
-  - `Assets/Scripts/UI/Crafting/CraftingUI.cs` — MonoBehaviour on `CraftingMenuUI.prefab` (nested in PlayerRig); subscribes to `CraftingSystem.OnCraftingMenuToggleRequested`; instantiates `CraftingRecipeRowUI` prefab per recipe; refreshes rows on slot changes via `InventoryData` events
+  - `Assets/Scripts/Crafting/CraftingSystem.cs` — MonoBehaviour on `PlayerCapsule`; static `LocalPlayer`; `RequestCraft(recipeId, qty)` consumes ingredients + calls `InventorySystem.GiveItem`; `GetMaxCraftable(recipe)` + `CountItem(itemId)` are public helpers; static events `OnCraftSuccess`, `OnCraftFailed`, `OnCraftingMenuToggleRequested`; **G** key → `ToggleCraftingMenu()` (called from `InventoryInputHandler.Update`)
+  - `Assets/Scripts/UI/Crafting/CraftingUI.cs` — MonoBehaviour on `CraftingMenuUI.prefab` (nested in PlayerRig); subscribes to `CraftingSystem.OnCraftingMenuToggleRequested`; instantiates `CraftingRecipeRowUI` prefab per recipe; refreshes rows on slot changes via `InventoryData` events; on open: unlocks cursor, zeros `StarterAssetsInputs.look/move`, raises Canvas `sortingOrder=150`; spawns full-screen transparent backdrop Button on `Start()` — clicking outside the panel calls `CloseCraftingMenu()`
   - `Assets/Scripts/UI/Crafting/CraftingRecipeRowUI.cs` — MonoBehaviour on row prefab; shows recipe name, ingredient counts (have/need), max craftable; Craft button calls `CraftingSystem.LocalPlayer.RequestCraft`
 - Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — C key → `CraftingSystem.LocalPlayer?.ToggleCraftingMenu()`
 - Assets (user creates): `Assets/App/Crafting/RecipeRegistry.asset`; one `RecipeDefinition` asset per recipe under `Assets/App/Crafting/Recipes/`
-- Prefabs (user creates): `CraftingMenuUI.prefab` (Canvas, Screen Space Overlay) nested inside `PlayerRig.prefab`; row prefab with TMP_Text (name, ingredients, maxCraftable) + Button
+- Prefabs: `Assets/App/Prefabs/CraftingMenuUI.prefab` (Canvas, Screen Space Overlay, **Scale With Screen Size 1920×1080 match=0.5**, sortingOrder=150) nested inside `PlayerRig.prefab`; Panel anchored 10%–90% width × 17.5%–82.5% height (centered, screen-proportional); Content top-stretched inside Panel with VerticalLayoutGroup; `Assets/App/Prefabs/UI/CraftingRowPrefab.prefab` — HorizontalLayoutGroup row, 60px height, auto-size TMP texts 14–28pt, Craft Button
 - Inspector wiring on `PlayerCapsule`: `CraftingSystem._recipeRegistry` → `RecipeRegistry.asset`; `CraftingUI._recipeRegistry`, `_itemRegistry`, `_panel`, `_rowContainer`, `_rowPrefab`
 - Docs: `../Docs/crafting-building-system.md`
 

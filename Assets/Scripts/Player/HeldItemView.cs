@@ -71,7 +71,7 @@ namespace LushWorld.Player
             _currentHeldObject = Instantiate(def.WorldPrefab, _heldItemAnchor);
             _currentHeldObject.transform.localPosition = Vector3.zero;
             _currentHeldObject.transform.localRotation = Quaternion.identity;
-            _currentHeldObject.transform.localScale = Vector3.one;
+            _currentHeldObject.transform.localScale = Vector3.one * def.HeldScale;
 
             // Held visuals must not block gameplay — disable physics on the clone
             foreach (var col in _currentHeldObject.GetComponentsInChildren<Collider>(true))
