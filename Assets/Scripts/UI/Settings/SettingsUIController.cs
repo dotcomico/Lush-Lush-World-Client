@@ -17,6 +17,7 @@ namespace LushWorld.UI
     /// Auto-discovers SlideController, CameraViewController, FirstPersonController,
     /// ThirdPersonOrbitController from the scene.
     /// </summary>
+    [RequireComponent(typeof(UnityEngine.UI.GraphicRaycaster))]
     public class SettingsUIController : MonoBehaviour
     {
         // ── Discovered scene references ───────────────────────────────────────
@@ -57,6 +58,11 @@ namespace LushWorld.UI
 
         private void Awake()
         {
+            if (GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
+                gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            var _canvas = GetComponent<Canvas>();
+            if (_canvas != null) _canvas.sortingOrder = 200;
+
             _slide        = FindFirstObjectByType<SlideController>();
             _camView      = FindFirstObjectByType<CameraViewController>();
             _fpc          = FindFirstObjectByType<FirstPersonController>();

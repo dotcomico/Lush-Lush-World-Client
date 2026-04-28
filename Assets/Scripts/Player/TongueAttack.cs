@@ -1,3 +1,4 @@
+using UnityEngine.EventSystems;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -46,6 +47,7 @@ namespace LushWorld.Player
 
         private void OnAttackPerformed(InputAction.CallbackContext ctx)
         {
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
             if (_isAttacking) return;
             if (Time.time - _lastAttackTime < _cooldown) return;
             RequestAttack();
