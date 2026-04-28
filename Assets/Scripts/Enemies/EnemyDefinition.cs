@@ -13,7 +13,8 @@ namespace LushWorld.Enemies
 
         [Header("Movement")]
         public float moveSpeed = 2f;
-        public float patrolRadius = 5f;
+        [Tooltip("How far an enemy wanders from its spawn position while patrolling.")]
+        public float patrolRadius = 15f;
 
         [Header("Detection")]
         public float detectionRadius = 8f;

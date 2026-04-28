@@ -339,10 +339,6 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 0.408
       objectReference: {fileID: 0}
-    - target: {fileID: 724959463867528224, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 2094205086018099532, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_Type
       value: 3
@@ -378,10 +374,6 @@ PrefabInstance:
     - target: {fileID: 2911686942251196249, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3013875331541504182, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
-      propertyPath: m_Enabled
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3110893317080832184, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: _healthFill

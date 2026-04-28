@@ -172,8 +172,17 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 
 ### Player Movement
 - Scripts: `Assets/StarterAssets/FirstPersonController/Scripts/FirstPersonController.cs`, `Assets/Scripts/Player/SlideController.cs`
-- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` — top-level children: MainCamera, PlayerFollowCamera, PlayerCapsule (holds FirstPersonController + SlideController), UI_Canvas_StarterAssetsInputs_Joysticks, UI_EventSystem, CameraViewManager, ThirdPerson_VirtualCamera, Isometric_VirtualCamera, InventoryUI, SettingsUI
+- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` — top-level children: MainCamera, PlayerFollowCamera, PlayerCapsule (holds FirstPersonController + SlideController + PlayerStats + InventorySystem + SlideController._visualModel → SnailBody), UI_Canvas_StarterAssetsInputs_Joysticks, UI_EventSystem, CameraViewManager, ThirdPerson_VirtualCamera, Isometric_VirtualCamera, InventoryUI, SettingsUI
 - Docs: `../Docs/shell-slide-system.md`
+
+### Player Body (SnailBody)
+- Prefabs: `Assets/App/Prefabs/Player/SnailBody.prefab` — nested inside `PlayerCapsule.prefab`; contains `body_1` (body_1.glb) + `shell_1` (shell_1.glb)
+- Models: `Assets/App/Models/Snail/Bodies/body_1.glb`, `Assets/App/Models/Snail/Shells/shell_1.glb` — both static meshes, no bones
+- Hierarchy: `PlayerRig > PlayerCapsule > SnailBody > [body_1, shell_1]`
+- The original `Capsule` GO (physics capsule) has its MeshRenderer disabled in PlayerRig — SnailBody is the only visible snail mesh
+- `SlideController._visualModel` points to SnailBody (rewired by extraction script)
+- Future body features (tongue, accessories) go as children inside `SnailBody.prefab`
+- Docs: `../Docs/tongue-attack-system.md` (architecture decision section)
 
 ### Camera System
 - Scripts: `Assets/Scripts/Camera/CameraViewController.cs`, `Assets/Scripts/Camera/ThirdPersonOrbitController.cs`
@@ -253,18 +262,27 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Scripts:
   - `Assets/Scripts/Enemies/EnemyDefinition.cs` — ScriptableObject config (health, speed, radii, damage, day/night aggression flag)
   - `Assets/Scripts/Enemies/EnemyBase.cs` — health, TakeDamage, Die; fires static `OnEnemyDied(EnemyBase)`
-  - `Assets/Scripts/Enemies/EnemyAI.cs` — state machine (Patrol/Chase/Attack/Dead) + NavMeshAgent; ThinkLoop coroutine every 0.25 s; subscribes to DayNightCycle events for live aggression gating
+  - `Assets/Scripts/Enemies/EnemyAI.cs` — state machine (Patrol/Chase/Attack/Dead) + NavMeshAgent; ThinkLoop coroutine every 0.25 s; patrol runs even when player reference is null; subscribes to DayNightCycle events for live aggression gating
   - `Assets/Scripts/Enemies/Attacks/ZombieSnailAttack.cs` — touch melee; place on child `AttackZone` GO with SphereCollider (trigger); OnTriggerStay → `PlayerStats.TakeDamage` on cooldown
-  - `Assets/Scripts/Enemies/EnemySpawner.cs` — day/night-aware spawner; `maxEnemiesDay` / `maxEnemiesNight` caps; reacts to `DayNightCycle.OnNightStarted` / `OnDayStarted`
+  - `Assets/Scripts/Enemies/EnemySpawner.cs` — proximity-based spawner; per-spawn-point activation radius (not spawner position); `maxEnemiesDay` / `maxEnemiesNight` caps; scatter radius prevents enemies piling on same spot; reacts to `DayNightCycle.OnNightStarted` / `OnDayStarted`; lazy player lookup avoids Start() race condition
 - Prefabs (to be created by user): `Assets/App/Prefabs/Enemies/ZombieSnailMan.prefab`, `Assets/App/Prefabs/Enemies/ZombieSnailWoman.prefab`
 - Definition assets (to be created by user): `Assets/App/Enemies/Definitions/ZombieSnailDefinition.asset`
 - Models: `Assets/App/Enemies/Zombie_Snail_Man.glb`, `Assets/App/Enemies/Zombie_Snail_Woman.glb`
 - Static events: `EnemyBase.OnEnemyDied(EnemyBase)` — fires before GO is deactivated
 - Static damage entry: `PlayerStats.TakeDamage(float)` (existing) — called by ZombieSnailAttack
 - Day/night integration: `DayNightCycle.OnNightStarted` / `OnDayStarted` (existing static events) — consumed by EnemyAI + EnemySpawner
-- EnemyDefinition `isAlwaysAggressive = false` (default): passive during day, aggressive at night; set to true on SO asset for daytime testing
-- Prefab structure: root has NavMeshAgent + CapsuleCollider + EnemyBase + EnemyAI; child `AttackZone` GO has SphereCollider (trigger) + ZombieSnailAttack
+- EnemyDefinition `isAlwaysAggressive = true` (default): always chases; set to false for passive-by-day behaviour
+- Prefab structure: root has NavMeshAgent + CapsuleCollider + EnemyBase + EnemyAI; child `AttackZone` GO has SphereCollider (trigger) + ZombieSnailAttack; set NavMeshAgent `Base Offset` = half model height to prevent terrain burial
 - Docs: `../Docs/enemy-system.md`
+
+### Tongue Attack
+- Script: `Assets/Scripts/Player/TongueAttack.cs` — on `PlayerCapsule`; subscribes to `PlayerInput.actions["Player/Attack"].performed`; coroutine-driven extend/detect/retract cycle; `RequestAttack()` is the NGO-ready entry point (Phase 2: `[ServerRpc]`)
+- Inspector refs (set on PlayerCapsule in PlayerRig.prefab): `_tonguePivot` → `SnailBody/TonguePivot`, `_tongueTransform` → `SnailBody/TonguePivot/Tongue`
+- Prefab: `Assets/App/Prefabs/Player/SnailBody.prefab` — `TonguePivot` (empty GO, identity rot) + `Tongue` (Capsule primitive, scale `0.04/0.08/0.04`, rot `90,0,0`, no CapsuleCollider, pink Tongue.mat, inactive at rest)
+- Material: `Assets/App/My Materials/Tongue.mat` (URP Lit, pink/red)
+- Hit detection: `Physics.OverlapSphere` at full extension — one call per swing; `GetComponentInParent<EnemyBase>()` handles child colliders
+- Enemy layer TODO: `_hitLayers = Everything` until Layer 9 `Enemy` is created and assigned to enemy prefabs
+- Docs: `../Docs/tongue-attack-system.md`
 
 ### Dev / Editor Tools
 - Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`, `Assets/Scripts/Editor/StatsSetupTool.cs`

@@ -14,6 +14,10 @@ namespace LushWorld.Enemies
         [SerializeField] private int _maxEnemiesDay   = 3;
         [SerializeField] private int _maxEnemiesNight = 6;
 
+        [Header("Spawn Scatter")]
+        [Tooltip("Each enemy spawns at a random point within this radius of the chosen spawn point. Prevents enemies piling up.")]
+        [SerializeField] private float _spawnScatterRadius = 10f;
+
         [Header("Proximity Activation")]
         [Tooltip("A spawn point activates when the player enters this radius around it.")]
         [SerializeField] private float _activationRadius   = 50f;
@@ -189,8 +193,11 @@ namespace LushWorld.Enemies
 
             if (prefab == null) return false;
 
-            Vector3 spawnPos = point.position;
-            if (NavMesh.SamplePosition(point.position, out NavMeshHit hit, 3f, NavMesh.AllAreas))
+            Vector3 scatter = Random.insideUnitSphere * _spawnScatterRadius;
+            scatter.y = 0f;
+            Vector3 candidate = point.position + scatter;
+            Vector3 spawnPos = candidate;
+            if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, Mathf.Max(3f, _spawnScatterRadius), NavMesh.AllAreas))
                 spawnPos = hit.position;
 
             GameObject instance = Instantiate(prefab, spawnPos, point.rotation);
@@ -210,6 +217,8 @@ namespace LushWorld.Enemies
             foreach (var pt in _spawnPoints)
             {
                 if (pt == null) continue;
+                Gizmos.color = new Color(0.2f, 1f, 0.2f, 0.25f);
+                Gizmos.DrawSphere(pt.position, _spawnScatterRadius);
                 Gizmos.color = new Color(1f, 0.8f, 0f, 0.2f);
                 Gizmos.DrawSphere(pt.position, _activationRadius);
                 Gizmos.color = new Color(1f, 0.2f, 0f, 0.1f);

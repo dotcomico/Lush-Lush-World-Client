@@ -28,7 +28,9 @@ namespace LushWorld.Camera
         [Header("Player")]
         [Tooltip("The FirstPersonController on the PlayerCapsule")]
         public FirstPersonController PlayerController;
-        [Tooltip("All mesh renderers that should be hidden in first-person view")]
+        [Tooltip("Root of the snail body visual (SnailBody prefab). All Renderers under it are shown/hidden automatically.")]
+        public Transform PlayerBodyRoot;
+        [Tooltip("Additional individual renderers to show/hide (legacy — prefer PlayerBodyRoot)")]
         public Renderer[] PlayerMeshRenderers;
 
         // ── Third Person Orbit ────────────────────────────────────────────────
@@ -152,9 +154,14 @@ namespace LushWorld.Camera
 
         private void SetMeshVisibility(bool visible)
         {
-            foreach (var r in PlayerMeshRenderers)
-                if (r != null)
+            // Primary path: toggle all renderers under the snail body root.
+            if (PlayerBodyRoot != null)
+                foreach (var r in PlayerBodyRoot.GetComponentsInChildren<Renderer>(includeInactive: true))
                     r.enabled = visible;
+
+            // Legacy fallback: explicit renderer array (kept for backward compat).
+            foreach (var r in PlayerMeshRenderers)
+                if (r != null) r.enabled = visible;
         }
 
         /// <summary>

@@ -13,6 +13,7 @@ namespace StarterAssets
 		public bool jump;
 		public bool sprint;
 		public bool slide;
+		[HideInInspector] public bool attack;
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -44,6 +45,8 @@ namespace StarterAssets
 		{
 			SprintInput(value.isPressed);
 		}
+
+		public void OnAttack(InputValue value) => AttackInput(value.isPressed);
 #endif
 
 
@@ -66,6 +69,8 @@ namespace StarterAssets
 		{
 			sprint = newSprintState;
 		}
+
+		public void AttackInput(bool newAttackState) { attack = newAttackState; }
 
 		// Fires once per press (rising edge) — SlideController subscribes for mobile input
 		public event System.Action SlidePerformed;
