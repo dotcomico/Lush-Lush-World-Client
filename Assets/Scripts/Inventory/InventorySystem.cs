@@ -189,14 +189,26 @@ namespace LushWorld.Inventory
 
             var go = new GameObject("QuantityLabel");
             go.transform.SetParent(parent.transform, false);
-            go.transform.localPosition = Vector3.up * 0.45f;
+
+            // Neutralize parent world scale so font renders at intended size regardless of prefab scale.
+            Vector3 ps = parent.transform.lossyScale;
+            go.transform.localScale = new Vector3(1f / ps.x, 1f / ps.y, 1f / ps.z);
+
+            // Sit the label just above the highest renderer bound — works for any prefab size.
+            float topY = parent.transform.position.y;
+            foreach (var r in parent.GetComponentsInChildren<Renderer>())
+                topY = Mathf.Max(topY, r.bounds.max.y);
+            go.transform.position = new Vector3(
+                parent.transform.position.x,
+                topY + 0.12f,
+                parent.transform.position.z);
 
             var tmp = go.AddComponent<TextMeshPro>();
-            tmp.text      = quantity.ToString();
-            tmp.fontSize  = 2.5f;
-            tmp.fontStyle = FontStyles.Bold;
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.color     = Color.white;
+            tmp.text         = quantity.ToString();
+            tmp.fontSize     = 2.5f;
+            tmp.fontStyle    = FontStyles.Bold;
+            tmp.alignment    = TextAlignmentOptions.Center;
+            tmp.color        = Color.white;
             tmp.outlineWidth = 0.25f;
             tmp.outlineColor = Color.black;
 
