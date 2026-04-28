@@ -222,7 +222,7 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Tech debt: `../Docs/TECH_DEBT.md` (3 items flagged)
 
 ### Resource Pickup
-- Scripts: `Assets/Scripts/Resource/TerrainResourceManager.cs`, `Assets/Scripts/Resource/ResourceNode.cs`, `Assets/Scripts/Resource/ResourceInteractor.cs`
+- Scripts: `Assets/Scripts/Resource/TerrainResourceManager.cs`, `Assets/Scripts/Resource/ResourceNode.cs`, `Assets/Scripts/Resource/ResourceInteractor.cs` — extended in Subtask 4 to also detect `IInteractable` in range (see Building System)
 - Prefabs: `Assets/App/Prefabs/Rocks/` (variants), `Assets/App/Prefabs/Mushrooms/` (variants), `Assets/App/Prefabs/Sticks/` (variants)
 - Docs: `Assets/Docs/terrain-tree-pickup-system.md`, `../Docs/adding-pickup-items.md`
 
@@ -300,7 +300,8 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 ### Crafting System
 - Scripts:
   - `Assets/Scripts/Utilities/IInteractable.cs` — interface (`InteractionLabel`, `Interact(GameObject)`) for any E-key world interactable; implemented by `BlueprintInstance` (Subtask 4); used by `ResourceInteractor`
-  - `Assets/Scripts/Crafting/RecipeDefinition.cs` — ScriptableObject; fields: `RecipeId`, `DisplayName`, `Category` (enum), `Ingredients` (List<Ingredient>), `OutputItemId`, `OutputQuantity`; nested `Ingredient` struct `{ string ItemId; int Quantity }`
+  - `Assets/Scripts/Data/Ingredient.cs` — shared `[Serializable] struct Ingredient { ItemId, Quantity }` in `LushWorld.Data`; used by both RecipeDefinition and BuildingDefinition
+  - `Assets/Scripts/Crafting/RecipeDefinition.cs` — ScriptableObject; fields: `RecipeId`, `DisplayName`, `Category` (enum), `Ingredients` (List<LushWorld.Data.Ingredient>), `OutputItemId`, `OutputQuantity`
   - `Assets/Scripts/Crafting/RecipeRegistry.cs` — ScriptableObject singleton; `List<RecipeDefinition>`, dictionary lookup via `TryGetRecipe(id)`
   - `Assets/Scripts/Crafting/CraftingSystem.cs` — MonoBehaviour on `PlayerCapsule`; static `LocalPlayer`; `RequestCraft(recipeId, qty)` consumes ingredients + calls `InventorySystem.GiveItem`; `GetMaxCraftable(recipe)` + `CountItem(itemId)` are public helpers; static events `OnCraftSuccess`, `OnCraftFailed`, `OnCraftingMenuToggleRequested`; **G** key → `ToggleCraftingMenu()` (called from `InventoryInputHandler.Update`)
   - `Assets/Scripts/UI/Crafting/CraftingUI.cs` — MonoBehaviour on `CraftingMenuUI.prefab` (nested in PlayerRig); subscribes to `CraftingSystem.OnCraftingMenuToggleRequested`; instantiates `CraftingRecipeRowUI` prefab per recipe; refreshes rows on slot changes via `InventoryData` events; on open: unlocks cursor, zeros `StarterAssetsInputs.look/move`, raises Canvas `sortingOrder=150`; spawns full-screen transparent backdrop Button on `Start()` — clicking outside the panel calls `CloseCraftingMenu()`
@@ -309,6 +310,24 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Assets (user creates): `Assets/App/Crafting/RecipeRegistry.asset`; one `RecipeDefinition` asset per recipe under `Assets/App/Crafting/Recipes/`
 - Prefabs: `Assets/App/Prefabs/CraftingMenuUI.prefab` (Canvas, Screen Space Overlay, **Scale With Screen Size 1920×1080 match=0.5**, sortingOrder=150) nested inside `PlayerRig.prefab`; Panel anchored 10%–90% width × 17.5%–82.5% height (centered, screen-proportional); Content top-stretched inside Panel with VerticalLayoutGroup; `Assets/App/Prefabs/UI/CraftingRowPrefab.prefab` — HorizontalLayoutGroup row, 60px height, auto-size TMP texts 14–28pt, Craft Button
 - Inspector wiring on `PlayerCapsule`: `CraftingSystem._recipeRegistry` → `RecipeRegistry.asset`; `CraftingUI._recipeRegistry`, `_itemRegistry`, `_panel`, `_rowContainer`, `_rowPrefab`
+- Docs: `../Docs/crafting-building-system.md`
+
+### Building System (Subtask 5 of 5 next — wire prefabs + NavMesh setup)
+- Scripts done:
+  - `Assets/Scripts/Building/BuildingDefinition.cs` — SO per piece: PieceId, DisplayName, Icon, PlacedPrefab, Cost, MaxHealth, SnapSize
+  - `Assets/Scripts/Building/BuildingRegistry.cs` — SO singleton; dictionary lookup by PieceId
+  - `Assets/Scripts/Building/BuildingSystem.cs` — MonoBehaviour on `PlayerCapsule`; states: Idle | PlacingGhost; `EnterPlacementMode(def)`, `CancelPlacement()`, `RequestPlaceBlueprint(groundPos,rot)`, `ToggleBuildingMenu()`; ghost follows cursor on ground layer raycast, grid-snapped; swaps sharedMaterials to red on invalid; B key via InventoryInputHandler; Y-offset fix: ghost lifted by `extents.y - (center.y - groundY)` so bottom is flush with ground; `_ghostGroundPosition` passed to `RequestPlaceBlueprint` (not ghost.transform.position) for NGO-safe ground-truth position
+  - `Assets/Scripts/Building/BlueprintInstance.cs` — MonoBehaviour + IInteractable on skeleton at spawn; `Init(def)` saves original materials (called before skeleton mat applied), adds SphereCollider trigger (radius = SnapSize * 1.2f); `RequestDeposit(itemId, qty)` validates inventory, removes items, tracks per-item deposits, calls `TryComplete()`; `TryComplete()` restores original materials, re-enables non-trigger colliders, adds `BuildingPiece`, fires `OnCompleted`; static events `OnInteracted`, `OnCompleted`; `Demolish()` destroys GO
+  - `Assets/Scripts/Building/BuildingPiece.cs` — MonoBehaviour on completed buildings; `Init(def)` sets MaxHealth; `TakeDamage(float)`, `Demolish()` refunds 50% of Cost via `InventorySystem.GiveItem`
+  - `Assets/Scripts/UI/Building/BuildingMenuUI.cs` — Canvas nested in PlayerRig; subscribes to `BuildingSystem.OnBuildingMenuToggleRequested`; cursor/backdrop pattern mirrors CraftingUI
+  - `Assets/Scripts/UI/Building/BuildingMenuPieceRowUI.cs` — row prefab; icon, name, cost, Select → `BuildingSystem.EnterPlacementMode`
+  - `Assets/Scripts/UI/Building/BlueprintDepositUI.cs` — Canvas nested in PlayerRig; subscribes to `BlueprintInstance.OnInteracted` / `OnCompleted`; auto-closes when player walks > 3.5 u from blueprint; cursor/backdrop pattern mirrors CraftingUI; `_itemRegistry` SerializeField resolves ingredient display names
+  - `Assets/Scripts/UI/Building/BlueprintDepositRowUI.cs` — row prefab per ingredient: name TMP, "X/Y" counter TMP, Deposit Button → `BlueprintInstance.RequestDeposit(itemId, 1)`
+- Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — B key added
+- Modified: `Assets/Scripts/Resource/ResourceInteractor.cs` — `FindNearestNode()` now also scans for `IInteractable`; IInteractable wins on tie; `UpdatePrompt()` shows `InteractionLabel`; `TryPickupNearest()` routes to `Interact(gameObject)` when IInteractable is nearest
+- Assets (user creates): `Assets/App/Building/BuildingRegistry.asset`; definitions in `Assets/App/Building/Definitions/`; materials in `Assets/App/Materials/Building/`
+- Prefabs (user creates): `BuildingMenuUI.prefab`, `BuildingPieceRowPrefab.prefab`, `BlueprintDepositUI.prefab`, `BlueprintDepositRowPrefab.prefab` — all nested in PlayerRig
+- Inspector wiring (user does): `BlueprintDepositUI._itemRegistry` → `Assets/App/Items/ItemRegistry.asset`; `BlueprintDepositUI._rowPrefab` → `BlueprintDepositRowPrefab.prefab`
 - Docs: `../Docs/crafting-building-system.md`
 
 ### Dev / Editor Tools
