@@ -11,7 +11,6 @@ namespace LushWorld.Building
     // Phase 2: RequestDeposit becomes [ServerRpc(RequireOwnership = true)].
     public class BlueprintInstance : MonoBehaviour, IInteractable
     {
-        public static event Action<BlueprintInstance> OnInteracted;
         public static event Action<BlueprintInstance> OnCompleted;
 
         private BuildingDefinition       _def;
@@ -22,6 +21,16 @@ namespace LushWorld.Building
 
         public BuildingDefinition Def             => _def;
         public string             InteractionLabel => "Add Materials [E]";
+
+        public string GetNextNeededItemId()
+        {
+            foreach (var ing in _def.Cost)
+            {
+                _deposited.TryGetValue(ing.ItemId, out int have);
+                if (have < ing.Quantity) return ing.ItemId;
+            }
+            return null;
+        }
 
         // Called immediately after AddComponent by BuildingSystem, before skeleton material is applied.
         // That ordering is intentional: saves the original prefab materials for restoration on complete.
@@ -43,7 +52,11 @@ namespace LushWorld.Building
             _interactionTrigger.radius = _def.SnapSize * 1.2f;
         }
 
-        public void Interact(GameObject player) => OnInteracted?.Invoke(this);
+        public void Interact(GameObject player)
+        {
+            string nextId = GetNextNeededItemId();
+            if (nextId != null) RequestDeposit(nextId, 1);
+        }
 
         public int GetDeposited(string itemId) =>
             _deposited.TryGetValue(itemId, out int n) ? n : 0;

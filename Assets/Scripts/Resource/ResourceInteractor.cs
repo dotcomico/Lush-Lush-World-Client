@@ -1,5 +1,7 @@
+using System.Text;
 using UnityEngine;
 using TMPro;
+using LushWorld.Building;
 using LushWorld.Inventory;
 using LushWorld.Utilities;
 #if ENABLE_INPUT_SYSTEM
@@ -21,6 +23,9 @@ namespace LushWorld.Resource
         private ResourceNode  _nearestNode;
         private IInteractable _nearestInteractable;
         private readonly Collider[] _overlapBuffer = new Collider[16];
+        private float _rHoldTime;
+        private const float DemolishHoldDuration = 1.5f;
+        private readonly StringBuilder _promptBuilder = new();
 
         private static bool IsMobile() => Application.isMobilePlatform;
 
@@ -35,6 +40,41 @@ namespace LushWorld.Resource
         private void Update()
         {
             FindNearestNode();
+            HandleBlueprintRHold();
+        }
+
+        private void HandleBlueprintRHold()
+        {
+            if (_nearestInteractable is not BlueprintInstance bp || bp == null)
+            {
+                _rHoldTime = 0f;
+                return;
+            }
+
+#if ENABLE_INPUT_SYSTEM
+            bool ePressed = Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
+            bool rHeld    = Keyboard.current != null && Keyboard.current.rKey.isPressed;
+#else
+            bool ePressed = Input.GetKeyDown(KeyCode.E);
+            bool rHeld    = Input.GetKey(KeyCode.R);
+#endif
+            // E: deposit one material directly (prompt refreshes immediately after)
+            if (ePressed)
+            {
+                TryPickupNearest();
+                return;
+            }
+
+            // R hold: demolish after 1.5 s
+            if (!rHeld) { _rHoldTime = 0f; return; }
+            _rHoldTime += Time.deltaTime;
+            if (_rHoldTime >= DemolishHoldDuration)
+            {
+                _rHoldTime = 0f;
+                bp.Demolish();
+                _nearestInteractable = null;
+                UpdatePrompt();
+            }
         }
 
         private void FindNearestNode()
@@ -91,7 +131,22 @@ namespace LushWorld.Resource
 
             if (interactPrompt == null) return;
 
-            if (_nearestInteractable != null)
+            if (_nearestInteractable is BlueprintInstance bp && bp != null)
+            {
+                _promptBuilder.Clear();
+                foreach (var ing in bp.Def.Cost)
+                {
+                    string name = ing.ItemId;
+                    if (itemRegistry != null && itemRegistry.TryGetById(ing.ItemId, out var itemDef))
+                        name = itemDef.DisplayName;
+                    int have = bp.GetDeposited(ing.ItemId);
+                    _promptBuilder.AppendLine($"{name}: {have}/{ing.Quantity}");
+                }
+                _promptBuilder.Append("[E] Add Material   [Hold R] Remove");
+                interactPrompt.text = _promptBuilder.ToString();
+                interactPrompt.gameObject.SetActive(true);
+            }
+            else if (_nearestInteractable != null)
             {
                 interactPrompt.text = _nearestInteractable.InteractionLabel;
                 interactPrompt.gameObject.SetActive(true);
@@ -116,6 +171,7 @@ namespace LushWorld.Resource
             if (_nearestInteractable != null)
             {
                 _nearestInteractable.Interact(gameObject);
+                UpdatePrompt();
                 return;
             }
             if (_nearestNode == null) return;
