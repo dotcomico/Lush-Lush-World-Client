@@ -1,3 +1,4 @@
+using LushWorld.Crafting;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -47,11 +48,18 @@ namespace LushWorld.Inventory
         private void Update()
         {
 #if ENABLE_INPUT_SYSTEM
-            if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
-                _inventory.RequestDropActiveItem();
+            if (Keyboard.current != null)
+            {
+                if (Keyboard.current.qKey.wasPressedThisFrame)
+                    _inventory.RequestDropActiveItem();
+                if (Keyboard.current.gKey.wasPressedThisFrame)
+                    CraftingSystem.LocalPlayer?.ToggleCraftingMenu();
+            }
 #else
             if (Input.GetKeyDown(KeyCode.Q))
                 _inventory.RequestDropActiveItem();
+            if (Input.GetKeyDown(KeyCode.G))
+                CraftingSystem.LocalPlayer?.ToggleCraftingMenu();
 #endif
         }
     }

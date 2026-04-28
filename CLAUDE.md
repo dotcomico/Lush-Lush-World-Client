@@ -290,6 +290,20 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Enemy layer TODO: `_hitLayers = Everything` until Layer 9 `Enemy` is created and assigned to enemy prefabs
 - Docs: `../Docs/tongue-attack-system.md`
 
+### Crafting System
+- Scripts:
+  - `Assets/Scripts/Utilities/IInteractable.cs` — interface (`InteractionLabel`, `Interact(GameObject)`) for any E-key world interactable; implemented by `BlueprintInstance` (Subtask 4); used by `ResourceInteractor`
+  - `Assets/Scripts/Crafting/RecipeDefinition.cs` — ScriptableObject; fields: `RecipeId`, `DisplayName`, `Category` (enum), `Ingredients` (List<Ingredient>), `OutputItemId`, `OutputQuantity`; nested `Ingredient` struct `{ string ItemId; int Quantity }`
+  - `Assets/Scripts/Crafting/RecipeRegistry.cs` — ScriptableObject singleton; `List<RecipeDefinition>`, dictionary lookup via `TryGetRecipe(id)`
+  - `Assets/Scripts/Crafting/CraftingSystem.cs` — MonoBehaviour on `PlayerCapsule`; static `LocalPlayer`; `RequestCraft(recipeId, qty)` consumes ingredients + calls `InventorySystem.GiveItem`; `GetMaxCraftable(recipe)` + `CountItem(itemId)` are public helpers; static events `OnCraftSuccess`, `OnCraftFailed`, `OnCraftingMenuToggleRequested`; C key → `ToggleCraftingMenu()` (called from `InventoryInputHandler`)
+  - `Assets/Scripts/UI/Crafting/CraftingUI.cs` — MonoBehaviour on `CraftingMenuUI.prefab` (nested in PlayerRig); subscribes to `CraftingSystem.OnCraftingMenuToggleRequested`; instantiates `CraftingRecipeRowUI` prefab per recipe; refreshes rows on slot changes via `InventoryData` events
+  - `Assets/Scripts/UI/Crafting/CraftingRecipeRowUI.cs` — MonoBehaviour on row prefab; shows recipe name, ingredient counts (have/need), max craftable; Craft button calls `CraftingSystem.LocalPlayer.RequestCraft`
+- Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — C key → `CraftingSystem.LocalPlayer?.ToggleCraftingMenu()`
+- Assets (user creates): `Assets/App/Crafting/RecipeRegistry.asset`; one `RecipeDefinition` asset per recipe under `Assets/App/Crafting/Recipes/`
+- Prefabs (user creates): `CraftingMenuUI.prefab` (Canvas, Screen Space Overlay) nested inside `PlayerRig.prefab`; row prefab with TMP_Text (name, ingredients, maxCraftable) + Button
+- Inspector wiring on `PlayerCapsule`: `CraftingSystem._recipeRegistry` → `RecipeRegistry.asset`; `CraftingUI._recipeRegistry`, `_itemRegistry`, `_panel`, `_rowContainer`, `_rowPrefab`
+- Docs: `../Docs/crafting-building-system.md`
+
 ### Dev / Editor Tools
 - Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`, `Assets/Scripts/Editor/StatsSetupTool.cs`
 - Prefabs: none
