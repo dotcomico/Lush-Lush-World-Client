@@ -91,8 +91,8 @@ LineRenderer:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
-        time: 0
-        value: 0.60000014
+        time: 0.010709505
+        value: 0.122478515
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -101,7 +101,7 @@ LineRenderer:
         outWeight: 0
       - serializedVersion: 3
         time: 1
-        value: 0.21518973
+        value: 0.03534775
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -142,7 +142,7 @@ LineRenderer:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     numCornerVertices: 0
-    numCapVertices: 0
+    numCapVertices: 5
     alignment: 0
     textureMode: 0
     textureScale: {x: 1, y: 1}
@@ -195,7 +195,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -1036644959745387582, guid: cda2a45315d8e3b4f835fa19e71a9989, type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4814140183114437194, guid: cda2a45315d8e3b4f835fa19e71a9989, type: 3}
       propertyPath: m_Name
@@ -261,7 +261,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -1036644959745387582, guid: b7d3ece06a1b30b49975b8255cd37c5b, type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4814140183114437194, guid: b7d3ece06a1b30b49975b8255cd37c5b, type: 3}
       propertyPath: m_Name

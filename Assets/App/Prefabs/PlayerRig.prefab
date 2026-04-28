@@ -80,7 +80,7 @@ MonoBehaviour:
   ThirdPersonCameraGO: {fileID: 7447670745152839309}
   IsometricCameraGO: {fileID: 5670209687546035401}
   PlayerController: {fileID: 2060063764280730352}
-  PlayerBodyRoot: {fileID: 6628494719671080506, guid: 6569b9ae4465800419e535f6709b7ae2, type: 3}
+  PlayerBodyRoot: {fileID: 612021513897443818}
   PlayerMeshRenderers: []
   OrbitController: {fileID: 8736571398309759006}
   CycleCameraButton: {fileID: 4962995384993298215}
@@ -3920,19 +3920,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3469875378773006479, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].time
-      value: 0.0014915466
+      value: 0.0068473816
       objectReference: {fileID: 0}
     - target: {fileID: 3469875378773006479, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[1].time
-      value: 0.9878082
+      value: 0.9931488
       objectReference: {fileID: 0}
     - target: {fileID: 3469875378773006479, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].value
-      value: 0.13303542
+      value: 0.120630026
       objectReference: {fileID: 0}
     - target: {fileID: 3469875378773006479, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[1].value
-      value: 0.02411154
+      value: 0.01791647
       objectReference: {fileID: 0}
     - target: {fileID: 4135013735270702856, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       propertyPath: m_LocalScale.x
@@ -4258,7 +4258,7 @@ MonoBehaviour:
   _tonguePivot: {fileID: 8914234157059345119}
   _tongueRenderer: {fileID: 6567715493521054764}
   _damage: 20
-  _extendDistance: 0.6
+  _extendDistance: 0.9
   _extendDuration: 0.12
   _holdDuration: 0.05
   _retractDuration: 0.18

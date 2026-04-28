@@ -82,6 +82,7 @@ namespace LushWorld.Enemies
         private void EvaluateState()
         {
             if (_base.Definition == null) return;
+            if (_base.IsKnockedBack) return;
 
             bool canAggro = _base.Definition.isAlwaysAggressive || _isNight;
 

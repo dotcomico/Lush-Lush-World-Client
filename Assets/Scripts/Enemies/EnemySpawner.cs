@@ -35,6 +35,7 @@ namespace LushWorld.Enemies
         private Transform _player;
         private bool _isActive;
         private bool _isNight;
+        private int  _killsThisPhase;
 
         private void Awake()
         {
@@ -119,10 +120,12 @@ namespace LushWorld.Enemies
         }
 
         // Fills the enemy count up to the current cap using only nearby spawn points.
+        // Kill debt (_killsThisPhase) reduces the cap so player-killed enemies don't respawn this phase.
         private void TopUp()
         {
             int cap = _isNight ? _maxEnemiesNight : _maxEnemiesDay;
-            while (_activeEnemies.Count < cap)
+            int effectiveCap = Mathf.Max(0, cap - _killsThisPhase);
+            while (_activeEnemies.Count < effectiveCap)
             {
                 if (!SpawnOne()) break; // no nearby points available — stop trying
             }
@@ -150,6 +153,7 @@ namespace LushWorld.Enemies
         private void OnNightStarted()
         {
             _isNight = true;
+            _killsThisPhase = 0; // new phase — reset kill debt so full night cap is available
             if (!_isActive) return;
             TopUp();
         }
@@ -165,11 +169,13 @@ namespace LushWorld.Enemies
                 _activeEnemies.RemoveAt(last);
                 if (enemy != null) enemy.TakeDamage(float.MaxValue);
             }
+            _killsThisPhase = 0; // reset AFTER trimming so system-trimmed enemies don't count as player kills
         }
 
         private void OnEnemyDied(EnemyBase dead)
         {
             _activeEnemies.Remove(dead);
+            _killsThisPhase++; // dead enemy lowers the effective cap for the rest of this phase
         }
 
         // Spawns one enemy at a randomly chosen spawn point that is within

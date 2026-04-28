@@ -72,7 +72,13 @@ namespace LushWorld.Player
             {
                 EnemyBase enemy = col.GetComponentInParent<EnemyBase>();
                 if (enemy != null)
+                {
+                    // Knockback BEFORE damage: TakeDamage may set IsDead=true on a killing
+                    // blow, which would cause ApplyKnockback to early-exit and do nothing.
+                    Vector3 knockDir = enemy.transform.position - _tonguePivot.position;
+                    enemy.ApplyKnockback(knockDir);
                     enemy.TakeDamage(_damage);
+                }
             }
 
             yield return _holdWait;
