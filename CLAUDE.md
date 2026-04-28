@@ -172,8 +172,14 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 
 ### Player Movement
 - Scripts: `Assets/StarterAssets/FirstPersonController/Scripts/FirstPersonController.cs`, `Assets/Scripts/Player/SlideController.cs`
-- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` — top-level children: MainCamera, PlayerFollowCamera, PlayerCapsule (holds FirstPersonController + SlideController + PlayerStats + InventorySystem + SlideController._visualModel → SnailBody), UI_Canvas_StarterAssetsInputs_Joysticks, UI_EventSystem, CameraViewManager, ThirdPerson_VirtualCamera, Isometric_VirtualCamera, InventoryUI, SettingsUI
+- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` — top-level children: MainCamera, PlayerFollowCamera, PlayerCapsule (holds FirstPersonController + SlideController + PlayerStats + InventorySystem + PlayerKnockback + TongueAttack + SlideController._visualModel → SnailBody), UI_Canvas_StarterAssetsInputs_Joysticks, UI_EventSystem, CameraViewManager, ThirdPerson_VirtualCamera, Isometric_VirtualCamera, InventoryUI, SettingsUI
 - Docs: `../Docs/shell-slide-system.md`
+
+### Player Knockback
+- Script: `Assets/Scripts/Player/PlayerKnockback.cs` — on `PlayerCapsule`; static `Knockback(Vector3)` entry point; uses `FPC.DisableHorizontalMovement` to pause input movement while running `CharacterController.Move()` with manual gravity; exits when `isGrounded` after hop; camera rotation keeps working during knockback
+- Attach: add `PlayerKnockback` component to `PlayerCapsule` in `PlayerRig.prefab`
+- Called by: `ZombieSnailAttack.OnTriggerStay` — direction = player pos − enemy root pos
+- Inspector-tunable: `Knockback Horizontal Force` (default 8), `Knockback Upward Force` (default 3.5)
 
 ### Player Body (SnailBody)
 - Prefabs: `Assets/App/Prefabs/Player/SnailBody.prefab` — nested inside `PlayerCapsule.prefab`; contains `body_1` (body_1.glb) + `shell_1` (shell_1.glb)
@@ -264,7 +270,7 @@ Quick-reference for every implemented feature. Check this before searching. Upda
   - `Assets/Scripts/Enemies/EnemyBase.cs` — health, TakeDamage, Die; fires static `OnEnemyDied(EnemyBase)`
   - `Assets/Scripts/Enemies/EnemyAI.cs` — state machine (Patrol/Chase/Attack/Dead) + NavMeshAgent; ThinkLoop coroutine every 0.25 s; patrol runs even when player reference is null; subscribes to DayNightCycle events for live aggression gating
   - `Assets/Scripts/Enemies/Attacks/ZombieSnailAttack.cs` — touch melee; place on child `AttackZone` GO with SphereCollider (trigger); OnTriggerStay → `PlayerStats.TakeDamage` on cooldown
-  - `Assets/Scripts/Enemies/EnemySpawner.cs` — proximity-based spawner; per-spawn-point activation radius (not spawner position); `maxEnemiesDay` / `maxEnemiesNight` caps; scatter radius prevents enemies piling on same spot; reacts to `DayNightCycle.OnNightStarted` / `OnDayStarted`; lazy player lookup avoids Start() race condition
+  - `Assets/Scripts/Enemies/EnemySpawner.cs` — proximity-based spawner; per-spawn-point activation radius (not spawner position); `maxEnemiesDay` / `maxEnemiesNight` caps; scatter radius prevents enemies piling on same spot; reacts to `DayNightCycle.OnNightStarted` / `OnDayStarted`; lazy player lookup avoids Start() race condition; **kill debt** (`_killsThisPhase`) reduces effective cap so player-killed enemies never respawn until the next day/night phase
 - Prefabs (to be created by user): `Assets/App/Prefabs/Enemies/ZombieSnailMan.prefab`, `Assets/App/Prefabs/Enemies/ZombieSnailWoman.prefab`
 - Definition assets (to be created by user): `Assets/App/Enemies/Definitions/ZombieSnailDefinition.asset`
 - Models: `Assets/App/Enemies/Zombie_Snail_Man.glb`, `Assets/App/Enemies/Zombie_Snail_Woman.glb`

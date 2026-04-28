@@ -27,6 +27,11 @@ namespace LushWorld.Enemies
             if (other.GetComponent<PlayerStats>() == null) return;
 
             PlayerStats.TakeDamage(_enemyBase.Definition.attackDamage);
+
+            // Knock the player away from the enemy center (not the AttackZone child position).
+            Vector3 knockDir = other.transform.position - _enemyBase.transform.position;
+            PlayerKnockback.Knockback(knockDir);
+
             _lastAttackTime = Time.time;
         }
     }
