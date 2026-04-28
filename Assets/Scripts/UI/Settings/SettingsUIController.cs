@@ -189,13 +189,14 @@ namespace LushWorld.UI
             if (old != null) DestroyImmediate(old.gameObject);
 
             _panel = Go("SettingsPanel", transform);
-
-            // Full-screen dimmer (blocks click-through to game world)
             Stretch(RT(_panel));
-            _panel.AddComponent<Image>().color = C_Dimmer;
 
-            // Clicking the dimmer (outside the card) dismisses the panel
-            var dimmerBtn = _panel.AddComponent<Button>();
+            // Dimmer is a sibling of card — keeps click events isolated so
+            // card button clicks don't bubble to dimmerBtn and close the panel.
+            var dimmer = Go("Dimmer", _panel.transform);
+            Stretch(RT(dimmer));
+            dimmer.AddComponent<Image>().color = C_Dimmer;
+            var dimmerBtn = dimmer.AddComponent<Button>();
             dimmerBtn.transition = Selectable.Transition.None;
             dimmerBtn.onClick.AddListener(TogglePanel);
 

@@ -38,6 +38,13 @@ namespace LushWorld.Camera
         [Tooltip("Controller that orbits the TP camera around the player via look input")]
         public ThirdPersonOrbitController OrbitController;
 
+        // ── Camera Safety ─────────────────────────────────────────────────────
+        [Header("Camera Safety")]
+        [Tooltip("TP camera must stay at least this many units above the Follow target. " +
+                 "Prevents Cinemachine collision logic from pulling the camera below " +
+                 "objects the snail is standing on. Tune to match snail scale.")]
+        public float TPMinHeightAboveTarget = 1.0f;
+
         // ── UI ────────────────────────────────────────────────────────────────
         [Header("UI")]
         [Tooltip("Button that cycles through camera modes (mobile & PC)")]
@@ -61,6 +68,17 @@ namespace LushWorld.Camera
                 var vcam = ThirdPersonCameraGO.GetComponent<CinemachineVirtualCamera>();
                 if (vcam != null)
                     vcam.Follow = OrbitController.OrbitPivot;
+            }
+
+            // Attach the min-height extension so the camera never gets pulled
+            // below the snail by Cinemachine's collision resolution against
+            // mushrooms, sticks, or other climbable objects.
+            if (ThirdPersonCameraGO != null)
+            {
+                var ext = ThirdPersonCameraGO.GetComponent<CameraMinHeightExtension>();
+                if (ext == null)
+                    ext = ThirdPersonCameraGO.AddComponent<CameraMinHeightExtension>();
+                ext.MinHeightAboveTarget = TPMinHeightAboveTarget;
             }
 
             ApplyMode(_currentMode);

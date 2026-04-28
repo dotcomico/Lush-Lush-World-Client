@@ -21,7 +21,7 @@ namespace LushWorld.Camera
         [Header("Orbit Settings")]
         public float HorizontalSensitivity = 1.0f;
         public float VerticalSensitivity   = 1.0f;
-        [Range(-80f,  0f)] public float MinPitch = -20f;
+        [Range(-80f,  0f)] public float MinPitch = -10f;
         [Range(  0f, 80f)] public float MaxPitch =  60f;
 
         [Header("Smoothing")]

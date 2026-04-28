@@ -100,7 +100,7 @@ MonoBehaviour:
   Player: {fileID: 2060063764280730359}
   HorizontalSensitivity: 1
   VerticalSensitivity: 1
-  MinPitch: -20
+  MinPitch: -10
   MaxPitch: 60
   RotationSmoothTime: 0.08
 --- !u!1 &2753887583838102160
@@ -534,10 +534,10 @@ MonoBehaviour:
   CameraDistance: 4.5
   CameraCollisionFilter:
     serializedVersion: 2
-    m_Bits: 1
-  IgnoreTag: 
+    m_Bits: 0
+  IgnoreTag: Player
   CameraRadius: 0.2
-  DampingIntoCollision: 0
+  DampingIntoCollision: 0.5
   DampingFromCollision: 2
 --- !u!114 &1570338846099230262
 MonoBehaviour:
