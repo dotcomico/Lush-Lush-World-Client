@@ -26,6 +26,8 @@ namespace LushWorld.Inventory
             {
                 inputBridge.cursorLocked = false;
                 inputBridge.cursorInputForLook = false;
+                inputBridge.look = Vector2.zero;
+                inputBridge.move = Vector2.zero;
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             }
