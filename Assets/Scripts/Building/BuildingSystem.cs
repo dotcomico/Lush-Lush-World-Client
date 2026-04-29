@@ -20,6 +20,7 @@ namespace LushWorld.Building
         public static BuildingSystem LocalPlayer { get; private set; }
 
         public static event Action<bool> OnBuildingMenuToggleRequested;
+        public static event Action<bool> OnPlacementStateChanged;
 
         [SerializeField] private Material  _ghostValidMaterial;
         [SerializeField] private Material  _skeletonMaterial;
@@ -33,7 +34,7 @@ namespace LushWorld.Building
 
         private BuildingDefinition _activeDef;
         private GameObject         _ghostInstance;
-        private Material           _ghostInvalidMaterial; // created once per placement session, destroyed on cancel
+        private Material           _ghostInvalidMaterial;
         private bool               _isValidPlacement = true;
         public static bool IsMenuOpen { get; private set; }
         private UnityEngine.Camera _cam;
@@ -64,7 +65,6 @@ namespace LushWorld.Building
 
         public void ToggleBuildingMenu()
         {
-            // If ghost is active, B cancels placement instead of reopening the menu.
             if (_state == PlacementState.PlacingGhost) { CancelPlacement(); return; }
             IsMenuOpen = !IsMenuOpen;
             OnBuildingMenuToggleRequested?.Invoke(IsMenuOpen);
@@ -77,12 +77,27 @@ namespace LushWorld.Building
             OnBuildingMenuToggleRequested?.Invoke(false);
         }
 
+        // Called by the mobile Place button — mirrors left-click placement.
+        public void MobilePlacePressed()
+        {
+            if (_state != PlacementState.PlacingGhost) return;
+            if (!_isValidPlacement || _ghostInstance == null || !_ghostInstance.activeSelf) return;
+            RequestPlaceBlueprint(_ghostGroundPosition, _ghostInstance.transform.rotation);
+        }
+
+        // Called by the mobile Rotate button — snaps 90° per tap.
+        public void MobileRotateStep()
+        {
+            if (_state != PlacementState.PlacingGhost) return;
+            _currentYRotation += 90f;
+        }
+
         // Called by BuildingMenuPieceRowUI when the player selects a piece type.
         public void EnterPlacementMode(BuildingDefinition def)
         {
             if (def?.PlacedPrefab == null) return;
-            CancelPlacement();   // clean up any previous ghost
-            CloseBuildingMenu(); // close the menu panel
+            CancelPlacement();
+            CloseBuildingMenu();
 
             _activeDef     = def;
             _ghostInstance = Instantiate(def.PlacedPrefab);
@@ -90,20 +105,16 @@ namespace LushWorld.Building
             _placementBaseRotation = _ghostInstance.transform.rotation;
             _currentYRotation      = 0f;
 
-            // Disable physics on ghost — it is visual-only, must not interfere with overlap checks.
             foreach (var col in _ghostInstance.GetComponentsInChildren<Collider>())
                 col.enabled = false;
 
-            // Remove resource-pickup behaviour — building pieces must never be treated as world resources.
             foreach (var node in _ghostInstance.GetComponentsInChildren<LushWorld.Resource.ResourceNode>())
                 Destroy(node);
 
-            // Build invalid (red-tinted) material from valid ghost material — one allocation per session.
             _ghostInvalidMaterial = new Material(_ghostValidMaterial);
             Color validColor = _ghostValidMaterial.GetColor("_BaseColor");
             _ghostInvalidMaterial.SetColor("_BaseColor", new Color(1f, 0.2f, 0.2f, validColor.a));
 
-            // Cache material arrays per renderer so we swap sharedMaterials (no GC) each validity change.
             _rendererData.Clear();
             foreach (var mr in _ghostInstance.GetComponentsInChildren<MeshRenderer>())
             {
@@ -121,6 +132,7 @@ namespace LushWorld.Building
 
             _isValidPlacement = true;
             _state = PlacementState.PlacingGhost;
+            OnPlacementStateChanged?.Invoke(true);
         }
 
         public void CancelPlacement()
@@ -133,10 +145,10 @@ namespace LushWorld.Building
 
             _activeDef = null;
             _state     = PlacementState.Idle;
+            OnPlacementStateChanged?.Invoke(false);
         }
 
         // Phase 2 upgrade: [ServerRpc(RequireOwnership = true)]
-        // groundPosition is the snapped XZ position at ground level — this method applies the Y lift.
         public void RequestPlaceBlueprint(Vector3 groundPosition, Quaternion rotation)
         {
             if (_activeDef?.PlacedPrefab == null) return;
@@ -144,7 +156,6 @@ namespace LushWorld.Building
             var blueprint = Instantiate(_activeDef.PlacedPrefab, groundPosition, rotation);
             blueprint.name = $"Blueprint_{_activeDef.PieceId}";
 
-            // Lift so the mesh bottom is flush with the ground (same robust formula as the ghost).
             var brs = blueprint.GetComponentsInChildren<MeshRenderer>();
             if (brs.Length > 0)
             {
@@ -154,14 +165,11 @@ namespace LushWorld.Building
                 blueprint.transform.position = groundPosition + new Vector3(0f, Mathf.Max(0f, lift), 0f);
             }
 
-            // Remove resource-pickup behaviour before colliders are ever re-enabled by TryComplete.
             foreach (var node in blueprint.GetComponentsInChildren<LushWorld.Resource.ResourceNode>())
                 Destroy(node);
 
-            // Init BEFORE applying skeleton material so BlueprintInstance captures original materials.
             blueprint.AddComponent<BlueprintInstance>().Init(_activeDef);
 
-            // Apply skeleton material (amber transparent) — piece awaits material deposit.
             foreach (var mr in blueprint.GetComponentsInChildren<MeshRenderer>())
             {
                 var mats = new Material[mr.sharedMaterials.Length];
@@ -169,8 +177,6 @@ namespace LushWorld.Building
                 mr.sharedMaterials = mats;
             }
 
-            // Disable non-trigger colliders — skeleton is not a real structure; player walks through it.
-            // The trigger added by BlueprintInstance.Init (isTrigger = true) is intentionally preserved.
             foreach (var col in blueprint.GetComponentsInChildren<Collider>())
                 if (!col.isTrigger) col.enabled = false;
 
@@ -179,14 +185,11 @@ namespace LushWorld.Building
 
         // ── Ghost update ────────────────────────────────────────────────────────────────
 
-private void UpdateGhost()
+        private void UpdateGhost()
         {
             if (_cam == null) _cam = UnityEngine.Camera.main;
             if (_cam == null || _ghostInstance == null) return;
 
-            // On mobile there is no real mouse — use viewport centre so the ghost always
-            // appears in the centre of the camera view where the player is aiming.
-            // On desktop, follow the actual mouse cursor position.
 #if ENABLE_INPUT_SYSTEM
             Ray ray;
             if (PlatformDetector.IsDesktop && Mouse.current != null)
