@@ -4589,7 +4589,7 @@ MonoBehaviour:
     m_Bits: 1
   _obstacleLayer:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 0
   _maxPlacementDistance: 10
 --- !u!114 &2060063764280730363 stripped
 MonoBehaviour:

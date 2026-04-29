@@ -312,7 +312,7 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Inspector wiring on `PlayerCapsule`: `CraftingSystem._recipeRegistry` → `RecipeRegistry.asset`; `CraftingUI._recipeRegistry`, `_itemRegistry`, `_panel`, `_rowContainer`, `_rowPrefab`
 - Docs: `../Docs/crafting-building-system.md`
 
-### Building System (Subtask 5 of 5 next — wire prefabs + NavMesh setup)
+### Building System ✓ DONE (all 5 subtasks complete)
 - Scripts done:
   - `Assets/Scripts/Building/BuildingDefinition.cs` — SO per piece: PieceId, DisplayName, Icon, PlacedPrefab, Cost, MaxHealth, SnapSize
   - `Assets/Scripts/Building/BuildingRegistry.cs` — SO singleton; dictionary lookup by PieceId
@@ -324,7 +324,9 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — B key added
 - Modified: `Assets/Scripts/Resource/ResourceInteractor.cs` — `FindNearestNode()` scans for `IInteractable`; `UpdatePrompt()` special-cases `BlueprintInstance`: shows all ingredients as "DisplayName: X/Y" per line + "[E] Add Material   [Hold R] Remove"; `TryPickupNearest()` calls `UpdatePrompt()` after `Interact()` to refresh counts; `HandleBlueprintRHold()` in Update() accumulates R hold and calls `bp.Demolish()` at 1.5 s
 - Assets (user creates): `Assets/App/Building/BuildingRegistry.asset`; definitions in `Assets/App/Building/Definitions/`; materials in `Assets/App/Materials/Building/`
-- Prefabs (user creates): `BuildingMenuUI.prefab`, `BuildingPieceRowPrefab.prefab` — nested in PlayerRig (BlueprintDepositUI/Row prefabs no longer needed — removed)
+- Prefabs: `Assets/App/Prefabs/Buildings/StickFence.prefab` (5× branch, X rot 90°, 0.18 m spacing), `Assets/App/Prefabs/Buildings/StoneWall.prefab` (4× rock, 2×2 grid 0.35×0.25 m); `BuildingMenuUI.prefab` + `BuildingPieceRowPrefab.prefab` nested in PlayerRig
+- Materials: `Assets/App/My Materials/Building/GhostMaterial.mat` (URP Lit Transparent, cyan-blue, alpha 0.35, emission on), `Assets/App/My Materials/Building/SkeletonMaterial.mat` (URP Lit Transparent, amber, alpha 0.50)
+- Inspector wiring done: `BuildingSystem._ghostValidMaterial`, `_skeletonMaterial`, `_groundLayer=Default(1)`, `_obstacleLayer=Nothing(0)` on PlayerCapsule in PlayerRig.prefab
 - Docs: `../Docs/crafting-building-system.md`
 
 ### Dev / Editor Tools

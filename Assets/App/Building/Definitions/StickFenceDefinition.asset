@@ -17,7 +17,7 @@ MonoBehaviour:
   <Icon>k__BackingField: {fileID: 0}
   <PlacedPrefab>k__BackingField: {fileID: 6386877897262748486, guid: 9654bbfa1a1869e41b9ab1bfb8f53b75, type: 3}
   <Cost>k__BackingField:
-  - ItemId: branch
+  - ItemId: branch_01
     Quantity: 5
   <MaxHealth>k__BackingField: 100
   <SnapSize>k__BackingField: 0.5

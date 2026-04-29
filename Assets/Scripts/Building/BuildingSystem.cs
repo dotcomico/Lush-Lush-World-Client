@@ -87,6 +87,10 @@ namespace LushWorld.Building
             foreach (var col in _ghostInstance.GetComponentsInChildren<Collider>())
                 col.enabled = false;
 
+            // Remove resource-pickup behaviour — building pieces must never be treated as world resources.
+            foreach (var node in _ghostInstance.GetComponentsInChildren<LushWorld.Resource.ResourceNode>())
+                Destroy(node);
+
             // Build invalid (red-tinted) material from valid ghost material — one allocation per session.
             _ghostInvalidMaterial = new Material(_ghostValidMaterial);
             Color validColor = _ghostValidMaterial.GetColor("_BaseColor");

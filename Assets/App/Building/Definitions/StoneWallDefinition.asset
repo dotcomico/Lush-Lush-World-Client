@@ -17,7 +17,7 @@ MonoBehaviour:
   <Icon>k__BackingField: {fileID: 0}
   <PlacedPrefab>k__BackingField: {fileID: 2818203100947559436, guid: d83063878291e4647a2983ae5b6c0894, type: 3}
   <Cost>k__BackingField:
-  - ItemId: small_rock
+  - ItemId: rock_small
     Quantity: 4
   <MaxHealth>k__BackingField: 150
   <SnapSize>k__BackingField: 0.5
