@@ -1,12 +1,15 @@
 using LushWorld.Building;
 using LushWorld.Utilities;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace LushWorld.UI
 {
     // Attach to MobilePlacementPanel (parent of PlaceButton and RotateButton).
     // Uses CanvasGroup for show/hide so the component stays enabled and subscribed.
-    // Wires UIVirtualButton.buttonClickOutputEvent — the mobile button architecture used in this project.
+    // PlaceButton: wires UIVirtualButton.buttonClickOutputEvent (tap to place).
+    // RotateButton: attaches a PointerHoldRelay at runtime — fires true while finger is down,
+    //               false on release — no Inspector wiring required.
     public class MobilePlacementControls : MonoBehaviour
     {
         private CanvasGroup _group;
@@ -24,12 +27,10 @@ namespace LushWorld.UI
 
             SetVisible(false);
 
-            WireButton("PlaceButton",       () => BuildingSystem.LocalPlayer?.MobilePlacePressed());
-            WireButtonHeld("RotateButton", held => BuildingSystem.LocalPlayer?.MobileRotateHeld(held));
+            WireButton("PlaceButton", () => BuildingSystem.LocalPlayer?.MobilePlacePressed());
+            WireHoldRelay("RotateButton", held => BuildingSystem.LocalPlayer?.MobileRotateHeld(held));
         }
 
-        // Subscribe/unsubscribe on the component lifecycle, not the GameObject lifecycle.
-        // This keeps the subscription alive even when CanvasGroup hides the panel.
         private void OnEnable()  => BuildingSystem.OnPlacementStateChanged += SetVisible;
         private void OnDisable() => BuildingSystem.OnPlacementStateChanged -= SetVisible;
 
@@ -50,26 +51,18 @@ namespace LushWorld.UI
                 return;
             }
 
-            // UIVirtualButton is the touch-input component used by this project's mobile buttons.
             var vBtn = t.GetComponent<UIVirtualButton>();
-            if (vBtn != null)
-            {
-                vBtn.buttonClickOutputEvent.AddListener(callback);
-                return;
-            }
+            if (vBtn != null) { vBtn.buttonClickOutputEvent.AddListener(callback); return; }
 
-            // Fallback for any plain UI Button.
             var btn = t.GetComponent<UnityEngine.UI.Button>();
-            if (btn != null)
-            {
-                btn.onClick.AddListener(callback);
-                return;
-            }
+            if (btn != null) { btn.onClick.AddListener(callback); return; }
 
-            Debug.LogWarning($"[MobilePlacementControls] No UIVirtualButton or Button found on '{childName}'.");
+            Debug.LogWarning($"[MobilePlacementControls] No button component found on '{childName}'.");
         }
 
-        private void WireButtonHeld(string childName, UnityEngine.Events.UnityAction<bool> callback)
+        // Adds a lightweight PointerHoldRelay to the child at runtime.
+        // This bypasses UIVirtualButton event wiring and hooks directly into Unity's pointer system.
+        private void WireHoldRelay(string childName, System.Action<bool> callback)
         {
             var t = transform.Find(childName);
             if (t == null)
@@ -78,14 +71,18 @@ namespace LushWorld.UI
                 return;
             }
 
-            var vBtn = t.GetComponent<UIVirtualButton>();
-            if (vBtn != null)
-            {
-                vBtn.buttonStateOutputEvent.AddListener(callback);
-                return;
-            }
-
-            Debug.LogWarning($"[MobilePlacementControls] No UIVirtualButton found on '{childName}' for hold wiring.");
+            var relay = t.gameObject.AddComponent<PointerHoldRelay>();
+            relay.OnHeldChanged = callback;
         }
+    }
+
+    // Added at runtime to the RotateButton — reports finger down (true) and up (false).
+    // Lives in this file; never needs to appear in the Inspector.
+    internal class PointerHoldRelay : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+    {
+        public System.Action<bool> OnHeldChanged;
+
+        public void OnPointerDown(PointerEventData _) => OnHeldChanged?.Invoke(true);
+        public void OnPointerUp(PointerEventData _)   => OnHeldChanged?.Invoke(false);
     }
 }
