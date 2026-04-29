@@ -253,10 +253,11 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Docs: `../Docs/platform-detection.md` — API reference, usage examples, consumer table, editor testing guide
 
 ### Mobile Input
-- Scripts: `Assets/StarterAssets/Mobile/Scripts/UICanvasControllerInput.cs`, `Assets/Scripts/UI/MobileInventoryButton.cs`, `Assets/Scripts/UI/MobilePickupButton.cs`, `Assets/Scripts/UI/MobileBuildingButton.cs`, `Assets/Scripts/UI/MobileCanvasVisibility.cs`
+- Scripts: `Assets/StarterAssets/Mobile/Scripts/UICanvasControllerInput.cs`, `Assets/Scripts/UI/MobileInventoryButton.cs`, `Assets/Scripts/UI/MobilePickupButton.cs`, `Assets/Scripts/UI/MobileBuildingButton.cs`, `Assets/Scripts/UI/MobileCanvasVisibility.cs`, `Assets/Scripts/UI/MobilePlacementControls.cs`
 - `MobileCanvasVisibility` uses `PlatformDetector.IsMobile` to show/hide any GameObject — attach it to the joystick canvas, BackpackButton, and BuildingButton; replaces per-component `_forceVisibleInEditor` flag with global `PlatformDetector.SimulateMobileInEditor`
 - `MobileBuildingButton` — attach to `BuildingButton` in `InventoryUI.prefab`; `OnBuildingButtonPressed()` → `BuildingSystem.LocalPlayer?.ToggleBuildingMenu()`; pair with `MobileCanvasVisibility` on the same GO
-- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (UI_Canvas_StarterAssetsInputs_Joysticks child)
+- `MobilePlacementControls` — **attach to `MobilePlacementPanel`** (parent of PlaceButton + RotateButton in PlayerRig.prefab); wires `UIVirtualButton.buttonClickOutputEvent` on PlaceButton → `BuildingSystem.MobilePlacePressed()` and RotateButton → `BuildingSystem.MobileRotateStep()`; uses `CanvasGroup` (auto-added) to show/hide the panel based on `BuildingSystem.OnPlacementStateChanged`; on non-mobile disables itself entirely; buttons found by exact name via `transform.Find`
+- Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` — `UI_Canvas_StarterAssetsInputs_Joysticks > MobilePlacementPanel` (direct children: `RotateButton`, `PlaceButton`); `MobilePlacementControls` component is on `MobilePlacementPanel`
 - Docs: none yet
 
 ### Day / Night Cycle
