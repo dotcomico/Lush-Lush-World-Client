@@ -33,7 +33,7 @@ namespace LushWorld.Building
         private GameObject         _ghostInstance;
         private Material           _ghostInvalidMaterial; // created once per placement session, destroyed on cancel
         private bool               _isValidPlacement = true;
-        private bool               _menuOpen;
+        public static bool IsMenuOpen { get; private set; }
         private UnityEngine.Camera _cam;
         private Vector3            _ghostGroundPosition;
         private Quaternion         _placementBaseRotation;
@@ -64,14 +64,14 @@ namespace LushWorld.Building
         {
             // If ghost is active, B cancels placement instead of reopening the menu.
             if (_state == PlacementState.PlacingGhost) { CancelPlacement(); return; }
-            _menuOpen = !_menuOpen;
-            OnBuildingMenuToggleRequested?.Invoke(_menuOpen);
+            IsMenuOpen = !IsMenuOpen;
+            OnBuildingMenuToggleRequested?.Invoke(IsMenuOpen);
         }
 
         public void CloseBuildingMenu()
         {
-            if (!_menuOpen) return;
-            _menuOpen = false;
+            if (!IsMenuOpen) return;
+            IsMenuOpen = false;
             OnBuildingMenuToggleRequested?.Invoke(false);
         }
 

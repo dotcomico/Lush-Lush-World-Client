@@ -35,6 +35,7 @@ namespace LushWorld.Inventory
 
         public void OnHotbarScroll(InputValue value)
         {
+            if (BuildingSystem.IsMenuOpen) return;
             var delta = value.Get<Vector2>();
             if (delta.y == 0f) return;
             _inventory.RequestCycleSlot(delta.y > 0f ? -1 : 1);
