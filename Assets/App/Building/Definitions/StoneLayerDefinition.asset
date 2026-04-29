@@ -15,7 +15,7 @@ MonoBehaviour:
   <PieceId>k__BackingField: piece_stone_layer
   <DisplayName>k__BackingField: Stone Layer
   <Icon>k__BackingField: {fileID: 0}
-  <PlacedPrefab>k__BackingField: {fileID: 2818203100947559436, guid: 16d6aedae47d81447af2dead8cabe855, type: 3}
+  <PlacedPrefab>k__BackingField: {fileID: 6386877897262748486, guid: aedf8f1ad8605bc4fa4b742dd41eaf62, type: 3}
   <Cost>k__BackingField:
   - ItemId: rock_small
     Quantity: 6

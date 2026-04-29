@@ -24,6 +24,7 @@ namespace LushWorld.Building
         [SerializeField] private LayerMask _groundLayer;
         [SerializeField] private LayerMask _obstacleLayer;
         [SerializeField] private float     _maxPlacementDistance = 10f;
+        [SerializeField] private float     _rotationSpeed        = 90f;
 
         private enum PlacementState { Idle, PlacingGhost }
         private PlacementState _state = PlacementState.Idle;
@@ -36,6 +37,7 @@ namespace LushWorld.Building
         private UnityEngine.Camera _cam;
         private Vector3            _ghostGroundPosition;
         private Quaternion         _placementBaseRotation;
+        private float              _currentYRotation;
 
         // Per-renderer cached material arrays — swapped on validity change, never per-frame allocated.
         private readonly List<(MeshRenderer mr, Material[] valid, Material[] invalid)> _rendererData = new();
@@ -84,6 +86,7 @@ namespace LushWorld.Building
             _ghostInstance = Instantiate(def.PlacedPrefab);
             _ghostInstance.name = $"Ghost_{def.PieceId}";
             _placementBaseRotation = _ghostInstance.transform.rotation;
+            _currentYRotation      = 0f;
 
             // Disable physics on ghost — it is visual-only, must not interfere with overlap checks.
             foreach (var col in _ghostInstance.GetComponentsInChildren<Collider>())
@@ -195,7 +198,8 @@ namespace LushWorld.Building
                 _ghostGroundPosition = snapped;
 
                 // Move to snapped so renderer bounds are in the correct coordinate space.
-                _ghostInstance.transform.SetPositionAndRotation(snapped, _placementBaseRotation);
+                Quaternion ghostRotation = _placementBaseRotation * Quaternion.Euler(0f, _currentYRotation, 0f);
+                _ghostInstance.transform.SetPositionAndRotation(snapped, ghostRotation);
 
                 // Lift so the mesh bottom is flush with the ground.
                 // Robust formula: handles pivot-at-center and pivot-at-bottom equally.
@@ -243,13 +247,17 @@ namespace LushWorld.Building
         private void HandlePlacementInput()
         {
 #if ENABLE_INPUT_SYSTEM
-            bool leftClick = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
-            bool cancel    = (Mouse.current  != null && Mouse.current.rightButton.wasPressedThisFrame)
-                          || (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame);
+            bool rotateHeld = Keyboard.current != null && Keyboard.current.rKey.isPressed;
+            bool leftClick  = Mouse.current    != null && Mouse.current.leftButton.wasPressedThisFrame;
+            bool cancel     = (Mouse.current   != null && Mouse.current.rightButton.wasPressedThisFrame)
+                           || (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame);
 #else
-            bool leftClick = Input.GetMouseButtonDown(0);
-            bool cancel    = Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape);
+            bool rotateHeld = Input.GetKey(KeyCode.R);
+            bool leftClick  = Input.GetMouseButtonDown(0);
+            bool cancel     = Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape);
 #endif
+            if (rotateHeld) _currentYRotation += _rotationSpeed * Time.deltaTime;
+
             if (cancel) { CancelPlacement(); return; }
 
             if (leftClick
