@@ -1,4 +1,5 @@
 using System.IO;
+using LushWorld.Building;
 using LushWorld.Inventory;
 using UnityEditor;
 using UnityEngine;
@@ -153,6 +154,74 @@ namespace LushWorld.Editor
                     : "No items needed icons (all have icons, or WorldPrefab is not set).",
                 "OK");
         }
+
+        // ── Building Icons ──────────────────────────────────────────────────────
+
+        private const string BuildingIconOutputFolder = "Assets/App/Building/Icons";
+
+        [MenuItem("Lush World/Generate Building Icons")]
+        public static void GenerateBuildingIcons()
+        {
+            if (!Directory.Exists(BuildingIconOutputFolder))
+                Directory.CreateDirectory(BuildingIconOutputFolder);
+
+            string[] guids = AssetDatabase.FindAssets("t:BuildingDefinition");
+            int generated = 0;
+
+            foreach (string guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var def = AssetDatabase.LoadAssetAtPath<BuildingDefinition>(path);
+
+                if (def == null || def.Icon != null || def.PlacedPrefab == null)
+                    continue;
+
+                Texture2D icon = RenderPrefabIcon(def.PlacedPrefab);
+                if (icon == null)
+                {
+                    Debug.LogWarning($"[ItemIconGenerator] Could not render building icon for '{def.PieceId}'. Skipping.");
+                    continue;
+                }
+
+                string pngPath = $"{BuildingIconOutputFolder}/{def.PieceId}.png";
+                File.WriteAllBytes(pngPath, icon.EncodeToPNG());
+                Object.DestroyImmediate(icon);
+
+                AssetDatabase.ImportAsset(pngPath);
+                var importer = AssetImporter.GetAtPath(pngPath) as TextureImporter;
+                if (importer != null)
+                {
+                    importer.textureType       = TextureImporterType.Sprite;
+                    importer.spriteImportMode  = SpriteImportMode.Single;
+                    importer.alphaIsTransparency = true;
+                    importer.filterMode        = FilterMode.Bilinear;
+                    importer.mipmapEnabled     = false;
+                    importer.SaveAndReimport();
+                }
+
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(pngPath);
+                if (sprite != null)
+                {
+                    var so = new SerializedObject(def);
+                    so.FindProperty("<Icon>k__BackingField").objectReferenceValue = sprite;
+                    so.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(def);
+                    generated++;
+                    Debug.Log($"[ItemIconGenerator] Building icon generated for '{def.PieceId}' → {pngPath}");
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            EditorUtility.DisplayDialog("Building Icon Generator",
+                generated > 0
+                    ? $"Done! Generated {generated} building icon(s)."
+                    : "No buildings needed icons (all have icons, or PlacedPrefab is not set).",
+                "OK");
+        }
+
+        // ── Shared renderer ─────────────────────────────────────────────────────
 
         private static Texture2D RenderPrefabIcon(GameObject prefab)
         {

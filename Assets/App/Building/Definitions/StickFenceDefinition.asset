@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Building.BuildingDefinition
   <PieceId>k__BackingField: piece_stick_fence
   <DisplayName>k__BackingField: Stick Fence
-  <Icon>k__BackingField: {fileID: 0}
+  <Icon>k__BackingField: {fileID: 21300000, guid: 64fe8fd983725e541b58e933c3a1f20f, type: 3}
   <PlacedPrefab>k__BackingField: {fileID: 6386877897262748486, guid: f118329ddc48de04084f959d025fe891, type: 3}
   <Cost>k__BackingField:
   - ItemId: branch_01

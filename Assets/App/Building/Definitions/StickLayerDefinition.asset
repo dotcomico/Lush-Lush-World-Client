@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Building.BuildingDefinition
   <PieceId>k__BackingField: piece_stick_layer
   <DisplayName>k__BackingField: Stick Layer
-  <Icon>k__BackingField: {fileID: 0}
+  <Icon>k__BackingField: {fileID: 21300000, guid: b580581bd64b2d648b01b6487c8f1042, type: 3}
   <PlacedPrefab>k__BackingField: {fileID: 6386877897262748486, guid: 0fc3a876eabf7ba448aca72c81dea9db, type: 3}
   <Cost>k__BackingField:
   - ItemId: branch_01

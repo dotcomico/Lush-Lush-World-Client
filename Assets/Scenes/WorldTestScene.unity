@@ -820,8 +820,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Resource.TerrainResourceManager
   resourcePrototypes:
-  - treePrefab: {fileID: 1713665613519977965, guid: c2a96ea34e03a434a9404d7da8bcdc1c, type: 3}
-    interactivePrefab: {fileID: 1713665613519977965, guid: c2a96ea34e03a434a9404d7da8bcdc1c, type: 3}
+  - treePrefab: {fileID: 1713665613519977965, guid: 0e7dbbb1fd793374795868aaa80f3049, type: 3}
+    interactivePrefab: {fileID: 1713665613519977965, guid: 0e7dbbb1fd793374795868aaa80f3049, type: 3}
   - treePrefab: {fileID: 1122301989070356508, guid: 211268216d231514686c81082dba0e41, type: 3}
     interactivePrefab: {fileID: 1122301989070356508, guid: 211268216d231514686c81082dba0e41, type: 3}
   - treePrefab: {fileID: 5717187289026386971, guid: 2f210a8b3247ed14aa3589d5251cf17a, type: 3}

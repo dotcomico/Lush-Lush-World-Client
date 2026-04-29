@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Building.BuildingDefinition
   <PieceId>k__BackingField: piece_stone_layer
   <DisplayName>k__BackingField: Stone Layer
-  <Icon>k__BackingField: {fileID: 0}
+  <Icon>k__BackingField: {fileID: 21300000, guid: 1288c29675117734f93b483c529c0dab, type: 3}
   <PlacedPrefab>k__BackingField: {fileID: 6386877897262748486, guid: aedf8f1ad8605bc4fa4b742dd41eaf62, type: 3}
   <Cost>k__BackingField:
   - ItemId: rock_small
