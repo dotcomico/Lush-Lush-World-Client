@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4777338783260777244}
+  - component: {fileID: 6813151575059828724}
   m_Layer: 0
   m_Name: HeartEnd
   m_TagString: Untagged
@@ -37,6 +38,28 @@ Transform:
   - {fileID: 3717622132954703865}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6813151575059828724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2050074118772806836}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afabd0a54e7cbf14cb8ff35afd9aca97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.World.HeartEndSequencer
+  _snailStatues:
+  - {fileID: 4719268516003043499}
+  - {fileID: 1888775572141199383}
+  - {fileID: 2533492383461204700}
+  - {fileID: 8695924054016805390}
+  _statuesDelay: 5
+  _riseDistance: 2.5
+  _riseDuration: 2.5
+  _portal: {fileID: 8896295826739250786}
+  _portalDelayAfterStatues: 3
 --- !u!1001 &1083178639371245548
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -97,6 +120,11 @@ PrefabInstance:
 --- !u!4 &3717622132954703865 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4368382348273037333, guid: 1de377c3587bb4e44af4ae224dbfc98a, type: 3}
+  m_PrefabInstance: {fileID: 1083178639371245548}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &8896295826739250786 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8394081681167274382, guid: 1de377c3587bb4e44af4ae224dbfc98a, type: 3}
   m_PrefabInstance: {fileID: 1083178639371245548}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2186518811878027089
