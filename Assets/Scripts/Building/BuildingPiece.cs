@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 using LushWorld.Inventory;
 
 namespace LushWorld.Building
@@ -14,6 +15,20 @@ namespace LushWorld.Building
         {
             _def    = def;
             _health = def.MaxHealth;
+            AddNavMeshObstacle();
+        }
+
+        // Carves a hole in the NavMesh so enemies path around this building instead of through it.
+        private void AddNavMeshObstacle()
+        {
+            var col = GetComponentInChildren<Collider>();
+            if (col == null) return;
+
+            var obstacle     = gameObject.AddComponent<NavMeshObstacle>();
+            obstacle.carving = true;
+            obstacle.shape   = NavMeshObstacleShape.Box;
+            obstacle.center  = transform.InverseTransformPoint(col.bounds.center);
+            obstacle.size    = col.bounds.size;
         }
 
         public void TakeDamage(float amount)
