@@ -247,8 +247,13 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Drag drop: `WorldDropZone.OnDrop` → `TryConsumeDrag` → `RequestDropSlotItem` → `DropFromSlot(slot, hotbar, qty:fullStack)`
 - Spawn: camera raycast through `Mouse.current.position` → clamped to `_dropMaxDistance` XZ radius from player; fallback = `player.forward * 1.5f + up * 0.3f`
 
+### Platform Detection (Global Utility)
+- Script: `Assets/Scripts/Utilities/PlatformDetector.cs` — static class; `PlatformDetector.IsMobile` returns `true` on Android/iOS (`SystemInfo.deviceType == Handheld`), `false` on desktop; `PlatformDetector.IsDesktop` is the convenience inverse; in the Editor set `PlatformDetector.SimulateMobileInEditor = true` at runtime to test mobile layout without a device
+- Usage: any script that must behave differently on mobile vs desktop should read `PlatformDetector.IsMobile` — do **not** call `SystemInfo.deviceType` directly
+
 ### Mobile Input
-- Scripts: `Assets/StarterAssets/Mobile/Scripts/UICanvasControllerInput.cs`, `Assets/Scripts/UI/MobileInventoryButton.cs`, `Assets/Scripts/UI/MobilePickupButton.cs`
+- Scripts: `Assets/StarterAssets/Mobile/Scripts/UICanvasControllerInput.cs`, `Assets/Scripts/UI/MobileInventoryButton.cs`, `Assets/Scripts/UI/MobilePickupButton.cs`, `Assets/Scripts/UI/MobileCanvasVisibility.cs`
+- `MobileCanvasVisibility` uses `PlatformDetector.IsMobile` to show/hide the joystick canvas; replaces per-component `_forceVisibleInEditor` flag with global `PlatformDetector.SimulateMobileInEditor`
 - Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (UI_Canvas_StarterAssetsInputs_Joysticks child)
 - Docs: none yet
 
