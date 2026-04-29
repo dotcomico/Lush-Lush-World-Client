@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using LushWorld.Inventory;
+using LushWorld.Utilities;
+
 using UnityEngine;
 using UnityEngine.EventSystems;
 #if ENABLE_INPUT_SYSTEM
@@ -177,34 +179,41 @@ namespace LushWorld.Building
 
         // ── Ghost update ────────────────────────────────────────────────────────────────
 
-        private void UpdateGhost()
+private void UpdateGhost()
         {
             if (_cam == null) _cam = UnityEngine.Camera.main;
             if (_cam == null || _ghostInstance == null) return;
 
+            // On mobile there is no real mouse — use viewport centre so the ghost always
+            // appears in the centre of the camera view where the player is aiming.
+            // On desktop, follow the actual mouse cursor position.
 #if ENABLE_INPUT_SYSTEM
-            Vector2 mp2 = Mouse.current != null
-                ? Mouse.current.position.ReadValue()
-                : new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
-            var mousePos = new Vector3(mp2.x, mp2.y, 0f);
+            Ray ray;
+            if (PlatformDetector.IsDesktop && Mouse.current != null)
+            {
+                Vector2 mp2 = Mouse.current.position.ReadValue();
+                ray = _cam.ScreenPointToRay(new Vector3(mp2.x, mp2.y, 0f));
+            }
+            else
+            {
+                ray = _cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+            }
 #else
-            var mousePos = Input.mousePosition;
+            Ray ray = PlatformDetector.IsMobile
+                ? _cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f))
+                : _cam.ScreenPointToRay(Input.mousePosition);
 #endif
-            var ray = _cam.ScreenPointToRay(mousePos);
 
             if (Physics.Raycast(ray, out var hit, _maxPlacementDistance, _groundLayer))
             {
                 Vector3 snapped = SnapToGrid(hit.point, _activeDef.SnapSize);
                 _ghostGroundPosition = snapped;
 
-                // Move to snapped so renderer bounds are in the correct coordinate space.
                 Quaternion ghostRotation = _placementBaseRotation * Quaternion.Euler(0f, _currentYRotation, 0f);
                 _ghostInstance.transform.SetPositionAndRotation(snapped, ghostRotation);
 
-                // Lift so the mesh bottom is flush with the ground.
-                // Robust formula: handles pivot-at-center and pivot-at-bottom equally.
-                var b    = GetGhostBounds(snapped);
-                float lift    = b.extents.y - (b.center.y - snapped.y);
+                var b = GetGhostBounds(snapped);
+                float lift = b.extents.y - (b.center.y - snapped.y);
                 Vector3 placedPos = snapped + new Vector3(0f, Mathf.Max(0f, lift), 0f);
                 _ghostInstance.transform.position = placedPos;
 
