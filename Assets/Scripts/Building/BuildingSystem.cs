@@ -147,6 +147,10 @@ namespace LushWorld.Building
                 blueprint.transform.position = groundPosition + new Vector3(0f, Mathf.Max(0f, lift), 0f);
             }
 
+            // Remove resource-pickup behaviour before colliders are ever re-enabled by TryComplete.
+            foreach (var node in blueprint.GetComponentsInChildren<LushWorld.Resource.ResourceNode>())
+                Destroy(node);
+
             // Init BEFORE applying skeleton material so BlueprintInstance captures original materials.
             blueprint.AddComponent<BlueprintInstance>().Init(_activeDef);
 
