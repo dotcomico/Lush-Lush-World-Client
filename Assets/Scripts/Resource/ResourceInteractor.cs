@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using UnityEngine;
 using TMPro;
@@ -15,6 +16,10 @@ namespace LushWorld.Resource
     // Phase 2 upgrade: early-return if !IsOwner so non-owned players don't process input.
     public class ResourceInteractor : MonoBehaviour
     {
+        // Fires whenever the nearest BlueprintInstance changes (null = left range, non-null = entered range).
+        // Consumed by MobileSkeletonControls to show/hide skeleton action buttons on mobile.
+        public static event Action<BlueprintInstance> OnNearBlueprintChanged;
+
         [SerializeField] private float pickupRadius = 2.5f;
         [SerializeField] private TMP_Text interactPrompt;
         [SerializeField] private ItemRegistry itemRegistry;
@@ -112,9 +117,15 @@ namespace LushWorld.Resource
 
             if (newNode != _nearestNode || newInteractable != _nearestInteractable)
             {
+                var oldBp = _nearestInteractable as BlueprintInstance;
+                var newBp = newInteractable      as BlueprintInstance;
+
                 _nearestNode         = newNode;
                 _nearestInteractable = newInteractable;
                 UpdatePrompt();
+
+                if (oldBp != newBp)
+                    OnNearBlueprintChanged?.Invoke(newBp);
             }
         }
 

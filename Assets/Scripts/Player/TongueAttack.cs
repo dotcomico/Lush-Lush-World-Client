@@ -25,6 +25,8 @@ namespace LushWorld.Player
         [SerializeField] private float _hitRadius = 0.15f;
         [SerializeField] private LayerMask _hitLayers = ~0;
 
+        public static TongueAttack LocalPlayer { get; private set; }
+
         private InputAction _attackAction;
         private bool _isAttacking;
         private float _lastAttackTime = -999f;
@@ -32,8 +34,14 @@ namespace LushWorld.Player
 
         private void Awake()
         {
+            LocalPlayer = this;
             _attackAction = GetComponent<PlayerInput>().actions["Player/Attack"];
             _holdWait = new WaitForSeconds(_holdDuration);
+        }
+
+        private void OnDestroy()
+        {
+            if (LocalPlayer == this) LocalPlayer = null;
         }
 
         private void OnEnable()
