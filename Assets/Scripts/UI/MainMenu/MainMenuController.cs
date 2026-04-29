@@ -23,6 +23,8 @@ namespace LushWorld.UI.MainMenu
         private static readonly Color QuitHighlight    = new Color(0.45f, 0.45f, 0.45f, 1f);
         private static readonly Color QuitPressed      = new Color(0.20f, 0.20f, 0.20f, 1f);
 
+        [SerializeField] private Texture2D heartSnailTexture;
+
         private void Awake()
         {
             Application.targetFrameRate = 60;
@@ -38,6 +40,7 @@ namespace LushWorld.UI.MainMenu
             Canvas canvas = CreateCanvas();
             CreateBackground(canvas);
             CreateTitleSection(canvas);
+            CreateHeartSnailImage(canvas);
             CreateStartButton(canvas);
             CreateQuitButton(canvas);
         }
@@ -85,16 +88,42 @@ namespace LushWorld.UI.MainMenu
                 fontSize: TitleFontSize,
                 style:    FontStyles.Bold,
                 color:    TitleColor,
-                anchorMin: new Vector2(0.1f, 0.60f),
-                anchorMax: new Vector2(0.9f, 0.80f));
+                anchorMin: new Vector2(0.1f, 0.72f),
+                anchorMax: new Vector2(0.9f, 0.90f));
 
             MakeText(canvas.transform, "Subtitle",
                 text:     "A Snail Survival Adventure",
                 fontSize: SubtitleFontSize,
                 style:    FontStyles.Italic,
                 color:    SubtitleColor,
-                anchorMin: new Vector2(0.1f, 0.52f),
-                anchorMax: new Vector2(0.9f, 0.62f));
+                anchorMin: new Vector2(0.1f, 0.37f),
+                anchorMax: new Vector2(0.9f, 0.47f));
+        }
+
+        // ── HeartSnail Image ─────────────────────────────────────────────────
+
+        private void CreateHeartSnailImage(Canvas canvas)
+        {
+            var go = new GameObject("HeartSnailImage");
+            go.transform.SetParent(canvas.transform, false);
+
+            var img = go.AddComponent<RawImage>();
+            img.texture = heartSnailTexture;
+            img.raycastTarget = false;
+
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin        = new Vector2(0.5f, 0.5f);
+            rt.anchorMax        = new Vector2(0.5f, 0.5f);
+            rt.pivot            = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta        = new Vector2(200f, 200f);
+            rt.anchoredPosition = new Vector2(0f, 60f);
+
+            if (heartSnailTexture != null)
+            {
+                var fitter = go.AddComponent<AspectRatioFitter>();
+                fitter.aspectMode  = AspectRatioFitter.AspectMode.FitInParent;
+                fitter.aspectRatio = (float)heartSnailTexture.width / heartSnailTexture.height;
+            }
         }
 
         // ── Buttons ──────────────────────────────────────────────────────────
@@ -115,7 +144,7 @@ namespace LushWorld.UI.MainMenu
             rt.anchorMax      = new Vector2(0.5f, 0.5f);
             rt.pivot          = new Vector2(0.5f, 0.5f);
             rt.sizeDelta      = new Vector2(StartButtonWidth, StartButtonHeight);
-            rt.anchoredPosition = new Vector2(0f, -20f);
+            rt.anchoredPosition = new Vector2(0f, -190f);
 
             btn.onClick.AddListener(OnStartClicked);
         }

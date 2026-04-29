@@ -285,6 +285,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aac8c7232e7d1874ca1d1357ed0c4a8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.UI.MainMenu.MainMenuController
+  heartSnailTexture: {fileID: 2800000, guid: 4a6ad67c650ab974896bb7479dc93170, type: 3}
 --- !u!4 &910811743
 Transform:
   m_ObjectHideFlags: 0

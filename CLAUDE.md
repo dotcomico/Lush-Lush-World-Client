@@ -342,7 +342,8 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Docs: `../Docs/crafting-building-system.md`
 
 ### Main Menu
-- Script: `Assets/Scripts/UI/MainMenu/MainMenuController.cs` — `MonoBehaviour` on `MainMenuController` GO in `MainMenuScene`; builds entire UI in code on `Start()`: dark-navy background panel, "LUSH LUSH WORLD" TMP title, subtitle, green **START** button (`SceneManager.LoadScene("WorldTestScene")`), gray **QUIT** button (`Application.Quit`); no Inspector refs; `Application.targetFrameRate = 60` in `Awake`
+- Script: `Assets/Scripts/UI/MainMenu/MainMenuController.cs` — `MonoBehaviour` on `MainMenuController` GO in `MainMenuScene`; builds entire UI in code on `Start()`: dark-navy background panel, "LUSH LUSH WORLD" TMP title, HeartSnail image, subtitle, green **START** button (`SceneManager.LoadScene("WorldTestScene")`), gray **QUIT** button (`Application.Quit`); `Application.targetFrameRate = 60` in `Awake`
+- Inspector refs: `[SerializeField] heartSnailTexture` → assign `Assets/App/Media/HeartSnail.gif` on `MainMenuController` GO
 - Scene: `Assets/Scenes/MainMenuScene.unity` — contains `Main Camera` (clearFlags=SolidColor, bg=#1A1A2E), `EventSystem` (InputSystemUIInputModule), `MainMenuController`
 - Scope: local — no dependency on PlayerRig, InventorySystem, or any gameplay system
 - Extension path (GDD Phase 2): replace `SceneManager.LoadScene(GameSceneName)` with lobby scene load; add `HostButton`, `JoinButton`, `SettingsButton` inside `BuildUI()`

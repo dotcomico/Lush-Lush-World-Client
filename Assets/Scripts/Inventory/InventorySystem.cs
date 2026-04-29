@@ -59,6 +59,45 @@ namespace LushWorld.Inventory
             return Data.TryAddItem(stack, out _);
         }
 
+        public int CountItem(string itemId)
+        {
+            int total = 0;
+            for (int i = 0; i < InventoryData.HotbarSize; i++)
+            {
+                var s = Data.GetHotbarSlot(i);
+                if (s.ItemId == itemId) total += s.Quantity;
+            }
+            for (int i = 0; i < InventoryData.BackpackSize; i++)
+            {
+                var s = Data.GetBackpackSlot(i);
+                if (s.ItemId == itemId) total += s.Quantity;
+            }
+            return total;
+        }
+
+        public bool TryConsumeItem(string itemId, int qty = 1)
+        {
+            for (int i = 0; i < InventoryData.HotbarSize; i++)
+            {
+                var s = Data.GetHotbarSlot(i);
+                if (s.ItemId == itemId && s.Quantity >= qty)
+                {
+                    Data.TryRemoveItem(i, true, qty);
+                    return true;
+                }
+            }
+            for (int i = 0; i < InventoryData.BackpackSize; i++)
+            {
+                var s = Data.GetBackpackSlot(i);
+                if (s.ItemId == itemId && s.Quantity >= qty)
+                {
+                    Data.TryRemoveItem(i, false, qty);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public void RequestRemoveItem(int slot, bool isHotbar, int qty)
         {
             Data.TryRemoveItem(slot, isHotbar, qty);
