@@ -35,6 +35,7 @@ namespace LushWorld.Building
         private bool               _menuOpen;
         private UnityEngine.Camera _cam;
         private Vector3            _ghostGroundPosition;
+        private Quaternion         _placementBaseRotation;
 
         // Per-renderer cached material arrays — swapped on validity change, never per-frame allocated.
         private readonly List<(MeshRenderer mr, Material[] valid, Material[] invalid)> _rendererData = new();
@@ -82,6 +83,7 @@ namespace LushWorld.Building
             _activeDef     = def;
             _ghostInstance = Instantiate(def.PlacedPrefab);
             _ghostInstance.name = $"Ghost_{def.PieceId}";
+            _placementBaseRotation = _ghostInstance.transform.rotation;
 
             // Disable physics on ghost — it is visual-only, must not interfere with overlap checks.
             foreach (var col in _ghostInstance.GetComponentsInChildren<Collider>())
@@ -193,7 +195,7 @@ namespace LushWorld.Building
                 _ghostGroundPosition = snapped;
 
                 // Move to snapped so renderer bounds are in the correct coordinate space.
-                _ghostInstance.transform.SetPositionAndRotation(snapped, Quaternion.identity);
+                _ghostInstance.transform.SetPositionAndRotation(snapped, _placementBaseRotation);
 
                 // Lift so the mesh bottom is flush with the ground.
                 // Robust formula: handles pivot-at-center and pivot-at-bottom equally.
