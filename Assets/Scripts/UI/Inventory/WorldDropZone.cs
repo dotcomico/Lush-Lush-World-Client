@@ -1,17 +1,38 @@
 using LushWorld.Inventory;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace LushWorld.UI.Inventory
 {
     // Full-screen invisible panel — sibling index 0 inside InventoryUI canvas, behind every other panel.
-    // Unity's event routing sends OnDrop here only when the drag is released outside any slot,
-    // so this is the single, reliable entry point for "drag item to world" drops.
-    //
-    // Setup: add this component to a full-stretch Image (alpha 0, Raycast Target ON) as the
-    // first child of the InventoryUI canvas root.
+    // raycastTarget is OFF by default; enabled only while a drag is in flight so this panel never
+    // blocks the joystick canvas (which sits at a lower Canvas sortOrder) during normal gameplay.
     public class WorldDropZone : MonoBehaviour, IDropHandler
     {
+        private Image _image;
+
+        private void Awake()
+        {
+            _image = GetComponent<Image>();
+            _image.raycastTarget = false;
+        }
+
+        private void OnEnable()
+        {
+            InventoryDragController.OnDragBegan += EnableRaycast;
+            InventoryDragController.OnDragEnded += DisableRaycast;
+        }
+
+        private void OnDisable()
+        {
+            InventoryDragController.OnDragBegan -= EnableRaycast;
+            InventoryDragController.OnDragEnded -= DisableRaycast;
+        }
+
+        private void EnableRaycast() => _image.raycastTarget = true;
+        private void DisableRaycast() => _image.raycastTarget = false;
+
         public void OnDrop(PointerEventData eventData)
         {
             if (!InventoryDragController.Instance.TryConsumeDrag(out int srcIndex, out bool srcIsHotbar)) return;

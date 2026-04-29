@@ -10,6 +10,9 @@ namespace LushWorld.UI.Inventory
     {
         public static InventoryDragController Instance { get; private set; }
 
+        public static event System.Action OnDragBegan;
+        public static event System.Action OnDragEnded;
+
         public bool IsDragging { get; private set; }
         public int DragSourceIndex { get; private set; }
         public bool DragSourceIsHotbar { get; private set; }
@@ -61,6 +64,8 @@ namespace LushWorld.UI.Inventory
             _dragIconImage.sprite = icon;
             _dragIconImage.color = icon != null ? Color.white : new Color(0.4f, 0.4f, 0.4f, 1f);
             _dragIconImage.gameObject.SetActive(true);
+
+            OnDragBegan?.Invoke();
         }
 
         public void UpdateDragPosition(Vector2 screenPos)
@@ -92,6 +97,8 @@ namespace LushWorld.UI.Inventory
         {
             IsDragging = false;
             _dragIconImage.gameObject.SetActive(false);
+
+            OnDragEnded?.Invoke();
         }
     }
 }
