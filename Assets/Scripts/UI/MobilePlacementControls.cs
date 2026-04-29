@@ -24,8 +24,8 @@ namespace LushWorld.UI
 
             SetVisible(false);
 
-            WireButton("PlaceButton",  () => BuildingSystem.LocalPlayer?.MobilePlacePressed());
-            WireButton("RotateButton", () => BuildingSystem.LocalPlayer?.MobileRotateStep());
+            WireButton("PlaceButton",       () => BuildingSystem.LocalPlayer?.MobilePlacePressed());
+            WireButtonHeld("RotateButton", held => BuildingSystem.LocalPlayer?.MobileRotateHeld(held));
         }
 
         // Subscribe/unsubscribe on the component lifecycle, not the GameObject lifecycle.
@@ -67,6 +67,25 @@ namespace LushWorld.UI
             }
 
             Debug.LogWarning($"[MobilePlacementControls] No UIVirtualButton or Button found on '{childName}'.");
+        }
+
+        private void WireButtonHeld(string childName, UnityEngine.Events.UnityAction<bool> callback)
+        {
+            var t = transform.Find(childName);
+            if (t == null)
+            {
+                Debug.LogWarning($"[MobilePlacementControls] Child '{childName}' not found.");
+                return;
+            }
+
+            var vBtn = t.GetComponent<UIVirtualButton>();
+            if (vBtn != null)
+            {
+                vBtn.buttonStateOutputEvent.AddListener(callback);
+                return;
+            }
+
+            Debug.LogWarning($"[MobilePlacementControls] No UIVirtualButton found on '{childName}' for hold wiring.");
         }
     }
 }

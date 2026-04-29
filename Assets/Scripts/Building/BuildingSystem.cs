@@ -41,6 +41,7 @@ namespace LushWorld.Building
         private Vector3            _ghostGroundPosition;
         private Quaternion         _placementBaseRotation;
         private float              _currentYRotation;
+        private bool               _mobileRotating;
 
         // Per-renderer cached material arrays — swapped on validity change, never per-frame allocated.
         private readonly List<(MeshRenderer mr, Material[] valid, Material[] invalid)> _rendererData = new();
@@ -85,11 +86,10 @@ namespace LushWorld.Building
             RequestPlaceBlueprint(_ghostGroundPosition, _ghostInstance.transform.rotation);
         }
 
-        // Called by the mobile Rotate button — snaps 90° per tap.
-        public void MobileRotateStep()
+        // Called by the mobile Rotate button on press (true) and release (false).
+        public void MobileRotateHeld(bool isHeld)
         {
-            if (_state != PlacementState.PlacingGhost) return;
-            _currentYRotation += 90f;
+            _mobileRotating = _state == PlacementState.PlacingGhost && isHeld;
         }
 
         // Called by BuildingMenuPieceRowUI when the player selects a piece type.
@@ -137,6 +137,7 @@ namespace LushWorld.Building
 
         public void CancelPlacement()
         {
+            _mobileRotating = false;
             if (_ghostInstance != null) Destroy(_ghostInstance);
             _ghostInstance = null;
             _rendererData.Clear();
@@ -259,12 +260,12 @@ namespace LushWorld.Building
         private void HandlePlacementInput()
         {
 #if ENABLE_INPUT_SYSTEM
-            bool rotateHeld = Keyboard.current != null && Keyboard.current.rKey.isPressed;
+            bool rotateHeld = _mobileRotating || (Keyboard.current != null && Keyboard.current.rKey.isPressed);
             bool leftClick  = Mouse.current    != null && Mouse.current.leftButton.wasPressedThisFrame;
             bool cancel     = (Mouse.current   != null && Mouse.current.rightButton.wasPressedThisFrame)
                            || (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame);
 #else
-            bool rotateHeld = Input.GetKey(KeyCode.R);
+            bool rotateHeld = _mobileRotating || Input.GetKey(KeyCode.R);
             bool leftClick  = Input.GetMouseButtonDown(0);
             bool cancel     = Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape);
 #endif
