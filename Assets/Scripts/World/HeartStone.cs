@@ -10,6 +10,7 @@ namespace LushWorld.World
     // Requires a SphereCollider (IsTrigger = true, radius ~2.5) on the same GameObject.
     public class HeartStone : MonoBehaviour, IInteractable
     {
+        public static HeartStone Instance { get; private set; }
         public static event Action OnAllHeartsPlaced;
 
         [SerializeField] private int _totalHearts = 6;
@@ -20,8 +21,14 @@ namespace LushWorld.World
 
         private void Awake()
         {
+            Instance = this;
             foreach (var slot in _heartSlots)
                 if (slot != null) slot.SetActive(false);
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
         }
 
         public string InteractionLabel

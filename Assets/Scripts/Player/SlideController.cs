@@ -243,5 +243,16 @@ namespace LushWorld.Player
             _visualModel.localRotation = to;
             _flipCoroutine = null;
         }
+
+        // Called by PlayerDeathHandler — bypasses the input toggle
+        public void ForceEnterSlide()
+        {
+            if (!IsSliding) EnterSlide();
+        }
+
+        public void ForceExitSlide()
+        {
+            if (IsSliding) ExitSlide();
+        }
     }
 }

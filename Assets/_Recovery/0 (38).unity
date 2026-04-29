@@ -400,10 +400,6 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 0.408
       objectReference: {fileID: 0}
-    - target: {fileID: 704363484478786721, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
-      propertyPath: _respawnHeightOffset
-      value: 100
-      objectReference: {fileID: 0}
     - target: {fileID: 724959463867528224, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_Enabled
       value: 1

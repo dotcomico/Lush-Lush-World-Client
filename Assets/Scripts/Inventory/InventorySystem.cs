@@ -188,6 +188,50 @@ namespace LushWorld.Inventory
                 DropFromSlot(slotIndex, isHotbar, quantity: stack.Quantity);
         }
 
+        // Death — scatters every droppable item in a random ring around the player.
+        public void RequestDeathScatterDrop()
+        {
+            for (int i = 0; i < InventoryData.HotbarSize; i++)
+                ScatterDropFromSlot(i, true);
+            for (int i = 0; i < InventoryData.BackpackSize; i++)
+                ScatterDropFromSlot(i, false);
+        }
+
+        private void ScatterDropFromSlot(int slotIndex, bool isHotbar)
+        {
+            ItemStack stack = Data.GetSlot(slotIndex, isHotbar);
+            if (stack.IsEmpty) return;
+            if (_itemRegistry == null || !_itemRegistry.TryGetById(stack.ItemId, out ItemDefinition def)) return;
+            if (!def.IsDroppable || def.WorldPrefab == null) return;
+
+            int toDrop = stack.Quantity;
+            Data.TryRemoveItem(slotIndex, isHotbar, toDrop);
+
+            Vector2 rand2D = UnityEngine.Random.insideUnitCircle.normalized * UnityEngine.Random.Range(1f, 3f);
+            Vector3 spawnPos = transform.position + new Vector3(rand2D.x, 0.5f, rand2D.y);
+
+            var spawned = UnityEngine.Object.Instantiate((UnityEngine.Object)def.WorldPrefab, spawnPos, UnityEngine.Random.rotation);
+            GameObject dropped = spawned as GameObject ?? (spawned as Component)?.gameObject;
+            if (dropped == null) return;
+
+            if (dropped.TryGetComponent(out ResourceNode node))
+                node.SetQuantity(toDrop);
+
+            foreach (var mc in dropped.GetComponentsInChildren<MeshCollider>())
+                mc.convex = true;
+
+            if (!dropped.TryGetComponent(out Rigidbody rb))
+                rb = dropped.AddComponent<Rigidbody>();
+            rb.mass           = 1f;
+            rb.linearDamping  = 0.5f;
+            rb.angularDamping = _dropAngularDrag;
+
+            Vector3 burst = new Vector3(rand2D.x, 1.5f, rand2D.y).normalized;
+            rb.AddForce(burst * UnityEngine.Random.Range(2f, 5f), ForceMode.Impulse);
+
+            SpawnQuantityLabel(dropped, toDrop);
+        }
+
         private void DropFromSlot(int slotIndex, bool isHotbar, int quantity)
         {
             ItemStack stack = Data.GetSlot(slotIndex, isHotbar);

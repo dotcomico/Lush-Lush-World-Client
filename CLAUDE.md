@@ -191,7 +191,8 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Docs: `../Docs/tongue-attack-system.md` (architecture decision section)
 
 ### Camera System
-- Scripts: `Assets/Scripts/Camera/CameraViewController.cs`, `Assets/Scripts/Camera/ThirdPersonOrbitController.cs`
+- Scripts: `Assets/Scripts/Camera/CameraViewController.cs`, `Assets/Scripts/Camera/ThirdPersonOrbitController.cs`, `Assets/Scripts/Camera/CameraShaker.cs`
+- `CameraShaker` — on `MainCamera`; static `Instance`; shakes `_shakeTarget` (PlayerCameraRoot) in LateUpdate; called by `HeartEndSequencer`; **⚠ currently not working** (see HeartEnd section)
 - Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (CameraViewManager child; ThirdPerson_VirtualCamera + Isometric_VirtualCamera children)
 - Docs: none yet
 
@@ -350,8 +351,19 @@ Quick-reference for every implemented feature. Check this before searching. Upda
   - `Assets/App/Prefabs/Heartstone/Heart.prefab` — has `ResourceNode` (itemId="heart", qty=1) + SphereCollider for pickup
   - `Assets/App/Prefabs/Heartstone/HeartDisplay.prefab` — variant of Heart.prefab with `ResourceNode` + `SphereCollider` disabled; purely visual, used as heart slot children inside Heartstone.prefab
 - Assets: `Assets/App/Items/Heart.asset` (ItemDefinition: id=heart, MaxStack=6, IsDroppable=false) — added to ItemRegistry
-- Static event: `HeartStone.OnAllHeartsPlaced` — fires when all 6 hearts deposited; subscribe here to trigger win screen/cutscene (not yet wired)
+- Static event: `HeartStone.OnAllHeartsPlaced` — fires when all 6 hearts deposited
 - Interaction range: controlled by the trigger SphereCollider radius on `Heartstone.prefab` (smaller = must be closer); ResourceInteractor's own `pickupRadius` (2.5m) is the hard outer limit
+
+### HeartEnd End-Game Sequence
+- Scripts:
+  - `Assets/Scripts/World/HeartEndSequencer.cs` — attach to `HeartEnd` root GO in scene; subscribes to `HeartStone.OnAllHeartsPlaced`; on Awake sinks all SnailStatues underground by `_riseDistance` and hides Portal; sequence: wait `_shakeStartDelay` (3s) → start camera shake → wait remaining `_statuesDelay - _shakeStartDelay` (2s) → statues rise via `SmoothStep` over `_riseDuration` (2.5s) → shake stops → wait `_portalDelayAfterStatues` (3s) → Portal activates
+  - `Assets/Scripts/Camera/CameraShaker.cs` — attach to `MainCamera`; static `Instance`; `Shake(duration, amplitude)` API; shakes `_shakeTarget` (assign `PlayerCameraRoot` in Inspector) via additive Perlin noise in `LateUpdate` with undo-previous-offset pattern to prevent drift; **⚠ UNRESOLVED: shake not visible in-game — root cause unknown, likely Cinemachine v3 + URP pipeline timing or follow-target damping eating the offset**
+- Inspector wiring on `HeartEndSequencer` (on `HeartEnd` GO):
+  - `_snailStatues` (size 4) → `SnailStatue`, `SnailStatue (1)`, `SnailStatue (2)`, `SnailStatue (3)`
+  - `_portal` → `Portal`
+- Inspector wiring on `CameraShaker` (on `MainCamera`):
+  - `_shakeTarget` → `PlayerCameraRoot` (`PlayerRig/PlayerCapsule/PlayerCameraRoot`)
+- Tunable fields on `HeartEndSequencer`: `_statuesDelay` (5s), `_riseDistance` (2.5m), `_riseDuration` (2.5s), `_portalDelayAfterStatues` (3s), `_shakeStartDelay` (3s), `_shakeAmplitude` (0.05)
 
 ### Main Menu
 - Script: `Assets/Scripts/UI/MainMenu/MainMenuController.cs` — `MonoBehaviour` on `MainMenuController` GO in `MainMenuScene`; builds entire UI in code on `Start()`: dark-navy background panel, "LUSH LUSH WORLD" TMP title, HeartSnail image, subtitle, green **START** button (`SceneManager.LoadScene("WorldTestScene")`), gray **QUIT** button (`Application.Quit`); `Application.targetFrameRate = 60` in `Awake`

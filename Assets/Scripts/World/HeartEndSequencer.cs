@@ -1,13 +1,14 @@
 using System.Collections;
 using UnityEngine;
+using LushWorld.Camera;
 
 namespace LushWorld.World
 {
     // Listens for HeartStone.OnAllHeartsPlaced and drives the end-game sequence:
-    // 1. Wait _statuesDelay seconds
-    // 2. All SnailStatues rise from underground (SmoothStep eased) over _riseDuration seconds
-    // 3. Wait _portalDelayAfterStatues seconds
-    // 4. Portal GameObject is activated
+    // 1. Wait _shakeStartDelay seconds → camera shake begins (earth-moving feel)
+    // 2. Wait remaining time until _statuesDelay → all SnailStatues rise over _riseDuration seconds
+    // 3. Shake stops when statues finish rising
+    // 4. Wait _portalDelayAfterStatues seconds → Portal activates
     public class HeartEndSequencer : MonoBehaviour
     {
         [Header("Statues")]
@@ -19,6 +20,10 @@ namespace LushWorld.World
         [Header("Portal")]
         [SerializeField] private GameObject _portal;
         [SerializeField] private float _portalDelayAfterStatues = 3f;
+
+        [Header("Camera Shake")]
+        [SerializeField] private float _shakeStartDelay = 3f;
+        [SerializeField] private float _shakeAmplitude  = 2f;
 
         private float[] _targetYs;
 
@@ -45,7 +50,14 @@ namespace LushWorld.World
 
         private IEnumerator RunSequence()
         {
-            yield return new WaitForSeconds(_statuesDelay);
+            // Shake starts _shakeStartDelay seconds after hearts placed and lasts
+            // until the statues finish rising — covers the full "earth moving" window
+            yield return new WaitForSeconds(_shakeStartDelay);
+
+            float shakeDuration = (_statuesDelay - _shakeStartDelay) + _riseDuration;
+            CameraShaker.Instance?.Shake(shakeDuration, _shakeAmplitude);
+
+            yield return new WaitForSeconds(_statuesDelay - _shakeStartDelay);
             yield return RiseAllStatues();
             yield return new WaitForSeconds(_portalDelayAfterStatues);
 

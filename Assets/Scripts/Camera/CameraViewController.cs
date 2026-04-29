@@ -81,6 +81,15 @@ namespace LushWorld.Camera
                 ext.MinHeightAboveTarget = TPMinHeightAboveTarget;
             }
 
+            // Add shake extension to every vcam so CameraShaker.Shake() works
+            // regardless of which camera is active — same pattern as CameraMinHeightExtension.
+            foreach (var go in new[] { FirstPersonCameraGO, ThirdPersonCameraGO, IsometricCameraGO })
+            {
+                if (go == null) continue;
+                if (go.GetComponent<CameraShakeExtension>() == null)
+                    go.AddComponent<CameraShakeExtension>();
+            }
+
             ApplyMode(_currentMode);
         }
 
