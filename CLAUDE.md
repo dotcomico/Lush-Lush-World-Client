@@ -341,6 +341,18 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Inspector wiring done: `BuildingSystem._ghostValidMaterial`, `_skeletonMaterial`, `_groundLayer=Default(1)`, `_obstacleLayer=Nothing(0)` on PlayerCapsule in PlayerRig.prefab
 - Docs: `../Docs/crafting-building-system.md`
 
+### Heart Collection & HeartStone Win-Condition
+- Scripts:
+  - `Assets/Scripts/World/HeartStone.cs` — MonoBehaviour + IInteractable on `Heartstone.prefab`; `_heartSlots` (array of 6 child display GOs, set in Inspector) start inactive in Awake; `InteractionLabel` returns dynamic "[E] Place heart (N carried)\nX/6" text read by ResourceInteractor's existing prompt system; `Interact()` calls `InventorySystem.TryConsumeItem("heart")`, activates next heart slot, fires `OnAllHeartsPlaced` when all placed
+  - `Assets/Scripts/Inventory/InventorySystem.cs` — added `CountItem(string itemId)` + `TryConsumeItem(string itemId, int qty=1)` public methods
+- Prefabs:
+  - `Assets/App/Prefabs/Heartstone/Heartstone.prefab` — has `HeartStone` component; **two colliders**: (1) SphereCollider `IsTrigger=true` for IInteractable detection (tune radius to control prompt range), (2) MeshCollider or BoxCollider `IsTrigger=false` for physical blocking; 6 child `HeartDisplay.prefab` instances assigned to `_heartSlots`
+  - `Assets/App/Prefabs/Heartstone/Heart.prefab` — has `ResourceNode` (itemId="heart", qty=1) + SphereCollider for pickup
+  - `Assets/App/Prefabs/Heartstone/HeartDisplay.prefab` — variant of Heart.prefab with `ResourceNode` + `SphereCollider` disabled; purely visual, used as heart slot children inside Heartstone.prefab
+- Assets: `Assets/App/Items/Heart.asset` (ItemDefinition: id=heart, MaxStack=6, IsDroppable=false) — added to ItemRegistry
+- Static event: `HeartStone.OnAllHeartsPlaced` — fires when all 6 hearts deposited; subscribe here to trigger win screen/cutscene (not yet wired)
+- Interaction range: controlled by the trigger SphereCollider radius on `Heartstone.prefab` (smaller = must be closer); ResourceInteractor's own `pickupRadius` (2.5m) is the hard outer limit
+
 ### Main Menu
 - Script: `Assets/Scripts/UI/MainMenu/MainMenuController.cs` — `MonoBehaviour` on `MainMenuController` GO in `MainMenuScene`; builds entire UI in code on `Start()`: dark-navy background panel, "LUSH LUSH WORLD" TMP title, HeartSnail image, subtitle, green **START** button (`SceneManager.LoadScene("WorldTestScene")`), gray **QUIT** button (`Application.Quit`); `Application.targetFrameRate = 60` in `Awake`
 - Inspector refs: `[SerializeField] heartSnailTexture` → assign `Assets/App/Media/HeartSnail.gif` on `MainMenuController` GO
