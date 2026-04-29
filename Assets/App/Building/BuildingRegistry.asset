@@ -14,4 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Building.BuildingRegistry
   _pieces:
   - {fileID: 11400000, guid: ca82e14c31be6a34dbb24c53b59acc99, type: 2}
+  - {fileID: 11400000, guid: f0d94c6a825f55b4a9024d6688e2f787, type: 2}
+  - {fileID: 11400000, guid: 6f34e6dbc9789dd4c8acafbd38005a01, type: 2}
+  - {fileID: 11400000, guid: 09f3de5ebb2b02f4e8d3dcafc590a6b9, type: 2}
+  - {fileID: 11400000, guid: a0b606b37db263a40b94af63980b0888, type: 2}
+  - {fileID: 11400000, guid: 40d00c328cdd78045a249e79abdb7e57, type: 2}
+  - {fileID: 11400000, guid: 1ee6bb444f211f248bfba98badb1a579, type: 2}
   - {fileID: 11400000, guid: 0db7843337634874bb195172b97ad82e, type: 2}

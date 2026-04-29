@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f1c89a8f8ab14204b8f615b06ddb04d3, type: 3}
-  m_Name: StickFenceDefinition
+  m_Name: StoneStaircaseDefinition
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Building.BuildingDefinition
-  <PieceId>k__BackingField: piece_stick_fence
-  <DisplayName>k__BackingField: Stick Fence
+  <PieceId>k__BackingField: piece_stone_staircase
+  <DisplayName>k__BackingField: Stone Staircase
   <Icon>k__BackingField: {fileID: 0}
-  <PlacedPrefab>k__BackingField: {fileID: 6386877897262748486, guid: f118329ddc48de04084f959d025fe891, type: 3}
+  <PlacedPrefab>k__BackingField: {fileID: 2818203100947559436, guid: acfc03a08ec34494a8c4dddb7d70bb92, type: 3}
   <Cost>k__BackingField:
-  - ItemId: branch_01
-    Quantity: 4
-  <MaxHealth>k__BackingField: 100
+  - ItemId: rock_small
+    Quantity: 9
+  <MaxHealth>k__BackingField: 150
   <SnapSize>k__BackingField: 0.5
