@@ -278,10 +278,17 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (PlayerCapsule child holds `PlayerStats`); `Assets/App/Prefabs/InventoryUI.prefab` (`StatsRoot` child of Canvas — health bar left/red, hunger bar right/orange, anchored bottom-center above hotbar at Y=130)
 - Static events: `OnStatsReady(float health, float hunger)`, `OnHealthChanged(float)`, `OnHungerChanged(float)`, `OnPlayerDied`
 - Static entry points: `PlayerStats.ConsumeFood(float)`, `PlayerStats.TakeDamage(float)`, `PlayerStats.Heal(float)`
-- Food items: `ItemDefinition.FoodValue` (float) — set > 0 on food SO assets (Mushroom.asset); consumed via `PlayerStats.ConsumeFood()` from item-use system (not yet wired)
+- Food items: `ItemDefinition.FoodValue` (float) — set > 0 on food SO assets (Mushroom.asset = 20); consumed via `PlayerStats.ConsumeFood()` from `EatingSystem`
 - Hunger drains passively (`_passiveHungerDrain` /sec); doubles when `StarterAssetsInputs.sprint == true`; at 0 health drains at `_starvationDamageRate` /sec
 - Setup tool: `Lush World > Setup > Add Player Stats & Bars` (run once, idempotent)
 - Docs: `../Docs/health-hunger-system.md`
+
+### Eating System
+- Script: `Assets/Scripts/Player/EatingSystem.cs` — on `PlayerCapsule`; hold right mouse button for 1.5 s (cursor must be locked) to eat the active hotbar item if its `FoodValue > 0`; cancels on button release, menu open (cursor unlock), or slot change mid-eat
+- Animation: calls `HeldItemView.StartEatingAnimation()` / `StopEatingAnimation()` — coroutine in HeldItemView bobs the held object's `localPosition` for visual "nibble" feedback
+- Inspector wiring: `EatingSystem._itemRegistry` → `Assets/App/Items/ItemRegistry.asset` on `PlayerCapsule` in `PlayerRig.prefab`
+- On complete: `PlayerStats.ConsumeFood(FoodValue)` + `InventorySystem.RequestRemoveItem(selectedSlot, hotbar, 1)`
+- No conflict with right-click split-stack in inventory UI — eating only fires when `Cursor.lockState == Locked`
 
 ### Enemy System
 - Scripts:

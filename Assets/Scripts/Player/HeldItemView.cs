@@ -1,3 +1,4 @@
+using System.Collections;
 using LushWorld.Inventory;
 using UnityEngine;
 
@@ -13,6 +14,7 @@ namespace LushWorld.Player
 
         private InventoryData _data;
         private GameObject _currentHeldObject;
+        private Coroutine _eatingCoroutine;
 
         private void OnEnable()
         {
@@ -59,6 +61,7 @@ namespace LushWorld.Player
 
         private void RefreshHeldItem()
         {
+            StopEatingAnimation();
             ClearHeldItem();
             if (_data == null || _heldItemAnchor == null) return;
 
@@ -82,9 +85,56 @@ namespace LushWorld.Player
 
         private void ClearHeldItem()
         {
+            StopEatingAnimation();
             if (_currentHeldObject == null) return;
             Destroy(_currentHeldObject);
             _currentHeldObject = null;
+        }
+
+        // ── Eating animation API (called by EatingSystem) ────────────────────
+
+        public void StartEatingAnimation()
+        {
+            if (_currentHeldObject == null) return;
+            if (_eatingCoroutine != null) StopCoroutine(_eatingCoroutine);
+            _eatingCoroutine = StartCoroutine(EatingAnimationLoop());
+        }
+
+        public void StopEatingAnimation()
+        {
+            if (_eatingCoroutine != null)
+            {
+                StopCoroutine(_eatingCoroutine);
+                _eatingCoroutine = null;
+            }
+            ResetHeldItemPosition();
+        }
+
+        private IEnumerator EatingAnimationLoop()
+        {
+            float t = 0f;
+            while (true)
+            {
+                t += Time.deltaTime;
+                if (_currentHeldObject == null) yield break;
+
+                float jitterX = Mathf.Sin(t * 13.7f) * 0.006f;
+                float bob     = Mathf.Abs(Mathf.Sin(t * 8f)) * 0.015f;
+                float jitterY = Mathf.Cos(t * 9.3f) * 0.006f;
+
+                _currentHeldObject.transform.localPosition = new Vector3(
+                    -0.02f + jitterX,
+                    0.02f + bob + jitterY,
+                    0.02f
+                );
+                yield return null;
+            }
+        }
+
+        private void ResetHeldItemPosition()
+        {
+            if (_currentHeldObject != null)
+                _currentHeldObject.transform.localPosition = Vector3.zero;
         }
 
         private void UnsubscribeData()
