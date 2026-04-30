@@ -20,6 +20,9 @@ namespace LushWorld.Resource
         // Consumed by MobileSkeletonControls to show/hide skeleton action buttons on mobile.
         public static event Action<BlueprintInstance> OnNearBlueprintChanged;
 
+        // Fires whenever the nearest IInteractable changes (covers BlueprintInstance, HeartStone, and any future interactable).
+        public static event Action<IInteractable> OnNearInteractableChanged;
+
         [SerializeField] private float pickupRadius = 2.5f;
         [SerializeField] private TMP_Text interactPrompt;
         [SerializeField] private ItemRegistry itemRegistry;
@@ -117,8 +120,9 @@ namespace LushWorld.Resource
 
             if (newNode != _nearestNode || newInteractable != _nearestInteractable)
             {
-                var oldBp = _nearestInteractable as BlueprintInstance;
-                var newBp = newInteractable      as BlueprintInstance;
+                var oldBp           = _nearestInteractable as BlueprintInstance;
+                var newBp           = newInteractable      as BlueprintInstance;
+                var oldInteractable = _nearestInteractable;
 
                 _nearestNode         = newNode;
                 _nearestInteractable = newInteractable;
@@ -126,6 +130,9 @@ namespace LushWorld.Resource
 
                 if (oldBp != newBp)
                     OnNearBlueprintChanged?.Invoke(newBp);
+
+                if (oldInteractable != newInteractable)
+                    OnNearInteractableChanged?.Invoke(newInteractable);
             }
         }
 
