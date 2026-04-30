@@ -298,6 +298,12 @@ namespace LushWorld.Resource
                     if (Vector3.SqrMagnitude(spot.worldPos - saved) < toleranceSq)
                     {
                         spot.harvested = true;
+                        // Destroy the GO if Update() already spawned it before LoadGame ran (frame 1 race).
+                        if (spot.activeGO != null)
+                        {
+                            Destroy(spot.activeGO);
+                            spot.activeGO = null;
+                        }
                         break;
                     }
         }

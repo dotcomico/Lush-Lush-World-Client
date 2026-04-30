@@ -11,6 +11,8 @@ namespace LushWorld.World
     // 4. Wait _portalDelayAfterStatues seconds → Portal activates
     public class HeartEndSequencer : MonoBehaviour
     {
+        public static HeartEndSequencer Instance { get; private set; }
+
         [Header("Statues")]
         [SerializeField] private Transform[] _snailStatues;
         [SerializeField] private float _statuesDelay = 5f;
@@ -29,6 +31,8 @@ namespace LushWorld.World
 
         private void Awake()
         {
+            Instance = this;
+
             _targetYs = new float[_snailStatues.Length];
             for (int i = 0; i < _snailStatues.Length; i++)
             {
@@ -41,6 +45,11 @@ namespace LushWorld.World
 
             if (_portal != null)
                 _portal.SetActive(false);
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
         }
 
         private void OnEnable()  => HeartStone.OnAllHeartsPlaced += OnAllHeartsPlaced;
@@ -99,6 +108,20 @@ namespace LushWorld.World
                 pos.y = _targetYs[i];
                 _snailStatues[i].position = pos;
             }
+        }
+
+        // Called by SaveManager when loading a save where all hearts were already placed.
+        // Skips the animation and immediately shows the final state.
+        public void SnapToEndState()
+        {
+            for (int i = 0; i < _snailStatues.Length; i++)
+            {
+                if (_snailStatues[i] == null) continue;
+                Vector3 pos = _snailStatues[i].position;
+                pos.y = _targetYs[i];
+                _snailStatues[i].position = pos;
+            }
+            if (_portal != null) _portal.SetActive(true);
         }
     }
 }

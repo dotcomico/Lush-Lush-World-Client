@@ -27,7 +27,13 @@ namespace LushWorld.Player
         [Header("Starvation")]
         [SerializeField] private float _starvationDamageRate = 2f;   // HP/sec when hunger = 0
 
+        [Header("Health Regen")]
+        [SerializeField] private float _healthRegenInterval = 5f;    // seconds between passive regen ticks
+        [SerializeField] private float _healthRegenAmount   = 5f;    // HP restored per tick
+        [SerializeField] private float _eatHealthBonus      = 15f;   // HP restored on any food consumption
+
         private float _health;
+        private float _healthRegenTimer;
         private float _hunger;
         private bool _isDead;
         private StarterAssetsInputs _inputs;
@@ -62,6 +68,7 @@ namespace LushWorld.Player
             if (_isDead) return;
             DrainHunger();
             if (_hunger <= 0f) ApplyStarvationDamage();
+            RegenerateHealth();
         }
 
         // ── Private logic ─────────────────────────────────────────────────────
@@ -83,6 +90,15 @@ namespace LushWorld.Player
             RequestTakeDamage(_starvationDamageRate * Time.deltaTime);
         }
 
+        private void RegenerateHealth()
+        {
+            if (_health >= _maxHealth) return;
+            _healthRegenTimer += Time.deltaTime;
+            if (_healthRegenTimer < _healthRegenInterval) return;
+            _healthRegenTimer = 0f;
+            RequestHeal(_healthRegenAmount);
+        }
+
         // ── Request API (Phase 2: become [ServerRpc]) ─────────────────────────
 
         public void RequestConsumeFood(float amount)
@@ -90,6 +106,7 @@ namespace LushWorld.Player
             if (_isDead) return;
             _hunger = Mathf.Min(_maxHunger, _hunger + amount);
             OnHungerChanged?.Invoke(HungerNormalized);
+            RequestHeal(_eatHealthBonus);
         }
 
         public void RequestTakeDamage(float amount)
@@ -127,6 +144,7 @@ namespace LushWorld.Player
             _isDead = false;
             _health = _maxHealth;
             _hunger = _maxHunger;
+            _healthRegenTimer = 0f;
             OnHealthChanged?.Invoke(HealthNormalized);
             OnHungerChanged?.Invoke(HungerNormalized);
         }
@@ -137,6 +155,7 @@ namespace LushWorld.Player
             _isDead = false;
             _health = Mathf.Clamp(health, 0f, _maxHealth);
             _hunger = Mathf.Clamp(hunger, 0f, _maxHunger);
+            _healthRegenTimer = 0f;
             OnHealthChanged?.Invoke(HealthNormalized);
             OnHungerChanged?.Invoke(HungerNormalized);
         }

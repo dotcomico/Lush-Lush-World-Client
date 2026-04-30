@@ -374,12 +374,12 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Tunable fields on `HeartEndSequencer`: `_statuesDelay` (5s), `_riseDistance` (2.5m), `_riseDuration` (2.5s), `_portalDelayAfterStatues` (3s), `_shakeStartDelay` (3s), `_shakeAmplitude` (0.05)
 
 ### Main Menu
-- Script: `Assets/Scripts/UI/MainMenu/MainMenuController.cs` — `MonoBehaviour` on `MainMenuController` GO in `MainMenuScene`; builds entire UI in code on `Start()`: dark-navy background panel, "LUSH LUSH WORLD" TMP title, HeartSnail image, subtitle, green **START** button (`SceneManager.LoadScene("WorldTestScene")`), gray **QUIT** button (`Application.Quit`); `Application.targetFrameRate = 60` in `Awake`
+- Script: `Assets/Scripts/UI/MainMenu/MainMenuController.cs` — `MonoBehaviour` on `MainMenuController` GO in `MainMenuScene`; builds entire UI in code on `Start()`: dark-navy background panel, "LUSH LUSH WORLD" TMP title, HeartSnail image, subtitle, green **START** button (`SceneManager.LoadScene("WorldGameScene")`), gray **QUIT** button (`Application.Quit`); `Application.targetFrameRate = 60` in `Awake`
 - Inspector refs: `[SerializeField] heartSnailTexture` → assign `Assets/App/Media/HeartSnail.gif` on `MainMenuController` GO
 - Scene: `Assets/Scenes/MainMenuScene.unity` — contains `Main Camera` (clearFlags=SolidColor, bg=#1A1A2E), `EventSystem` (InputSystemUIInputModule), `MainMenuController`
 - Scope: local — no dependency on PlayerRig, InventorySystem, or any gameplay system
 - Extension path (GDD Phase 2): replace `SceneManager.LoadScene(GameSceneName)` with lobby scene load; add `HostButton`, `JoinButton`, `SettingsButton` inside `BuildUI()`
-- **Build Settings required (manual)**: add `MainMenuScene` at index 0, `WorldTestScene` at index 1 via File → Build Settings → Add Open Scenes
+- **Build Settings required (manual)**: add `MainMenuScene` at index 0, `WorldGameScene` at index 1 via File → Build Settings → Add Open Scenes
 
 ### Save System
 - Scripts:
@@ -391,6 +391,19 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Modified scripts: `PlayerStats` (+`Health`, `Hunger` props, `LoadState()`), `InventoryData` (+`LoadState()`), `HeartStone` (+`PlacedCount` prop, `LoadHearts()`, `OnHeartsChanged` event), `DayNightCycle` (+`LoadTimeOfDay()`), `BuildingSystem` (+`OnBlueprintPlaced` event, `SpawnBlueprintFromSave()`), `BuildingPiece` (+`Def`, `Health` props, `Init` optional health), `BlueprintInstance` (+`SetDepositedFromSave()`)
 - Settings UI: `SettingsUIController` now has `GetCurrentSettings()`, `ApplySettings()`, "Reset Settings" and "Reset Game" buttons (Reset Game requires 2 clicks); each setting handler calls `SaveManager.Instance?.SaveSettings()`
 - Docs: `../Docs/save-system.md`
+
+### Friendly Mob System (GummyBears etc.)
+- Scripts:
+  - `Assets/Scripts/Mobs/MobDefinition.cs` — ScriptableObject config (health, speed, wanderRadius, followRadius, stopDistance, hopHeight, hopDuration)
+  - `Assets/Scripts/Mobs/MobBase.cs` — health, TakeDamage, Die; fires static `OnMobDied(MobBase)`; orange hit flash; no knockback (friendly)
+  - `Assets/Scripts/Mobs/MobAI.cs` — state machine (Wander/Follow/Dead) + NavMeshAgent; ThinkLoop every 0.25 s; HopLoop coroutine oscillates `_visualModel` child localY (hop is purely visual — NavMesh root stays flat); Follow stops at `stopDistance` via `agent.stoppingDistance`; no day/night dependency
+  - `Assets/Scripts/Mobs/MobSpawner.cs` — same proximity spawning as EnemySpawner; single `_maxMobs` cap (no day/night split); no kill debt; subscribes to `MobBase.OnMobDied` to track count
+- Prefabs (to be created by user): `Assets/App/Prefabs/Mobs/GummyBear.prefab`
+  - Prefab structure: root has `NavMeshAgent` + `CapsuleCollider` + `MobBase` + `MobAI`; mesh child assigned to `MobAI._visualModel` in Inspector
+- Definition assets (to be created by user): `Assets/App/Mobs/Definitions/GummyBearDefinition.asset`
+- Static event: `MobBase.OnMobDied(MobBase)` — fires before GO is deactivated
+- HopLoop detail: `_visualModel` localY oscillates using `Mathf.SmoothStep` over `hopDuration`; only runs when `agent.velocity.sqrMagnitude > 0.01`; smoothly settles to 0 when stopped
+- No `MobSpawnerEditor` yet — place spawn point child GOs manually under the MobSpawner GO
 
 ### Dev / Editor Tools
 - Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`, `Assets/Scripts/Editor/StatsSetupTool.cs`

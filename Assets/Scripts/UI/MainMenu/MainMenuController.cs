@@ -7,7 +7,7 @@ namespace LushWorld.UI.MainMenu
 {
     public class MainMenuController : MonoBehaviour
     {
-        private const string GameSceneName = "WorldTestScene";
+        private const string GameSceneName = "WorldGameScene";
         private const float TitleFontSize = 72f;
         private const float SubtitleFontSize = 24f;
         private const float StartButtonWidth = 300f;

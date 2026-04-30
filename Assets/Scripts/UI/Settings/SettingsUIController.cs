@@ -70,6 +70,12 @@ namespace LushWorld.UI
             var _canvas = GetComponent<Canvas>();
             if (_canvas != null) _canvas.sortingOrder = 200;
 
+            // Scale UI with screen resolution, matching the Building/Crafting menus.
+            var scaler = GetComponent<CanvasScaler>() ?? gameObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode         = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight  = 0.5f;
+
             _slide        = FindFirstObjectByType<SlideController>();
             _camView      = FindFirstObjectByType<CameraViewController>();
             _fpc          = FindFirstObjectByType<FirstPersonController>();
@@ -112,7 +118,7 @@ namespace LushWorld.UI
             if (_resetGamePending && Time.time - _resetGamePendingTime > 3f)
             {
                 _resetGamePending = false;
-                if (_resetGameBtnText != null) _resetGameBtnText.text = "Reset Game";
+                if (_resetGameBtnText != null) _resetGameBtnText.text = "Delete Save Data";
             }
         }
 
@@ -138,7 +144,7 @@ namespace LushWorld.UI
             }
         }
 
-        // ── Sync (game state → UI) ────────────────────────────────────────────
+        // ── Sync (game state -> UI) ───────────────────────────────────────────
 
         private void SyncAll()
         {
@@ -187,7 +193,7 @@ namespace LushWorld.UI
                 lens.FieldOfView = v;
                 _fpVCam.m_Lens = lens;
             }
-            if (_fpFovLabel != null) _fpFovLabel.text = v.ToString("F0") + "\u00b0";
+            if (_fpFovLabel != null) _fpFovLabel.text = v.ToString("F0") + "°";
             LushWorld.Save.SaveManager.Instance?.SaveSettings();
         }
 
@@ -199,7 +205,7 @@ namespace LushWorld.UI
                 _orbit.HorizontalSensitivity = v;
                 _orbit.VerticalSensitivity   = v;
             }
-            if (_sensLabel != null) _sensLabel.text = v.ToString("F2") + "\u00d7";
+            if (_sensLabel != null) _sensLabel.text = v.ToString("F2") + "×";
             LushWorld.Save.SaveManager.Instance?.SaveSettings();
         }
 
@@ -207,15 +213,13 @@ namespace LushWorld.UI
 
         void BuildPanel()
         {
-            // Replace any stale scene panel left over from the editor
             var old = transform.Find("SettingsPanel");
             if (old != null) DestroyImmediate(old.gameObject);
 
             _panel = Go("SettingsPanel", transform);
             Stretch(RT(_panel));
 
-            // Dimmer is a sibling of card — keeps click events isolated so
-            // card button clicks don't bubble to dimmerBtn and close the panel.
+            // Full-screen dimmer backdrop; clicking it closes the panel.
             var dimmer = Go("Dimmer", _panel.transform);
             Stretch(RT(dimmer));
             dimmer.AddComponent<Image>().color = C_Dimmer;
@@ -223,80 +227,138 @@ namespace LushWorld.UI
             dimmerBtn.transition = Selectable.Transition.None;
             dimmerBtn.onClick.AddListener(TogglePanel);
 
-            // ── Card ─────────────────────────────────────────────────────────
+            // Card: fills 80% width x 88% height, centered, scales with CanvasScaler.
             var card = Go("Card", _panel.transform);
             var cardRT = RT(card);
-            cardRT.anchorMin = cardRT.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRT.sizeDelta = new Vector2(740, 540);
+            cardRT.anchorMin        = new Vector2(0.10f, 0.06f);
+            cardRT.anchorMax        = new Vector2(0.90f, 0.94f);
+            cardRT.sizeDelta        = Vector2.zero;
             cardRT.anchoredPosition = Vector2.zero;
             card.AddComponent<Image>().color = C_Bg;
 
-            var vg = card.AddComponent<VerticalLayoutGroup>();
-            vg.padding = new RectOffset(34, 34, 22, 22);
+            // ── Fixed title strip pinned to top of card ───────────────────────
+            const float TitleH = 68f; // 22 top-pad + 46 row
+            var titleStrip = Go("TitleStrip", card.transform);
+            var tsRT = RT(titleStrip);
+            tsRT.anchorMin        = new Vector2(0f, 1f);
+            tsRT.anchorMax        = new Vector2(1f, 1f);
+            tsRT.pivot            = new Vector2(0.5f, 1f);
+            tsRT.sizeDelta        = new Vector2(0f, TitleH);
+            tsRT.anchoredPosition = Vector2.zero;
+            var tsVG = titleStrip.AddComponent<VerticalLayoutGroup>();
+            tsVG.padding            = new RectOffset(34, 34, 22, 0);
+            tsVG.spacing            = 0;
+            tsVG.childControlWidth  = true;  tsVG.childForceExpandWidth  = true;
+            tsVG.childControlHeight = false; tsVG.childForceExpandHeight = false;
+
+            var titleRow = HRow(titleStrip.transform, 46, 6);
+            Lbl(titleRow.transform, "SETTINGS", 20, C_White, FontStyles.Bold,
+                TextAlignmentOptions.Left, flexW: 1);
+            var closeBtn = IconBtn(titleRow.transform, "X", 38, 38, C_BtnBg, C_Gray, 16);
+            closeBtn.onClick.AddListener(TogglePanel);
+            LE(closeBtn.gameObject, prefW: 38);
+
+            // 1-px divider below the title strip
+            var divider = Go("Divider", card.transform);
+            var divRT   = RT(divider);
+            divRT.anchorMin        = new Vector2(0f, 1f);
+            divRT.anchorMax        = new Vector2(1f, 1f);
+            divRT.pivot            = new Vector2(0.5f, 1f);
+            divRT.sizeDelta        = new Vector2(0f, 1f);
+            divRT.anchoredPosition = new Vector2(0f, -TitleH);
+            divider.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.07f);
+
+            // ── ScrollRect fills the card below the title strip ───────────────
+            // This means any number of settings rows will scroll rather than overflow.
+            var scrollGO = Go("Scroll", card.transform);
+            var scrollRT = RT(scrollGO);
+            scrollRT.anchorMin = Vector2.zero;
+            scrollRT.anchorMax = Vector2.one;
+            scrollRT.offsetMin = Vector2.zero;
+            scrollRT.offsetMax = new Vector2(0f, -(TitleH + 1f));
+
+            var scroll = scrollGO.AddComponent<ScrollRect>();
+            scroll.horizontal        = false;
+            scroll.vertical          = true;
+            scroll.scrollSensitivity = 30f;
+            scroll.movementType      = ScrollRect.MovementType.Clamped;
+            scroll.inertia           = true;
+            scroll.decelerationRate  = 0.135f;
+
+            var viewport = Go("Viewport", scrollGO.transform);
+            Stretch(RT(viewport));
+            viewport.AddComponent<RectMask2D>();
+            scroll.viewport = RT(viewport);
+
+            // Content grows automatically via ContentSizeFitter.
+            var content = Go("Content", viewport.transform);
+            var contentRT = RT(content);
+            contentRT.anchorMin        = new Vector2(0f, 1f);
+            contentRT.anchorMax        = new Vector2(1f, 1f);
+            contentRT.pivot            = new Vector2(0.5f, 1f);
+            contentRT.sizeDelta        = Vector2.zero;
+            contentRT.anchoredPosition = Vector2.zero;
+
+            var vg = content.AddComponent<VerticalLayoutGroup>();
+            vg.padding = new RectOffset(34, 34, 10, 22);
             vg.spacing = 6;
             vg.childControlWidth  = true;  vg.childForceExpandWidth  = true;
             vg.childControlHeight = false; vg.childForceExpandHeight = false;
 
-            // ── Title row ────────────────────────────────────────────────────
-            var titleRow = HRow(card.transform, 46, 6);
-            Lbl(titleRow.transform, "SETTINGS", 20, C_White, FontStyles.Bold,
-                TextAlignmentOptions.Left, flexW: 1);
-            var closeBtn = IconBtn(titleRow.transform, "\u2715", 38, 38, C_BtnBg, C_Gray, 16);
-            closeBtn.onClick.AddListener(TogglePanel);
-            LE(closeBtn.gameObject, prefW: 38);
-
-            Separator(card.transform);
+            content.AddComponent<ContentSizeFitter>().verticalFit =
+                ContentSizeFitter.FitMode.PreferredSize;
+            scroll.content = contentRT;
 
             // ── Section: CAMERA VIEW ─────────────────────────────────────────
-            SectionHdr(card.transform, "CAMERA VIEW");
+            SectionHdr(content.transform, "CAMERA VIEW");
 
-            var cmRow = SettingRow(card.transform, "Camera Mode");
+            var cmRow = SettingRow(content.transform, "Camera Mode");
             _camModeLabel = Cycler(cmRow.transform, CamModeNames, 0, StepCamMode);
 
-            var slRow = SettingRow(card.transform, "Slide Effect");
+            var slRow = SettingRow(content.transform, "Slide Effect");
             _slideModeLabel = Cycler(slRow.transform, SlideModeNames, 0, StepSlideMode);
-            HintLbl(card.transform, "First person only \u2014 no effect in TP or ISO");
+            HintLbl(content.transform, "First person only — no effect in TP or ISO");
 
             // ── Section: CAMERA TUNING ───────────────────────────────────────
-            SectionHdr(card.transform, "CAMERA TUNING");
+            SectionHdr(content.transform, "CAMERA TUNING");
 
             float initDist = _tpFollow != null ? _tpFollow.CameraDistance : 5f;
-            var tdRow = SettingRow(card.transform, "TP Distance");
+            var tdRow = SettingRow(content.transform, "TP Distance");
             _tpDistLabel = SliderRow(tdRow.transform, 2f, 10f, initDist, OnTPDist,
                 initDist.ToString("F1") + " m");
             _tpDistSlider = tdRow.GetComponentInChildren<Slider>();
-            HintLbl(card.transform, "Third person only");
+            HintLbl(content.transform, "Third person only");
 
             float initFov = _fpVCam != null ? _fpVCam.m_Lens.FieldOfView : 80f;
-            var fovRow = SettingRow(card.transform, "FP Field of View");
+            var fovRow = SettingRow(content.transform, "FP Field of View");
             _fpFovLabel = SliderRow(fovRow.transform, 60f, 110f, initFov, OnFPFov,
-                initFov.ToString("F0") + "\u00b0");
+                initFov.ToString("F0") + "°");
             _fpFovSlider = fovRow.GetComponentInChildren<Slider>();
-            HintLbl(card.transform, "First person only");
+            HintLbl(content.transform, "First person only");
 
             // ── Section: CONTROLS ────────────────────────────────────────────
-            SectionHdr(card.transform, "CONTROLS");
+            SectionHdr(content.transform, "CONTROLS");
 
             float initSens = _fpc != null ? _fpc.RotationSpeed : 1f;
-            var sensRow = SettingRow(card.transform, "Look Sensitivity");
+            var sensRow = SettingRow(content.transform, "Look Sensitivity");
             _sensLabel = SliderRow(sensRow.transform, 0.2f, 3f, initSens, OnSensitivity,
-                initSens.ToString("F2") + "\u00d7");
+                initSens.ToString("F2") + "×");
             _sensSlider = sensRow.GetComponentInChildren<Slider>();
 
-            // \u2500\u2500 Section: GAME \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-            Separator(card.transform);
-            SectionHdr(card.transform, "GAME");
+            // ── Section: GAME ────────────────────────────────────────────────
+            Separator(content.transform);
+            SectionHdr(content.transform, "GAME");
 
-            var resetRow = HRow(card.transform, 38, 10);
-            var resetSettingsBtn = ActionBtn(resetRow.transform, "Reset Settings", C_BtnBg, C_White);
+            var resetSettingsBtn = ActionBtn(content.transform, "Reset Settings", C_BtnBg, C_White);
             resetSettingsBtn.onClick.AddListener(OnResetSettingsClicked);
 
-            var resetGameBtn = ActionBtn(resetRow.transform, "Reset Game",
+            var resetGameBtn = ActionBtn(content.transform, "Delete Save Data",
                 new Color(0.55f, 0.15f, 0.12f, 1f), C_White);
             _resetGameBtnText = resetGameBtn.GetComponentInChildren<TextMeshProUGUI>();
             resetGameBtn.onClick.AddListener(OnResetGameClicked);
 
-            HintLbl(card.transform, "Reset Game: click twice to confirm  \u2022  resets world, keeps settings");
+            HintLbl(content.transform,
+                "Delete Save Data: click twice to confirm  •  wipes world progress, keeps settings");
         }
 
         // ── Save integration ──────────────────────────────────────────────────
@@ -436,23 +498,24 @@ namespace LushWorld.UI
         static void HintLbl(Transform parent, string text)
         {
             var go = Go("Hint", parent);
-            RT(go).sizeDelta = new Vector2(0, 15);
+            RT(go).sizeDelta = new Vector2(0, 18);
             var le = go.AddComponent<LayoutElement>();
-            le.preferredHeight = 15; le.flexibleWidth = 1;
+            le.preferredHeight = 18; le.flexibleWidth = 1;
             var t = go.AddComponent<TextMeshProUGUI>();
             t.text = text;
             t.fontSize = 10;
             t.color = new Color(0.38f, 0.38f, 0.42f, 1f);
             t.fontStyle = FontStyles.Italic;
             t.alignment = TextAlignmentOptions.Right;
-            t.overflowMode = TextOverflowModes.Overflow;
+            t.overflowMode = TextOverflowModes.Ellipsis;
+            t.enableWordWrapping = false;
         }
 
-        // ◄ Value ► cycler — returns the center value label for later sync
+        // Value cycler (◄ label ►) — returns the center label for later sync
         static TextMeshProUGUI Cycler(Transform parent, string[] opts, int startIdx,
                                        System.Action<int> step)
         {
-            var left = IconBtn(parent, "\u25c4", 30, 30, C_BtnBg, C_White, 13);
+            var left = IconBtn(parent, "◄", 30, 30, C_BtnBg, C_White, 13);
             left.onClick.AddListener(() => step(-1));
 
             var valGO = Go("Val", parent);
@@ -463,7 +526,7 @@ namespace LushWorld.UI
             t.overflowMode = TextOverflowModes.Overflow;
             LE(valGO, flexW: 1);
 
-            var right = IconBtn(parent, "\u25ba", 30, 30, C_BtnBg, C_White, 13);
+            var right = IconBtn(parent, "►", 30, 30, C_BtnBg, C_White, 13);
             right.onClick.AddListener(() => step(1));
 
             return t;

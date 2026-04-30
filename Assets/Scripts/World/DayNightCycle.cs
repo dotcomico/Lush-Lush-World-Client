@@ -98,6 +98,7 @@ namespace LushWorld.World
         public void LoadTimeOfDay(float time)
         {
             timeOfDay = Mathf.Clamp01(time);
+            _transitionInitialized = false; // re-init _wasDay from loaded time; prevents spurious day/night event on first post-load Update
             UpdateSun();
             UpdateAmbient();
         }

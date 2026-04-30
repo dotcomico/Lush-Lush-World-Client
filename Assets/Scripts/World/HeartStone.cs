@@ -14,7 +14,8 @@ namespace LushWorld.World
         public static event Action OnAllHeartsPlaced;
         public static event Action OnHeartsChanged;
 
-        public int PlacedCount => _placedCount;
+        public int  PlacedCount => _placedCount;
+        public bool IsComplete  => _placedCount >= _totalHearts;
 
         [SerializeField] private int _totalHearts = 6;
         [SerializeField] private GameObject[] _heartSlots;

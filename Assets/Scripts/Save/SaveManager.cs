@@ -31,6 +31,14 @@ namespace LushWorld.Save
         // Used at save time to detect which scene items (e.g. hearts) have been collected.
         private List<Vector3> _sceneNodeBaseline;
 
+        // Tracked so we can subscribe/unsubscribe to its slot-changed events for per-change saves.
+        private InventoryData _trackedInventory;
+        // Blocks per-slot SaveGame() calls during bulk inventory operations (e.g. ClearAll on death).
+        private bool _suppressSaves;
+        // > 0 while a debounced save is pending; value is the Time.time at which to fire it.
+        private float _deferredSaveTime = -1f;
+        private const float StatsSaveDebounce = 5f;
+
         // ── Lifecycle ─────────────────────────────────────────────────────────
 
         private void Awake()
@@ -51,22 +59,40 @@ namespace LushWorld.Save
 
         private void OnEnable()
         {
-            BlueprintInstance.OnCompleted    += OnBuildingCompleted;
-            BuildingSystem.OnBlueprintPlaced += OnBlueprintPlaced;
-            HeartStone.OnHeartsChanged       += OnHeartsChanged;
-            PlayerStats.OnPlayerDied         += OnPlayerDied;
+            BlueprintInstance.OnCompleted        += OnBuildingCompleted;
+            BuildingSystem.OnBlueprintPlaced     += OnBlueprintPlaced;
+            HeartStone.OnHeartsChanged           += OnHeartsChanged;
+            PlayerStats.OnPlayerDied             += OnPlayerDied;
+            PlayerStats.OnHealthChanged          += OnStatChanged;
+            PlayerStats.OnHungerChanged          += OnStatChanged;
+            InventorySystem.OnInventoryReady     += OnInventoryReady;
+            InventorySystem.OnInventoryDestroyed += UntrackInventory;
         }
 
         private void OnDisable()
         {
-            BlueprintInstance.OnCompleted    -= OnBuildingCompleted;
-            BuildingSystem.OnBlueprintPlaced -= OnBlueprintPlaced;
-            HeartStone.OnHeartsChanged       -= OnHeartsChanged;
-            PlayerStats.OnPlayerDied         -= OnPlayerDied;
+            BlueprintInstance.OnCompleted        -= OnBuildingCompleted;
+            BuildingSystem.OnBlueprintPlaced     -= OnBlueprintPlaced;
+            HeartStone.OnHeartsChanged           -= OnHeartsChanged;
+            PlayerStats.OnPlayerDied             -= OnPlayerDied;
+            PlayerStats.OnHealthChanged          -= OnStatChanged;
+            PlayerStats.OnHungerChanged          -= OnStatChanged;
+            InventorySystem.OnInventoryReady     -= OnInventoryReady;
+            InventorySystem.OnInventoryDestroyed -= UntrackInventory;
+            UntrackInventory();
         }
 
         // Fires before OnDisable in both the Editor (Stop) and builds — reliable quit-save.
         private void OnApplicationQuit() { SaveGame(); }
+
+        private void Update()
+        {
+            if (_deferredSaveTime > 0f && Time.time >= _deferredSaveTime && !_isLoading)
+            {
+                _deferredSaveTime = -1f;
+                SaveGame();
+            }
+        }
 
         private IEnumerator Start()
         {
@@ -89,10 +115,38 @@ namespace LushWorld.Save
         private void OnPlayerDied()
         {
             if (_isLoading) return;
-            // Clear inventory and respawn player stats so the death penalty is persisted.
+            // Suppress per-slot saves while wiping inventory; one explicit save follows.
+            _suppressSaves = true;
             InventorySystem.LocalPlayer?.Data.ClearAll();
             PlayerStats.LocalPlayer?.Respawn();
+            _suppressSaves = false;
             SaveGame();
+        }
+
+        private void OnInventoryReady(InventoryData data)
+        {
+            UntrackInventory();
+            _trackedInventory = data;
+            data.OnHotbarSlotChanged   += OnInventorySlotChanged;
+            data.OnBackpackSlotChanged += OnInventorySlotChanged;
+        }
+
+        private void UntrackInventory()
+        {
+            if (_trackedInventory == null) return;
+            _trackedInventory.OnHotbarSlotChanged   -= OnInventorySlotChanged;
+            _trackedInventory.OnBackpackSlotChanged -= OnInventorySlotChanged;
+            _trackedInventory = null;
+        }
+
+        private void OnInventorySlotChanged(int _, ItemStack __)
+        {
+            if (!_isLoading && !_suppressSaves) SaveGame();
+        }
+
+        private void OnStatChanged(float _)
+        {
+            if (!_isLoading) _deferredSaveTime = Time.time + StatsSaveDebounce;
         }
 
         // ── Auto-save loop ────────────────────────────────────────────────────
@@ -145,6 +199,10 @@ namespace LushWorld.Save
             data.blueprints = new List<BlueprintSaveData>();
             foreach (var bp in FindObjectsByType<BlueprintInstance>(FindObjectsSortMode.None))
             {
+                // TryComplete() adds BuildingPiece before Destroy(this) is deferred — skip to avoid
+                // writing the same GO as both a blueprint and a completed building in the same save.
+                if (bp.GetComponent<BuildingPiece>() != null) continue;
+
                 var bpData = new BlueprintSaveData
                 {
                     pieceId  = bp.Def.PieceId,
@@ -231,6 +289,9 @@ namespace LushWorld.Save
 
             // ── HeartStone ───────────────────────────────────────────────────
             HeartStone.Instance?.LoadHearts(data.heartsPlaced);
+            // Restore end-game visuals without replaying the animation if player already won.
+            if (HeartStone.Instance != null && HeartStone.Instance.IsComplete)
+                HeartEndSequencer.Instance?.SnapToEndState();
 
             // ── Harvested terrain resource spots ─────────────────────────────
             FindFirstObjectByType<TerrainResourceManager>()
