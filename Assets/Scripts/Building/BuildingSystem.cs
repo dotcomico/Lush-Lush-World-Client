@@ -21,6 +21,7 @@ namespace LushWorld.Building
 
         public static event Action<bool> OnBuildingMenuToggleRequested;
         public static event Action<bool> OnPlacementStateChanged;
+        public static event Action       OnBlueprintPlaced;
 
         [SerializeField] private Material  _ghostValidMaterial;
         [SerializeField] private Material  _skeletonMaterial;
@@ -170,6 +171,7 @@ namespace LushWorld.Building
                 Destroy(node);
 
             blueprint.AddComponent<BlueprintInstance>().Init(_activeDef);
+            OnBlueprintPlaced?.Invoke();
 
             foreach (var mr in blueprint.GetComponentsInChildren<MeshRenderer>())
             {
@@ -292,6 +294,42 @@ namespace LushWorld.Building
                 Mathf.Round(position.x / snapSize) * snapSize,
                 position.y,
                 Mathf.Round(position.z / snapSize) * snapSize);
+        }
+
+        // Reconstructs a saved skeleton building. Does NOT fire OnBlueprintPlaced.
+        public void SpawnBlueprintFromSave(BuildingDefinition def, Vector3 groundPosition, Quaternion rotation,
+                                           Dictionary<string, int> deposits)
+        {
+            if (def?.PlacedPrefab == null) return;
+
+            var go = Instantiate(def.PlacedPrefab, groundPosition, rotation);
+            go.name = $"Blueprint_{def.PieceId}";
+
+            var brs = go.GetComponentsInChildren<MeshRenderer>();
+            if (brs.Length > 0)
+            {
+                var b = brs[0].bounds;
+                for (int i = 1; i < brs.Length; i++) b.Encapsulate(brs[i].bounds);
+                float lift = b.extents.y - (b.center.y - groundPosition.y);
+                go.transform.position = groundPosition + new Vector3(0f, Mathf.Max(0f, lift), 0f);
+            }
+
+            foreach (var node in go.GetComponentsInChildren<LushWorld.Resource.ResourceNode>())
+                Destroy(node);
+
+            var bp = go.AddComponent<BlueprintInstance>();
+            bp.Init(def);
+            if (deposits != null) bp.SetDepositedFromSave(deposits);
+
+            foreach (var mr in go.GetComponentsInChildren<MeshRenderer>())
+            {
+                var mats = new Material[mr.sharedMaterials.Length];
+                for (int i = 0; i < mats.Length; i++) mats[i] = _skeletonMaterial;
+                mr.sharedMaterials = mats;
+            }
+
+            foreach (var col in go.GetComponentsInChildren<Collider>())
+                if (!col.isTrigger) col.enabled = false;
         }
     }
 }

@@ -34,6 +34,8 @@ namespace LushWorld.Player
 
         public float HealthNormalized => _health / Mathf.Max(1f, _maxHealth);
         public float HungerNormalized => _hunger / Mathf.Max(1f, _maxHunger);
+        public float Health => _health;
+        public float Hunger => _hunger;
 
         private void Awake()
         {
@@ -125,6 +127,16 @@ namespace LushWorld.Player
             _isDead = false;
             _health = _maxHealth;
             _hunger = _maxHunger;
+            OnHealthChanged?.Invoke(HealthNormalized);
+            OnHungerChanged?.Invoke(HungerNormalized);
+        }
+
+        // Restores exact health/hunger from a save file without going through Request* clamping.
+        public void LoadState(float health, float hunger)
+        {
+            _isDead = false;
+            _health = Mathf.Clamp(health, 0f, _maxHealth);
+            _hunger = Mathf.Clamp(hunger, 0f, _maxHunger);
             OnHealthChanged?.Invoke(HealthNormalized);
             OnHungerChanged?.Invoke(HungerNormalized);
         }

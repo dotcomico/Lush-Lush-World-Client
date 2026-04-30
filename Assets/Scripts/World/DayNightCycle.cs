@@ -94,6 +94,14 @@ namespace LushWorld.World
             else        { onNightStart?.Invoke(); OnNightStarted?.Invoke(); }
         }
 
+        // Jumps time to a saved value and immediately updates lighting.
+        public void LoadTimeOfDay(float time)
+        {
+            timeOfDay = Mathf.Clamp01(time);
+            UpdateSun();
+            UpdateAmbient();
+        }
+
         void Reset()
         {
             ApplyDefaults();

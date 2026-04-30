@@ -152,6 +152,31 @@ namespace LushWorld.Inventory
             SetSelectedHotbarSlot(next);
         }
 
+        // Restores full inventory state from a save file; fires all slot-changed events so UI refreshes.
+        public void LoadState(ItemStack[] hotbar, ItemStack[] backpack, int selectedSlot)
+        {
+            if (hotbar != null)
+            {
+                int len = Math.Min(hotbar.Length, HotbarSize);
+                for (int i = 0; i < HotbarSize; i++)
+                {
+                    _hotbar[i] = i < len ? hotbar[i] : ItemStack.Empty;
+                    OnHotbarSlotChanged?.Invoke(i, _hotbar[i]);
+                }
+            }
+            if (backpack != null)
+            {
+                int len = Math.Min(backpack.Length, BackpackSize);
+                for (int i = 0; i < BackpackSize; i++)
+                {
+                    _backpack[i] = i < len ? backpack[i] : ItemStack.Empty;
+                    OnBackpackSlotChanged?.Invoke(i, _backpack[i]);
+                }
+            }
+            _selectedSlot = Math.Clamp(selectedSlot, 0, HotbarSize - 1);
+            OnSelectedHotbarSlotChanged?.Invoke(_selectedSlot);
+        }
+
         private bool TryAddToArray(ItemStack[] slots, ItemStack incoming, out int placedIndex, bool isHotbar)
         {
             // First pass: stack onto existing matching stacks

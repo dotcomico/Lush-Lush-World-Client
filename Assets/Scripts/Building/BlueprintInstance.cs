@@ -82,6 +82,13 @@ namespace LushWorld.Building
 
         public void Demolish() => Destroy(gameObject);
 
+        // Restores deposited material amounts from a save file (called after Init).
+        public void SetDepositedFromSave(Dictionary<string, int> deposits)
+        {
+            foreach (var kv in deposits)
+                _deposited[kv.Key] = kv.Value;
+        }
+
         private int GetTotalRequired(string itemId)
         {
             int total = 0;

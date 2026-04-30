@@ -12,6 +12,9 @@ namespace LushWorld.World
     {
         public static HeartStone Instance { get; private set; }
         public static event Action OnAllHeartsPlaced;
+        public static event Action OnHeartsChanged;
+
+        public int PlacedCount => _placedCount;
 
         [SerializeField] private int _totalHearts = 6;
         [SerializeField] private GameObject[] _heartSlots;
@@ -59,11 +62,23 @@ namespace LushWorld.World
                 _heartSlots[_placedCount].SetActive(true);
 
             _placedCount++;
+            OnHeartsChanged?.Invoke();
 
             if (_placedCount >= _totalHearts)
             {
                 Debug.Log("[HeartStone] All hearts placed — game complete!");
                 OnAllHeartsPlaced?.Invoke();
+            }
+        }
+
+        // Restores heart count from a save file; activates the correct heart slot displays.
+        public void LoadHearts(int count)
+        {
+            _placedCount = Mathf.Clamp(count, 0, _totalHearts);
+            for (int i = 0; i < _heartSlots.Length; i++)
+            {
+                if (_heartSlots[i] != null)
+                    _heartSlots[i].SetActive(i < _placedCount);
             }
         }
     }

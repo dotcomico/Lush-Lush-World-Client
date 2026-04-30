@@ -380,6 +380,17 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Extension path (GDD Phase 2): replace `SceneManager.LoadScene(GameSceneName)` with lobby scene load; add `HostButton`, `JoinButton`, `SettingsButton` inside `BuildUI()`
 - **Build Settings required (manual)**: add `MainMenuScene` at index 0, `WorldTestScene` at index 1 via File → Build Settings → Add Open Scenes
 
+### Save System
+- Scripts:
+  - `Assets/Scripts/Save/SaveData.cs` — `[Serializable]` data containers: `GameSaveData`, `PlayerSaveData`, `InventorySaveData`, `BlueprintSaveData`, `BuildingPieceSaveData`, `WorldSaveData`, `DepositedItem`
+  - `Assets/Scripts/Save/SettingsData.cs` — `GameSettings` container with defaults; namespace `LushWorld.Save`
+  - `Assets/Scripts/Save/SaveManager.cs` — scene singleton `MonoBehaviour`; `SaveGame()`, `LoadGame()`, `SaveSettings()`, `LoadSettings()`, `ResetGame()`, `ResetSettings()`; 30s auto-save coroutine; subscribes to `BlueprintInstance.OnCompleted`, `BuildingSystem.OnBlueprintPlaced`, `HeartStone.OnHeartsChanged` for immediate saves
+- Save files location: `Application.persistentDataPath/LushWorld/save.json` (game) + `settings.json` (settings)
+- Inspector wiring on `SaveManager` GO: `_buildingRegistry` → `Assets/App/Building/BuildingRegistry.asset`
+- Modified scripts: `PlayerStats` (+`Health`, `Hunger` props, `LoadState()`), `InventoryData` (+`LoadState()`), `HeartStone` (+`PlacedCount` prop, `LoadHearts()`, `OnHeartsChanged` event), `DayNightCycle` (+`LoadTimeOfDay()`), `BuildingSystem` (+`OnBlueprintPlaced` event, `SpawnBlueprintFromSave()`), `BuildingPiece` (+`Def`, `Health` props, `Init` optional health), `BlueprintInstance` (+`SetDepositedFromSave()`)
+- Settings UI: `SettingsUIController` now has `GetCurrentSettings()`, `ApplySettings()`, "Reset Settings" and "Reset Game" buttons (Reset Game requires 2 clicks); each setting handler calls `SaveManager.Instance?.SaveSettings()`
+- Docs: `../Docs/save-system.md`
+
 ### Dev / Editor Tools
 - Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`, `Assets/Scripts/Editor/StatsSetupTool.cs`
 - Prefabs: none

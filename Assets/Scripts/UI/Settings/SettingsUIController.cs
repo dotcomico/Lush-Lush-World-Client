@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Unity.Cinemachine;
+using LushWorld.Save;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -38,8 +39,14 @@ namespace LushWorld.UI
         private TextMeshProUGUI  _sensLabel;
 
         // ── State ─────────────────────────────────────────────────────────────
-        private int _camModeIdx;
-        private int _slideModeIdx;
+        private int   _camModeIdx;
+        private int   _slideModeIdx;
+        private Slider _tpDistSlider;
+        private Slider _fpFovSlider;
+        private Slider _sensSlider;
+        private bool   _resetGamePending;
+        private float  _resetGamePendingTime;
+        private TextMeshProUGUI _resetGameBtnText;
 
         // ── Palette (dark gaming theme) ───────────────────────────────────────
         static readonly Color C_Bg        = new Color(0.080f, 0.080f, 0.098f, 0.97f);
@@ -102,6 +109,11 @@ namespace LushWorld.UI
 #else
             if (Input.GetKeyDown(KeyCode.Escape)) TogglePanel();
 #endif
+            if (_resetGamePending && Time.time - _resetGamePendingTime > 3f)
+            {
+                _resetGamePending = false;
+                if (_resetGameBtnText != null) _resetGameBtnText.text = "Reset Game";
+            }
         }
 
         public void TogglePanel()
@@ -149,6 +161,7 @@ namespace LushWorld.UI
             _camModeIdx = (_camModeIdx + dir + 3) % 3;
             if (_camModeLabel != null) _camModeLabel.text = CamModeNames[_camModeIdx];
             _camView?.SetMode((LushWorld.Camera.CameraMode)_camModeIdx);
+            LushWorld.Save.SaveManager.Instance?.SaveSettings();
         }
 
         void StepSlideMode(int dir)
@@ -156,12 +169,14 @@ namespace LushWorld.UI
             _slideModeIdx = (_slideModeIdx + dir + 3) % 3;
             if (_slideModeLabel != null) _slideModeLabel.text = SlideModeNames[_slideModeIdx];
             if (_slide != null) _slide.CameraMode = (SlideCameraMode)_slideModeIdx;
+            LushWorld.Save.SaveManager.Instance?.SaveSettings();
         }
 
         void OnTPDist(float v)
         {
             if (_tpFollow != null) _tpFollow.CameraDistance = v;
             if (_tpDistLabel != null) _tpDistLabel.text = v.ToString("F1") + " m";
+            LushWorld.Save.SaveManager.Instance?.SaveSettings();
         }
 
         void OnFPFov(float v)
@@ -173,6 +188,7 @@ namespace LushWorld.UI
                 _fpVCam.m_Lens = lens;
             }
             if (_fpFovLabel != null) _fpFovLabel.text = v.ToString("F0") + "\u00b0";
+            LushWorld.Save.SaveManager.Instance?.SaveSettings();
         }
 
         void OnSensitivity(float v)
@@ -184,6 +200,7 @@ namespace LushWorld.UI
                 _orbit.VerticalSensitivity   = v;
             }
             if (_sensLabel != null) _sensLabel.text = v.ToString("F2") + "\u00d7";
+            LushWorld.Save.SaveManager.Instance?.SaveSettings();
         }
 
         // ── Panel builder ─────────────────────────────────────────────────────
@@ -247,12 +264,14 @@ namespace LushWorld.UI
             var tdRow = SettingRow(card.transform, "TP Distance");
             _tpDistLabel = SliderRow(tdRow.transform, 2f, 10f, initDist, OnTPDist,
                 initDist.ToString("F1") + " m");
+            _tpDistSlider = tdRow.GetComponentInChildren<Slider>();
             HintLbl(card.transform, "Third person only");
 
             float initFov = _fpVCam != null ? _fpVCam.m_Lens.FieldOfView : 80f;
             var fovRow = SettingRow(card.transform, "FP Field of View");
             _fpFovLabel = SliderRow(fovRow.transform, 60f, 110f, initFov, OnFPFov,
                 initFov.ToString("F0") + "\u00b0");
+            _fpFovSlider = fovRow.GetComponentInChildren<Slider>();
             HintLbl(card.transform, "First person only");
 
             // ── Section: CONTROLS ────────────────────────────────────────────
@@ -262,6 +281,66 @@ namespace LushWorld.UI
             var sensRow = SettingRow(card.transform, "Look Sensitivity");
             _sensLabel = SliderRow(sensRow.transform, 0.2f, 3f, initSens, OnSensitivity,
                 initSens.ToString("F2") + "\u00d7");
+            _sensSlider = sensRow.GetComponentInChildren<Slider>();
+
+            // \u2500\u2500 Section: GAME \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+            Separator(card.transform);
+            SectionHdr(card.transform, "GAME");
+
+            var resetRow = HRow(card.transform, 38, 10);
+            var resetSettingsBtn = ActionBtn(resetRow.transform, "Reset Settings", C_BtnBg, C_White);
+            resetSettingsBtn.onClick.AddListener(OnResetSettingsClicked);
+
+            var resetGameBtn = ActionBtn(resetRow.transform, "Reset Game",
+                new Color(0.55f, 0.15f, 0.12f, 1f), C_White);
+            _resetGameBtnText = resetGameBtn.GetComponentInChildren<TextMeshProUGUI>();
+            resetGameBtn.onClick.AddListener(OnResetGameClicked);
+
+            HintLbl(card.transform, "Reset Game: click twice to confirm  \u2022  resets world, keeps settings");
+        }
+
+        // ── Save integration ──────────────────────────────────────────────────
+
+        public GameSettings GetCurrentSettings() => new GameSettings
+        {
+            cameraMode      = _camView  != null ? (int)_camView.CurrentMode      : 0,
+            slideMode       = _slide    != null ? (int)_slide.CameraMode         : 0,
+            tpDistance      = _tpFollow != null ? _tpFollow.CameraDistance       : 5f,
+            fpFov           = _fpVCam   != null ? _fpVCam.m_Lens.FieldOfView     : 80f,
+            lookSensitivity = _fpc      != null ? _fpc.RotationSpeed             : 1f,
+        };
+
+        public void ApplySettings(GameSettings s)
+        {
+            _camModeIdx = Mathf.Clamp(s.cameraMode, 0, CamModeNames.Length - 1);
+            if (_camModeLabel != null) _camModeLabel.text = CamModeNames[_camModeIdx];
+            _camView?.SetMode((LushWorld.Camera.CameraMode)_camModeIdx);
+
+            _slideModeIdx = Mathf.Clamp(s.slideMode, 0, SlideModeNames.Length - 1);
+            if (_slideModeLabel != null) _slideModeLabel.text = SlideModeNames[_slideModeIdx];
+            if (_slide != null) _slide.CameraMode = (SlideCameraMode)_slideModeIdx;
+
+            // Setting slider.value fires onValueChanged which updates the underlying system and label.
+            if (_tpDistSlider != null) _tpDistSlider.value = s.tpDistance;
+            if (_fpFovSlider  != null) _fpFovSlider.value  = s.fpFov;
+            if (_sensSlider   != null) _sensSlider.value   = s.lookSensitivity;
+        }
+
+        void OnResetSettingsClicked() =>
+            LushWorld.Save.SaveManager.Instance?.ResetSettings();
+
+        void OnResetGameClicked()
+        {
+            if (!_resetGamePending)
+            {
+                _resetGamePending     = true;
+                _resetGamePendingTime = Time.time;
+                if (_resetGameBtnText != null) _resetGameBtnText.text = "CONFIRM?";
+            }
+            else
+            {
+                LushWorld.Save.SaveManager.Instance?.ResetGame();
+            }
         }
 
         // ── UI factory methods ────────────────────────────────────────────────
@@ -489,6 +568,32 @@ namespace LushWorld.UI
             slider.value         = value;
 
             return slider;
+        }
+
+        static Button ActionBtn(Transform parent, string label, Color bg, Color textColor, int fontSize = 13)
+        {
+            var go = Go("ActBtn_" + label, parent);
+            RT(go).sizeDelta = new Vector2(0, 36);
+            var img = go.AddComponent<Image>();
+            img.color = bg;
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            var cols = btn.colors;
+            cols.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
+            cols.pressedColor     = new Color(0.70f, 0.70f, 0.70f, 1f);
+            btn.colors = cols;
+            LE(go, flexW: 1);
+
+            var lbl = Go("L", go.transform);
+            var rt = RT(lbl);
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            var t = lbl.AddComponent<TextMeshProUGUI>();
+            t.text = label; t.fontSize = fontSize; t.color = textColor;
+            t.alignment = TextAlignmentOptions.Center;
+            t.overflowMode = TextOverflowModes.Overflow;
+
+            return btn;
         }
     }
 }

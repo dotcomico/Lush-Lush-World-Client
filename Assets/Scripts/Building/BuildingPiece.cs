@@ -11,10 +11,14 @@ namespace LushWorld.Building
         private BuildingDefinition _def;
         private float _health;
 
-        public void Init(BuildingDefinition def)
+        public BuildingDefinition Def    => _def;
+        public float              Health => _health;
+
+        // startingHealth < 0 means use def.MaxHealth (fresh build).
+        public void Init(BuildingDefinition def, float startingHealth = -1f)
         {
             _def    = def;
-            _health = def.MaxHealth;
+            _health = startingHealth >= 0f ? startingHealth : def.MaxHealth;
             AddNavMeshObstacle();
         }
 
