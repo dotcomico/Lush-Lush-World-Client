@@ -14,6 +14,8 @@ namespace LushWorld.Player
     {
         private const float EatDuration = 1.5f;
 
+        public static EatingSystem LocalPlayer { get; private set; }
+
         [SerializeField] private ItemRegistry _itemRegistry;
 
         private InventorySystem _inventory;
@@ -23,12 +25,22 @@ namespace LushWorld.Player
         private float _eatProgress;
         private string _cachedItemId;
         private float _cachedFoodValue;
+        private bool _mobileEatHeld;
 
         private void Awake()
         {
+            LocalPlayer = this;
             _inventory = GetComponent<InventorySystem>();
             _heldItemView = GetComponent<HeldItemView>();
         }
+
+        private void OnDestroy()
+        {
+            if (LocalPlayer == this) LocalPlayer = null;
+        }
+
+        // Called by MobileEatButton on pointer down/up.
+        public void MobileEatHeld(bool held) => _mobileEatHeld = held;
 
         private void Update()
         {
@@ -37,12 +49,13 @@ namespace LushWorld.Player
 #else
             bool rightHeld = Input.GetMouseButton(1);
 #endif
-            bool cursorLocked = Cursor.lockState == CursorLockMode.Locked;
+            // Desktop requires cursor locked (menus unlock it). Mobile button bypasses this guard
+            // because the mobile canvas is hidden when menus are open.
+            bool eatHeld = (rightHeld && Cursor.lockState == CursorLockMode.Locked) || _mobileEatHeld;
 
             if (_isEating)
             {
-                // Cancel if button released, cursor unlocked (menu opened), or active item changed
-                if (!rightHeld || !cursorLocked || !ActiveItemMatchesCache())
+                if (!eatHeld || !ActiveItemMatchesCache())
                 {
                     CancelEating();
                     return;
@@ -52,7 +65,7 @@ namespace LushWorld.Player
                 if (_eatProgress >= EatDuration)
                     FinishEating();
             }
-            else if (rightHeld && cursorLocked)
+            else if (eatHeld)
             {
                 TryBeginEating();
             }

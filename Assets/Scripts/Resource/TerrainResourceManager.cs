@@ -281,6 +281,27 @@ namespace LushWorld.Resource
             }
         }
 
+        public List<Vector3> GetHarvestedPositions()
+        {
+            var result = new List<Vector3>();
+            foreach (var spot in _spots)
+                if (spot.harvested) result.Add(spot.worldPos);
+            return result;
+        }
+
+        public void ApplyHarvestedPositions(List<Vector3> positions)
+        {
+            if (positions == null || positions.Count == 0) return;
+            const float toleranceSq = 0.01f; // 10 cm radius
+            foreach (var spot in _spots)
+                foreach (var saved in positions)
+                    if (Vector3.SqrMagnitude(spot.worldPos - saved) < toleranceSq)
+                    {
+                        spot.harvested = true;
+                        break;
+                    }
+        }
+
         private void RemoveTreeInstance(TreeInstance ti)
         {
             if (_terrain == null) return;

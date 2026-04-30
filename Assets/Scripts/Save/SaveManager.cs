@@ -46,19 +46,20 @@ namespace LushWorld.Save
 
         private void OnEnable()
         {
-            BlueprintInstance.OnCompleted  += OnBuildingCompleted;
+            BlueprintInstance.OnCompleted    += OnBuildingCompleted;
             BuildingSystem.OnBlueprintPlaced += OnBlueprintPlaced;
             HeartStone.OnHeartsChanged       += OnHeartsChanged;
-            Application.quitting             += SaveGame;
         }
 
         private void OnDisable()
         {
-            BlueprintInstance.OnCompleted  -= OnBuildingCompleted;
+            BlueprintInstance.OnCompleted    -= OnBuildingCompleted;
             BuildingSystem.OnBlueprintPlaced -= OnBlueprintPlaced;
             HeartStone.OnHeartsChanged       -= OnHeartsChanged;
-            Application.quitting             -= SaveGame;
         }
+
+        // Fires before OnDisable in both the Editor (Stop) and builds — reliable quit-save.
+        private void OnApplicationQuit() { SaveGame(); }
 
         private IEnumerator Start()
         {
@@ -98,8 +99,8 @@ namespace LushWorld.Save
             {
                 data.playerData = new PlayerSaveData
                 {
-                    position  = stats.transform.root.position,
-                    yRotation = stats.transform.root.eulerAngles.y,
+                    position  = stats.transform.position,
+                    yRotation = stats.transform.eulerAngles.y,
                     health    = stats.Health,
                     hunger    = stats.Hunger,
                 };
@@ -152,6 +153,10 @@ namespace LushWorld.Save
             // ── HeartStone ───────────────────────────────────────────────────
             data.heartsPlaced = HeartStone.Instance != null ? HeartStone.Instance.PlacedCount : 0;
 
+            // ── Harvested resource spots ─────────────────────────────────────
+            var trm = FindFirstObjectByType<Resource.TerrainResourceManager>();
+            data.harvestedSpotPositions = trm != null ? trm.GetHarvestedPositions() : new List<Vector3>();
+
             // ── World ────────────────────────────────────────────────────────
             var dnc = FindFirstObjectByType<DayNightCycle>();
             data.worldData = new WorldSaveData { timeOfDay = dnc != null ? dnc.timeOfDay : 0.25f };
@@ -182,10 +187,16 @@ namespace LushWorld.Save
             var stats = PlayerStats.LocalPlayer;
             if (stats != null && data.playerData != null)
             {
-                var root   = stats.transform.root;
-                root.position = data.playerData.position;
-                var euler  = root.eulerAngles;
-                root.eulerAngles = new Vector3(euler.x, data.playerData.yRotation, euler.z);
+                // CharacterController.Warp() is required — setting transform.position on a
+                // CC-driven object is not reliable; Warp syncs the physics capsule correctly.
+                var cc = stats.GetComponent<CharacterController>();
+                if (cc != null)
+                    cc.Warp(data.playerData.position);
+                else
+                    stats.transform.position = data.playerData.position;
+
+                var euler = stats.transform.eulerAngles;
+                stats.transform.eulerAngles = new Vector3(euler.x, data.playerData.yRotation, euler.z);
                 stats.LoadState(data.playerData.health, data.playerData.hunger);
             }
 
@@ -198,6 +209,10 @@ namespace LushWorld.Save
 
             // ── HeartStone ───────────────────────────────────────────────────
             HeartStone.Instance?.LoadHearts(data.heartsPlaced);
+
+            // ── Harvested resource spots ─────────────────────────────────────
+            FindFirstObjectByType<Resource.TerrainResourceManager>()
+                ?.ApplyHarvestedPositions(data.harvestedSpotPositions);
 
             // ── Skeleton buildings ───────────────────────────────────────────
             if (_buildingRegistry != null && data.blueprints != null)

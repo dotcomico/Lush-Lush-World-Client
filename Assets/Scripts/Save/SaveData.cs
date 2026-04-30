@@ -14,6 +14,7 @@ namespace LushWorld.Save
         public List<BuildingPieceSaveData> buildings;
         public int                         heartsPlaced;
         public WorldSaveData               worldData;
+        public List<Vector3>               harvestedSpotPositions;
         public long                        saveTimestamp;
     }
 
