@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using LushWorld.Building;
 using LushWorld.Inventory;
 using LushWorld.Player;
+using LushWorld.Resource;
 using LushWorld.World;
 using LushWorld.UI;
 
@@ -25,6 +26,10 @@ namespace LushWorld.Save
         private string _savePath;
         private string _settingsPath;
         private bool   _isLoading;
+
+        // Baseline of all scene-placed ResourceNode positions captured before any terrain nodes spawn.
+        // Used at save time to detect which scene items (e.g. hearts) have been collected.
+        private List<Vector3> _sceneNodeBaseline;
 
         // ── Lifecycle ─────────────────────────────────────────────────────────
 
@@ -49,6 +54,7 @@ namespace LushWorld.Save
             BlueprintInstance.OnCompleted    += OnBuildingCompleted;
             BuildingSystem.OnBlueprintPlaced += OnBlueprintPlaced;
             HeartStone.OnHeartsChanged       += OnHeartsChanged;
+            PlayerStats.OnPlayerDied         += OnPlayerDied;
         }
 
         private void OnDisable()
@@ -56,6 +62,7 @@ namespace LushWorld.Save
             BlueprintInstance.OnCompleted    -= OnBuildingCompleted;
             BuildingSystem.OnBlueprintPlaced -= OnBlueprintPlaced;
             HeartStone.OnHeartsChanged       -= OnHeartsChanged;
+            PlayerStats.OnPlayerDied         -= OnPlayerDied;
         }
 
         // Fires before OnDisable in both the Editor (Stop) and builds — reliable quit-save.
@@ -63,6 +70,10 @@ namespace LushWorld.Save
 
         private IEnumerator Start()
         {
+            // Capture scene-placed ResourceNode positions BEFORE yield so no terrain nodes
+            // have spawned yet (terrain spawning starts on the first Update call).
+            CaptureSceneNodeBaseline();
+
             yield return null; // wait one frame so all Awake() calls complete
             LoadSettings();
             if (File.Exists(_savePath)) LoadGame();
@@ -74,6 +85,15 @@ namespace LushWorld.Save
         private void OnBuildingCompleted(BlueprintInstance bp) { if (!_isLoading) SaveGame(); }
         private void OnBlueprintPlaced()                       { if (!_isLoading) SaveGame(); }
         private void OnHeartsChanged()                         { if (!_isLoading) SaveGame(); }
+
+        private void OnPlayerDied()
+        {
+            if (_isLoading) return;
+            // Clear inventory and respawn player stats so the death penalty is persisted.
+            InventorySystem.LocalPlayer?.Data.ClearAll();
+            PlayerStats.LocalPlayer?.Respawn();
+            SaveGame();
+        }
 
         // ── Auto-save loop ────────────────────────────────────────────────────
 
@@ -153,9 +173,12 @@ namespace LushWorld.Save
             // ── HeartStone ───────────────────────────────────────────────────
             data.heartsPlaced = HeartStone.Instance != null ? HeartStone.Instance.PlacedCount : 0;
 
-            // ── Harvested resource spots ─────────────────────────────────────
-            var trm = FindFirstObjectByType<Resource.TerrainResourceManager>();
+            // ── Harvested terrain resource spots ─────────────────────────────
+            var trm = FindFirstObjectByType<TerrainResourceManager>();
             data.harvestedSpotPositions = trm != null ? trm.GetHarvestedPositions() : new List<Vector3>();
+
+            // ── Collected scene-placed items (e.g. hearts on the ground) ─────
+            data.collectedSceneNodePositions = GetCollectedSceneNodePositions();
 
             // ── World ────────────────────────────────────────────────────────
             var dnc = FindFirstObjectByType<DayNightCycle>();
@@ -187,13 +210,12 @@ namespace LushWorld.Save
             var stats = PlayerStats.LocalPlayer;
             if (stats != null && data.playerData != null)
             {
-                // CharacterController.Warp() is required — setting transform.position on a
-                // CC-driven object is not reliable; Warp syncs the physics capsule correctly.
+                // Disable CC before teleporting — setting transform.position while it's active
+                // is unreliable; the CC must be toggled so it re-syncs its internal capsule.
                 var cc = stats.GetComponent<CharacterController>();
-                if (cc != null)
-                    cc.Warp(data.playerData.position);
-                else
-                    stats.transform.position = data.playerData.position;
+                if (cc != null) cc.enabled = false;
+                stats.transform.position = data.playerData.position;
+                if (cc != null) cc.enabled = true;
 
                 var euler = stats.transform.eulerAngles;
                 stats.transform.eulerAngles = new Vector3(euler.x, data.playerData.yRotation, euler.z);
@@ -210,9 +232,12 @@ namespace LushWorld.Save
             // ── HeartStone ───────────────────────────────────────────────────
             HeartStone.Instance?.LoadHearts(data.heartsPlaced);
 
-            // ── Harvested resource spots ─────────────────────────────────────
-            FindFirstObjectByType<Resource.TerrainResourceManager>()
+            // ── Harvested terrain resource spots ─────────────────────────────
+            FindFirstObjectByType<TerrainResourceManager>()
                 ?.ApplyHarvestedPositions(data.harvestedSpotPositions);
+
+            // ── Collected scene-placed items — destroy nodes already picked up ─
+            RestoreCollectedSceneNodes(data.collectedSceneNodePositions);
 
             // ── Skeleton buildings ───────────────────────────────────────────
             if (_buildingRegistry != null && data.blueprints != null)
@@ -262,6 +287,50 @@ namespace LushWorld.Save
             FindFirstObjectByType<SettingsUIController>()?.ApplySettings(GameSettings.Default);
         }
 
+        // ── Scene node tracking ───────────────────────────────────────────────
+
+        private void CaptureSceneNodeBaseline()
+        {
+            _sceneNodeBaseline = new List<Vector3>();
+            foreach (var node in FindObjectsByType<ResourceNode>(FindObjectsSortMode.None))
+                _sceneNodeBaseline.Add(node.transform.position);
+        }
+
+        private List<Vector3> GetCollectedSceneNodePositions()
+        {
+            if (_sceneNodeBaseline == null || _sceneNodeBaseline.Count == 0)
+                return new List<Vector3>();
+
+            // Build a set of positions for all currently-alive ResourceNodes.
+            var liveNodes = FindObjectsByType<ResourceNode>(FindObjectsSortMode.None);
+            const float toleranceSq = 0.01f;
+
+            var result = new List<Vector3>();
+            foreach (var baselinePos in _sceneNodeBaseline)
+            {
+                bool alive = false;
+                foreach (var node in liveNodes)
+                    if (Vector3.SqrMagnitude(node.transform.position - baselinePos) < toleranceSq)
+                    { alive = true; break; }
+                if (!alive) result.Add(baselinePos);
+            }
+            return result;
+        }
+
+        private void RestoreCollectedSceneNodes(List<Vector3> collectedPositions)
+        {
+            if (collectedPositions == null || collectedPositions.Count == 0) return;
+
+            const float toleranceSq = 0.01f;
+            foreach (var node in FindObjectsByType<ResourceNode>(FindObjectsSortMode.None))
+                foreach (var pos in collectedPositions)
+                    if (Vector3.SqrMagnitude(node.transform.position - pos) < toleranceSq)
+                    {
+                        Destroy(node.gameObject);
+                        break;
+                    }
+        }
+
         // ── Building spawn helpers ────────────────────────────────────────────
 
         private void SpawnBlueprintFromSave(BlueprintSaveData bd)
@@ -283,7 +352,7 @@ namespace LushWorld.Save
             var go = Instantiate(def.PlacedPrefab, pd.position, pd.rotation);
             go.name = $"Building_{def.PieceId}";
 
-            foreach (var node in go.GetComponentsInChildren<Resource.ResourceNode>())
+            foreach (var node in go.GetComponentsInChildren<ResourceNode>())
                 Destroy(node);
 
             go.AddComponent<BuildingPiece>().Init(def, pd.currentHealth);

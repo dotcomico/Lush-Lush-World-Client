@@ -284,11 +284,12 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Docs: `../Docs/health-hunger-system.md`
 
 ### Eating System
-- Script: `Assets/Scripts/Player/EatingSystem.cs` — on `PlayerCapsule`; hold right mouse button for 1.5 s (cursor must be locked) to eat the active hotbar item if its `FoodValue > 0`; cancels on button release, menu open (cursor unlock), or slot change mid-eat
-- Animation: calls `HeldItemView.StartEatingAnimation()` / `StopEatingAnimation()` — coroutine in HeldItemView bobs the held object's `localPosition` for visual "nibble" feedback
+- Scripts: `Assets/Scripts/Player/EatingSystem.cs` — on `PlayerCapsule`; static `LocalPlayer`; hold right mouse (cursor locked) OR mobile long-press for 1.5 s to eat active hotbar item if `FoodValue > 0`; cancels on release, menu open, or slot change mid-eat
+- Mobile: `Assets/Scripts/UI/MobileEatButton.cs` — invisible UI button over held-item area (bottom-right); `IPointerDownHandler/Up` → `EatingSystem.LocalPlayer.MobileEatHeld(bool)`; pair with `MobileCanvasVisibility`; `OnDisable` auto-releases to handle menu-open edge case
+- Animation: calls `HeldItemView.StartEatingAnimation()` / `StopEatingAnimation()` — coroutine bobs `localPosition` for Minecraft-style nibble feedback
 - Inspector wiring: `EatingSystem._itemRegistry` → `Assets/App/Items/ItemRegistry.asset` on `PlayerCapsule` in `PlayerRig.prefab`
 - On complete: `PlayerStats.ConsumeFood(FoodValue)` + `InventorySystem.RequestRemoveItem(selectedSlot, hotbar, 1)`
-- No conflict with right-click split-stack in inventory UI — eating only fires when `Cursor.lockState == Locked`
+- No conflict with right-click split-stack — desktop eating only fires when `Cursor.lockState == Locked`
 
 ### Enemy System
 - Scripts:
