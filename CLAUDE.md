@@ -403,7 +403,7 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Definition assets (to be created by user): `Assets/App/Mobs/Definitions/GummyBearDefinition.asset`
 - Static event: `MobBase.OnMobDied(MobBase)` — fires before GO is deactivated
 - HopLoop detail: `_visualModel` localY oscillates using `Mathf.SmoothStep` over `hopDuration`; only runs when `agent.velocity.sqrMagnitude > 0.01`; smoothly settles to 0 when stopped
-- No `MobSpawnerEditor` yet — place spawn point child GOs manually under the MobSpawner GO
+- Editor tool: `Assets/Scripts/Editor/MobSpawnerEditor.cs` — same Scatter Tool as EnemySpawnerEditor; teal disc in Scene view; wires `_spawnPoints` array automatically
 
 ### Dev / Editor Tools
 - Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`, `Assets/Scripts/Editor/StatsSetupTool.cs`

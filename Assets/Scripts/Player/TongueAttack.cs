@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using LushWorld.Building;
 using LushWorld.Enemies;
+using LushWorld.Mobs;
 
 namespace LushWorld.Player
 {
@@ -90,7 +91,12 @@ namespace LushWorld.Player
                     Vector3 knockDir = enemy.transform.position - _tonguePivot.position;
                     enemy.ApplyKnockback(knockDir);
                     enemy.TakeDamage(_damage);
+                    continue;
                 }
+
+                MobBase mob = col.GetComponentInParent<MobBase>();
+                if (mob != null)
+                    mob.TakeDamage(_damage);
             }
 
             yield return _holdWait;
