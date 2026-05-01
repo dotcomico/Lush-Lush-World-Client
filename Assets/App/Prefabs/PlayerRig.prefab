@@ -5871,9 +5871,6 @@ PrefabInstance:
       addedObject: {fileID: 2745627720534265304}
     - targetCorrespondingSourceObject: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8650797432705633658}
-    - targetCorrespondingSourceObject: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 2880209291464378640}
     - targetCorrespondingSourceObject: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       insertIndex: -1
@@ -5890,6 +5887,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3521573595346254950}
+    - targetCorrespondingSourceObject: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8650797432705633658}
     - targetCorrespondingSourceObject: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6651047754897187346}
@@ -5966,22 +5966,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Inventory.CursorLockManager
   inputBridge: {fileID: 2321761983353699979}
---- !u!114 &8650797432705633658
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2060063764280730359}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 670beb656c7a59e4a8939b564f0c45db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Resource.ResourceInteractor
-  pickupRadius: 1.5
-  interactPrompt: {fileID: 721509093286942169}
-  itemRegistry: {fileID: 11400000, guid: eb4469f6f44f4124fbbcff30e118c857, type: 2}
-  mobilePickupButton: {fileID: 8166511393619696311}
 --- !u!114 &2880209291464378640
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6028,7 +6012,10 @@ MonoBehaviour:
   _maxHunger: 100
   _passiveHungerDrain: 0.5
   _sprintHungerMultiplier: 0.5
-  _starvationDamageRate: 1
+  _starvationDamageRate: 0.25
+  _healthRegenInterval: 5
+  _healthRegenAmount: 5
+  _eatHealthBonus: 15
 --- !u!114 &6078937360846275602
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6094,6 +6081,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Player.HeldItemView
   _itemRegistry: {fileID: 11400000, guid: eb4469f6f44f4124fbbcff30e118c857, type: 2}
   _heldItemAnchor: {fileID: 519775238646364580}
+--- !u!114 &8650797432705633658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2060063764280730359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 670beb656c7a59e4a8939b564f0c45db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Resource.ResourceInteractor
+  pickupRadius: 1.5
+  interactPrompt: {fileID: 721509093286942169}
+  itemRegistry: {fileID: 11400000, guid: eb4469f6f44f4124fbbcff30e118c857, type: 2}
+  mobilePickupButton: {fileID: 8166511393619696311}
+  DemolishHoldDuration: 0.5
 --- !u!114 &6651047754897187346
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6286,15 +6290,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 439.7861
+      value: 457.53888
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.3566637
+      value: 50.726665
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 353.99634
+      value: 384.63824
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalRotation.w

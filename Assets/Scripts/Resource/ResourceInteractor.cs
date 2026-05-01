@@ -32,7 +32,7 @@ namespace LushWorld.Resource
         private IInteractable _nearestInteractable;
         private readonly Collider[] _overlapBuffer = new Collider[16];
         private float _rHoldTime;
-        private const float DemolishHoldDuration = 1.5f;
+        [SerializeField] private float DemolishHoldDuration = 1.5f;
         private readonly StringBuilder _promptBuilder = new();
 
         private static bool IsMobile() => Application.isMobilePlatform;
