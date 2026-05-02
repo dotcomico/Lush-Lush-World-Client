@@ -9,7 +9,7 @@ namespace LushWorld.UI
 {
     // Nested inside PlayerRig.prefab as CraftingMenuUI.prefab.
     // Subscribes to CraftingSystem static events — no direct scene references needed.
-    public class CraftingUI : MonoBehaviour
+    public class CraftingUI : MenuUIBase
     {
         [SerializeField] private GameObject      _panel;
         [SerializeField] private Transform       _rowContainer;
@@ -21,7 +21,6 @@ namespace LushWorld.UI
         private InventoryData       _inventoryData;
         private StarterAssetsInputs _inputBridge;
         private Canvas              _canvas;
-        private GameObject          _backdrop;
 
         private void OnEnable()
         {
@@ -52,36 +51,8 @@ namespace LushWorld.UI
             if (_canvas != null) _canvas.sortingOrder = 150;
 
             if (_panel != null) _panel.SetActive(false);
-            CreateBackdrop();
+            InitBackdrop("CraftingBackdrop", () => CraftingSystem.LocalPlayer?.CloseCraftingMenu(), _panel);
             BuildRows();
-        }
-
-        // Full-screen button behind the panel — clicking outside the panel closes the menu.
-        private void CreateBackdrop()
-        {
-            _backdrop = new GameObject("CraftingBackdrop", typeof(RectTransform));
-            _backdrop.transform.SetParent(transform, false);
-            _backdrop.layer = gameObject.layer;
-
-            var rt = _backdrop.GetComponent<RectTransform>();
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = rt.offsetMax = Vector2.zero;
-
-            // Tiny non-zero alpha: invisible to the eye but guarantees raycast detection.
-            var img = _backdrop.AddComponent<Image>();
-            img.color = new Color(0f, 0f, 0f, 0.004f);
-            img.raycastTarget = true;
-
-            var btn = _backdrop.AddComponent<Button>();
-            btn.transition = Selectable.Transition.None;
-            btn.onClick.AddListener(() => CraftingSystem.LocalPlayer?.CloseCraftingMenu());
-
-            // Backdrop renders BEHIND the panel (lower sibling index = drawn first).
-            if (_panel != null)
-                _backdrop.transform.SetSiblingIndex(_panel.transform.GetSiblingIndex());
-
-            _backdrop.SetActive(false);
         }
 
         private void OnInventoryReady(InventoryData data)
@@ -109,34 +80,8 @@ namespace LushWorld.UI
 
         private void HandleMenuToggle(bool open)
         {
-            if (_panel    != null) _panel.SetActive(open);
-            if (_backdrop != null) _backdrop.SetActive(open);
-
-            if (open)
-            {
-                // Stop camera immediately: clear buffered look + unlock cursor.
-                if (_inputBridge != null)
-                {
-                    _inputBridge.cursorLocked        = false;
-                    _inputBridge.cursorInputForLook  = false;
-                    _inputBridge.look                = Vector2.zero;
-                    _inputBridge.move                = Vector2.zero;
-                }
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible   = true;
-                RefreshAllRows();
-            }
-            else
-            {
-                // Resume camera: re-lock cursor and re-enable look input.
-                if (_inputBridge != null)
-                {
-                    _inputBridge.cursorLocked       = true;
-                    _inputBridge.cursorInputForLook = true;
-                }
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible   = false;
-            }
+            ApplyMenuToggle(open, _panel, _inputBridge);
+            if (open) RefreshAllRows();
         }
 
         private void HandleCraftResult(string _) => RefreshAllRows();

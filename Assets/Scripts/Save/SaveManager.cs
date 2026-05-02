@@ -8,6 +8,7 @@ using LushWorld.Building;
 using LushWorld.Inventory;
 using LushWorld.Player;
 using LushWorld.Resource;
+using LushWorld.Utilities;
 using LushWorld.World;
 using LushWorld.UI;
 
@@ -153,10 +154,9 @@ namespace LushWorld.Save
 
         private IEnumerator AutoSaveLoop()
         {
-            var wait = new WaitForSeconds(30f);
             while (true)
             {
-                yield return wait;
+                yield return CoroutineUtils.Wait30;
                 if (!_isLoading) SaveGame();
             }
         }
@@ -166,36 +166,44 @@ namespace LushWorld.Save
         public void SaveGame()
         {
             var data = new GameSaveData();
+            SavePlayerState(data);
+            SaveInventoryState(data);
+            SaveBuildingState(data);
+            SaveWorldState(data);
+            data.saveTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            File.WriteAllText(_savePath, JsonUtility.ToJson(data));
+        }
 
-            // ── Player ───────────────────────────────────────────────────────
+        private void SavePlayerState(GameSaveData data)
+        {
             var stats = PlayerStats.LocalPlayer;
-            if (stats != null)
+            if (stats == null) return;
+            data.playerData = new PlayerSaveData
             {
-                data.playerData = new PlayerSaveData
-                {
-                    position  = stats.transform.position,
-                    yRotation = stats.transform.eulerAngles.y,
-                    health    = stats.Health,
-                    hunger    = stats.Hunger,
-                };
-            }
+                position  = stats.transform.position,
+                yRotation = stats.transform.eulerAngles.y,
+                health    = stats.Health,
+                hunger    = stats.Hunger,
+            };
+        }
 
-            // ── Inventory ────────────────────────────────────────────────────
+        private void SaveInventoryState(GameSaveData data)
+        {
             var inv = InventorySystem.LocalPlayer?.Data;
-            if (inv != null)
+            if (inv == null) return;
+            var id = new InventorySaveData
             {
-                var id = new InventorySaveData
-                {
-                    hotbar      = new ItemStack[InventoryData.HotbarSize],
-                    backpack    = new ItemStack[InventoryData.BackpackSize],
-                    selectedSlot = inv.SelectedHotbarSlot,
-                };
-                for (int i = 0; i < InventoryData.HotbarSize;   i++) id.hotbar[i]   = inv.GetHotbarSlot(i);
-                for (int i = 0; i < InventoryData.BackpackSize; i++) id.backpack[i] = inv.GetBackpackSlot(i);
-                data.inventoryData = id;
-            }
+                hotbar       = new ItemStack[InventoryData.HotbarSize],
+                backpack     = new ItemStack[InventoryData.BackpackSize],
+                selectedSlot = inv.SelectedHotbarSlot,
+            };
+            for (int i = 0; i < InventoryData.HotbarSize;   i++) id.hotbar[i]   = inv.GetHotbarSlot(i);
+            for (int i = 0; i < InventoryData.BackpackSize; i++) id.backpack[i] = inv.GetBackpackSlot(i);
+            data.inventoryData = id;
+        }
 
-            // ── Skeleton buildings ───────────────────────────────────────────
+        private void SaveBuildingState(GameSaveData data)
+        {
             data.blueprints = new List<BlueprintSaveData>();
             foreach (var bp in FindObjectsByType<BlueprintInstance>(FindObjectsSortMode.None))
             {
@@ -215,7 +223,6 @@ namespace LushWorld.Save
                 data.blueprints.Add(bpData);
             }
 
-            // ── Completed buildings ──────────────────────────────────────────
             data.buildings = new List<BuildingPieceSaveData>();
             foreach (var piece in FindObjectsByType<BuildingPiece>(FindObjectsSortMode.None))
             {
@@ -227,24 +234,19 @@ namespace LushWorld.Save
                     currentHealth = piece.Health,
                 });
             }
+        }
 
-            // ── HeartStone ───────────────────────────────────────────────────
+        private void SaveWorldState(GameSaveData data)
+        {
             data.heartsPlaced = HeartStone.Instance != null ? HeartStone.Instance.PlacedCount : 0;
 
-            // ── Harvested terrain resource spots ─────────────────────────────
             var trm = FindFirstObjectByType<TerrainResourceManager>();
             data.harvestedSpotPositions = trm != null ? trm.GetHarvestedPositions() : new List<Vector3>();
 
-            // ── Collected scene-placed items (e.g. hearts on the ground) ─────
             data.collectedSceneNodePositions = GetCollectedSceneNodePositions();
 
-            // ── World ────────────────────────────────────────────────────────
             var dnc = FindFirstObjectByType<DayNightCycle>();
             data.worldData = new WorldSaveData { timeOfDay = dnc != null ? dnc.timeOfDay : 0.25f };
-
-            data.saveTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-            File.WriteAllText(_savePath, JsonUtility.ToJson(data));
         }
 
         // ── Load ──────────────────────────────────────────────────────────────
@@ -264,54 +266,62 @@ namespace LushWorld.Save
 
         private void ApplyLoadedData(GameSaveData data)
         {
-            // ── Player position ──────────────────────────────────────────────
+            ApplyPlayerState(data);
+            ApplyInventoryState(data);
+            ApplyWorldState(data);
+            ApplyBuildingState(data);
+        }
+
+        private void ApplyPlayerState(GameSaveData data)
+        {
             var stats = PlayerStats.LocalPlayer;
-            if (stats != null && data.playerData != null)
-            {
-                // Disable CC before teleporting — setting transform.position while it's active
-                // is unreliable; the CC must be toggled so it re-syncs its internal capsule.
-                var cc = stats.GetComponent<CharacterController>();
-                if (cc != null) cc.enabled = false;
-                stats.transform.position = data.playerData.position;
-                if (cc != null) cc.enabled = true;
+            if (stats == null || data.playerData == null) return;
 
-                var euler = stats.transform.eulerAngles;
-                stats.transform.eulerAngles = new Vector3(euler.x, data.playerData.yRotation, euler.z);
-                stats.LoadState(data.playerData.health, data.playerData.hunger);
-            }
+            // Disable CC before teleporting — setting transform.position while it's active
+            // is unreliable; the CC must be toggled so it re-syncs its internal capsule.
+            var cc = stats.GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false;
+            stats.transform.position = data.playerData.position;
+            if (cc != null) cc.enabled = true;
 
-            // ── Inventory ────────────────────────────────────────────────────
-            if (data.inventoryData != null && InventorySystem.LocalPlayer != null)
-                InventorySystem.LocalPlayer.Data.LoadState(
-                    data.inventoryData.hotbar,
-                    data.inventoryData.backpack,
-                    data.inventoryData.selectedSlot);
+            var euler = stats.transform.eulerAngles;
+            stats.transform.eulerAngles = new Vector3(euler.x, data.playerData.yRotation, euler.z);
+            stats.LoadState(data.playerData.health, data.playerData.hunger);
+        }
 
-            // ── HeartStone ───────────────────────────────────────────────────
+        private void ApplyInventoryState(GameSaveData data)
+        {
+            if (data.inventoryData == null || InventorySystem.LocalPlayer == null) return;
+            InventorySystem.LocalPlayer.Data.LoadState(
+                data.inventoryData.hotbar,
+                data.inventoryData.backpack,
+                data.inventoryData.selectedSlot);
+        }
+
+        private void ApplyWorldState(GameSaveData data)
+        {
             HeartStone.Instance?.LoadHearts(data.heartsPlaced);
             // Restore end-game visuals without replaying the animation if player already won.
             if (HeartStone.Instance != null && HeartStone.Instance.IsComplete)
                 HeartEndSequencer.Instance?.SnapToEndState();
 
-            // ── Harvested terrain resource spots ─────────────────────────────
             FindFirstObjectByType<TerrainResourceManager>()
                 ?.ApplyHarvestedPositions(data.harvestedSpotPositions);
 
-            // ── Collected scene-placed items — destroy nodes already picked up ─
             RestoreCollectedSceneNodes(data.collectedSceneNodePositions);
 
-            // ── Skeleton buildings ───────────────────────────────────────────
+            FindFirstObjectByType<DayNightCycle>()?.LoadTimeOfDay(data.worldData?.timeOfDay ?? 0.25f);
+        }
+
+        private void ApplyBuildingState(GameSaveData data)
+        {
             if (_buildingRegistry != null && data.blueprints != null)
                 foreach (var bd in data.blueprints)
                     SpawnBlueprintFromSave(bd);
 
-            // ── Completed buildings ──────────────────────────────────────────
             if (_buildingRegistry != null && data.buildings != null)
                 foreach (var pd in data.buildings)
                     SpawnBuildingPieceFromSave(pd);
-
-            // ── Day / Night ──────────────────────────────────────────────────
-            FindFirstObjectByType<DayNightCycle>()?.LoadTimeOfDay(data.worldData?.timeOfDay ?? 0.25f);
         }
 
         // ── Settings ──────────────────────────────────────────────────────────

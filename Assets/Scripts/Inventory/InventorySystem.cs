@@ -60,38 +60,32 @@ namespace LushWorld.Inventory
         }
 
         public int CountItem(string itemId)
-        {
-            int total = 0;
-            for (int i = 0; i < InventoryData.HotbarSize; i++)
-            {
-                var s = Data.GetHotbarSlot(i);
-                if (s.ItemId == itemId) total += s.Quantity;
-            }
-            for (int i = 0; i < InventoryData.BackpackSize; i++)
-            {
-                var s = Data.GetBackpackSlot(i);
-                if (s.ItemId == itemId) total += s.Quantity;
-            }
-            return total;
-        }
+            => CountItemInSection(itemId, true) + CountItemInSection(itemId, false);
 
         public bool TryConsumeItem(string itemId, int qty = 1)
+            => TryConsumeFromSection(itemId, qty, true) || TryConsumeFromSection(itemId, qty, false);
+
+        private int CountItemInSection(string itemId, bool isHotbar)
         {
-            for (int i = 0; i < InventoryData.HotbarSize; i++)
+            int size  = isHotbar ? InventoryData.HotbarSize : InventoryData.BackpackSize;
+            int count = 0;
+            for (int i = 0; i < size; i++)
             {
-                var s = Data.GetHotbarSlot(i);
-                if (s.ItemId == itemId && s.Quantity >= qty)
-                {
-                    Data.TryRemoveItem(i, true, qty);
-                    return true;
-                }
+                var s = Data.GetSlot(i, isHotbar);
+                if (s.ItemId == itemId) count += s.Quantity;
             }
-            for (int i = 0; i < InventoryData.BackpackSize; i++)
+            return count;
+        }
+
+        private bool TryConsumeFromSection(string itemId, int qty, bool isHotbar)
+        {
+            int size = isHotbar ? InventoryData.HotbarSize : InventoryData.BackpackSize;
+            for (int i = 0; i < size; i++)
             {
-                var s = Data.GetBackpackSlot(i);
+                var s = Data.GetSlot(i, isHotbar);
                 if (s.ItemId == itemId && s.Quantity >= qty)
                 {
-                    Data.TryRemoveItem(i, false, qty);
+                    Data.TryRemoveItem(i, isHotbar, qty);
                     return true;
                 }
             }
@@ -199,42 +193,23 @@ namespace LushWorld.Inventory
 
         private void ScatterDropFromSlot(int slotIndex, bool isHotbar)
         {
-            ItemStack stack = Data.GetSlot(slotIndex, isHotbar);
+            var stack = Data.GetSlot(slotIndex, isHotbar);
             if (stack.IsEmpty) return;
-            if (_itemRegistry == null || !_itemRegistry.TryGetById(stack.ItemId, out ItemDefinition def)) return;
-            if (!def.IsDroppable || def.WorldPrefab == null) return;
-
-            int toDrop = stack.Quantity;
-            Data.TryRemoveItem(slotIndex, isHotbar, toDrop);
-
-            Vector2 rand2D = UnityEngine.Random.insideUnitCircle.normalized * UnityEngine.Random.Range(1f, 3f);
+            Vector2 rand2D   = UnityEngine.Random.insideUnitCircle.normalized * UnityEngine.Random.Range(1f, 3f);
             Vector3 spawnPos = transform.position + new Vector3(rand2D.x, 0.5f, rand2D.y);
-
-            var spawned = UnityEngine.Object.Instantiate((UnityEngine.Object)def.WorldPrefab, spawnPos, UnityEngine.Random.rotation);
-            GameObject dropped = spawned as GameObject ?? (spawned as Component)?.gameObject;
-            if (dropped == null) return;
-
-            if (dropped.TryGetComponent(out ResourceNode node))
-                node.SetQuantity(toDrop);
-
-            foreach (var mc in dropped.GetComponentsInChildren<MeshCollider>())
-                mc.convex = true;
-
-            if (!dropped.TryGetComponent(out Rigidbody rb))
-                rb = dropped.AddComponent<Rigidbody>();
-            rb.mass           = 1f;
-            rb.linearDamping  = 0.5f;
-            rb.angularDamping = _dropAngularDrag;
-
-            Vector3 burst = new Vector3(rand2D.x, 1.5f, rand2D.y).normalized;
-            rb.AddForce(burst * UnityEngine.Random.Range(2f, 5f), ForceMode.Impulse);
-
-            SpawnQuantityLabel(dropped, toDrop);
+            Vector3 burst    = new Vector3(rand2D.x, 1.5f, rand2D.y).normalized * UnityEngine.Random.Range(2f, 5f);
+            SpawnDroppedItem(slotIndex, isHotbar, stack.Quantity, spawnPos, burst);
         }
 
         private void DropFromSlot(int slotIndex, bool isHotbar, int quantity)
         {
-            ItemStack stack = Data.GetSlot(slotIndex, isHotbar);
+            Vector3 throwForce = (transform.forward + Vector3.up * 0.2f).normalized * 2f;
+            SpawnDroppedItem(slotIndex, isHotbar, quantity, GetDropSpawnPosition(), throwForce);
+        }
+
+        private void SpawnDroppedItem(int slotIndex, bool isHotbar, int quantity, Vector3 position, Vector3 forceImpulse)
+        {
+            var stack = Data.GetSlot(slotIndex, isHotbar);
             if (stack.IsEmpty) return;
             if (_itemRegistry == null || !_itemRegistry.TryGetById(stack.ItemId, out ItemDefinition def)) return;
             if (!def.IsDroppable || def.WorldPrefab == null) return;
@@ -242,28 +217,30 @@ namespace LushWorld.Inventory
             int toDrop = Mathf.Min(quantity, stack.Quantity);
             Data.TryRemoveItem(slotIndex, isHotbar, toDrop);
 
-            Vector3 spawnPos = GetDropSpawnPosition();
-            var spawned = UnityEngine.Object.Instantiate((UnityEngine.Object)def.WorldPrefab, spawnPos, UnityEngine.Random.rotation);
+            var spawned = UnityEngine.Object.Instantiate((UnityEngine.Object)def.WorldPrefab, position, UnityEngine.Random.rotation);
             GameObject dropped = spawned as GameObject ?? (spawned as Component)?.gameObject;
             if (dropped == null) return;
 
             if (dropped.TryGetComponent(out ResourceNode node))
                 node.SetQuantity(toDrop);
 
-            // Concave MeshColliders are incompatible with dynamic Rigidbodies — fix before adding.
+            SetupDroppedItemPhysics(dropped, forceImpulse);
+            SpawnQuantityLabel(dropped, toDrop);
+        }
+
+        // Concave MeshColliders are incompatible with dynamic Rigidbodies — fix before adding.
+        // Add physics only on the dropped clone; the original prefab stays static for terrain spawns.
+        private void SetupDroppedItemPhysics(GameObject dropped, Vector3 forceImpulse)
+        {
             foreach (var mc in dropped.GetComponentsInChildren<MeshCollider>())
                 mc.convex = true;
 
-            // Add physics only on the dropped clone; the original prefab stays static for terrain spawns.
             if (!dropped.TryGetComponent(out Rigidbody rb))
                 rb = dropped.AddComponent<Rigidbody>();
             rb.mass           = 1f;
             rb.linearDamping  = 0.5f;
             rb.angularDamping = _dropAngularDrag;
-            Vector3 throwDir  = transform.forward + Vector3.up * 0.2f;
-            rb.AddForce(throwDir.normalized * 2f, ForceMode.Impulse);
-
-            SpawnQuantityLabel(dropped, toDrop);
+            rb.AddForce(forceImpulse, ForceMode.Impulse);
         }
 
         private void SpawnQuantityLabel(GameObject parent, int quantity)
@@ -300,24 +277,27 @@ namespace LushWorld.Inventory
 
         private Vector3 GetDropSpawnPosition()
         {
-            UnityEngine.Camera cam = UnityEngine.Camera.main;
-            if (cam != null)
+            var cam = UnityEngine.Camera.main;
+            if (cam != null && TryGetMouseScreenPosition(out var screenPos))
             {
-#if ENABLE_INPUT_SYSTEM
-                var mouse = UnityEngine.InputSystem.Mouse.current;
-                if (mouse != null)
-                {
-                    Ray ray = cam.ScreenPointToRay(mouse.position.ReadValue());
-                    if (Physics.Raycast(ray, out RaycastHit hit, 20f))
-                        return ClampDropPoint(hit.point + Vector3.up * 0.1f);
-                }
-#else
-                Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+                Ray ray = cam.ScreenPointToRay(screenPos);
                 if (Physics.Raycast(ray, out RaycastHit hit, 20f))
                     return ClampDropPoint(hit.point + Vector3.up * 0.1f);
-#endif
             }
             return transform.position + transform.forward * Mathf.Min(1.5f, _dropMaxDistance) + Vector3.up * 0.3f;
+        }
+
+        private bool TryGetMouseScreenPosition(out Vector2 screenPos)
+        {
+#if ENABLE_INPUT_SYSTEM
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            if (mouse == null) { screenPos = default; return false; }
+            screenPos = mouse.position.ReadValue();
+            return true;
+#else
+            screenPos = Input.mousePosition;
+            return true;
+#endif
         }
 
         // Clamps the drop point to _dropMaxDistance on the XZ plane so items never land far away.

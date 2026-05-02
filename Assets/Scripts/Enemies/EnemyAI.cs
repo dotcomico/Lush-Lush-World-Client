@@ -1,4 +1,5 @@
 using System.Collections;
+using LushWorld.Utilities;
 using UnityEngine;
 using UnityEngine.AI;
 using LushWorld.Player;
@@ -70,47 +71,45 @@ namespace LushWorld.Enemies
 
         private IEnumerator ThinkLoop()
         {
-            var wait = new WaitForSeconds(ThinkInterval);
             while (true)
             {
-                if (_state != State.Dead)
-                    EvaluateState();
-                yield return wait;
+                if (_state != State.Dead) EvaluateState();
+                yield return CoroutineUtils.Wait0_25;
             }
         }
 
         private void EvaluateState()
         {
-            if (_base.Definition == null) return;
-            if (_base.IsKnockedBack) return;
-
-            bool canAggro = _base.Definition.isAlwaysAggressive || _isNight;
+            if (_base.Definition == null || _base.IsKnockedBack) return;
 
             // Patrol when passive (day) OR when player reference is missing —
             // enemies must always roam; never freeze waiting for the player.
-            if (!canAggro || _player == null)
+            if (!CanAggro() || _player == null)
             {
                 if (_state != State.Patrol) TransitionTo(State.Patrol);
                 ExecutePatrol();
                 return;
             }
 
-            float dist = Vector3.Distance(transform.position, _player.position);
+            State next = EvaluateDistanceState(GetDistanceToPlayer());
+            if (next != _state) TransitionTo(next);
 
-            if (dist <= _base.Definition.attackRadius)
-            {
-                if (_state != State.Attack) TransitionTo(State.Attack);
-            }
-            else if (dist <= _base.Definition.detectionRadius)
-            {
-                if (_state != State.Chase) TransitionTo(State.Chase);
-                _agent.SetDestination(_player.position);
-            }
-            else
-            {
-                if (_state != State.Patrol) TransitionTo(State.Patrol);
-                ExecutePatrol();
-            }
+            // Per-state continuous actions — called every think tick regardless of transition.
+            if (next == State.Chase)  _agent.SetDestination(_player.position);
+            if (next == State.Patrol) ExecutePatrol();
+        }
+
+        private bool CanAggro()
+            => _base.Definition.isAlwaysAggressive || _isNight;
+
+        private float GetDistanceToPlayer()
+            => Vector3.Distance(transform.position, _player.position);
+
+        private State EvaluateDistanceState(float dist)
+        {
+            if (dist <= _base.Definition.attackRadius)    return State.Attack;
+            if (dist <= _base.Definition.detectionRadius) return State.Chase;
+            return State.Patrol;
         }
 
         private void TransitionTo(State next)

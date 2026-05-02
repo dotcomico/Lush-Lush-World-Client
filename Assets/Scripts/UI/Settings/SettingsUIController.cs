@@ -76,25 +76,8 @@ namespace LushWorld.UI
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight  = 0.5f;
 
-            _slide        = FindFirstObjectByType<SlideController>();
-            _camView      = FindFirstObjectByType<CameraViewController>();
-            _fpc          = FindFirstObjectByType<FirstPersonController>();
-            _orbit        = FindFirstObjectByType<ThirdPersonOrbitController>();
-            _inputBridge  = FindFirstObjectByType<StarterAssetsInputs>();
-
-            if (_camView != null)
-            {
-                if (_camView.FirstPersonCameraGO != null)
-                    _fpVCam = _camView.FirstPersonCameraGO.GetComponent<CinemachineVirtualCamera>();
-
-                if (_camView.ThirdPersonCameraGO != null)
-                {
-                    var tpVCam = _camView.ThirdPersonCameraGO.GetComponent<CinemachineVirtualCamera>();
-                    if (tpVCam != null)
-                        _tpFollow = tpVCam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
-                }
-            }
-
+            DiscoverSceneReferences();
+            SetupCinemachineRefs();
             BuildPanel();
 
             var gearBtn = transform.Find("GearButton")?.GetComponent<Button>();
@@ -207,6 +190,30 @@ namespace LushWorld.UI
             }
             if (_sensLabel != null) _sensLabel.text = v.ToString("F2") + "×";
             LushWorld.Save.SaveManager.Instance?.SaveSettings();
+        }
+
+        private void DiscoverSceneReferences()
+        {
+            _slide       = FindFirstObjectByType<SlideController>();
+            _camView     = FindFirstObjectByType<CameraViewController>();
+            _fpc         = FindFirstObjectByType<FirstPersonController>();
+            _orbit       = FindFirstObjectByType<ThirdPersonOrbitController>();
+            _inputBridge = FindFirstObjectByType<StarterAssetsInputs>();
+        }
+
+        private void SetupCinemachineRefs()
+        {
+            if (_camView == null) return;
+
+            if (_camView.FirstPersonCameraGO != null)
+                _fpVCam = _camView.FirstPersonCameraGO.GetComponent<CinemachineVirtualCamera>();
+
+            if (_camView.ThirdPersonCameraGO != null)
+            {
+                var tpVCam = _camView.ThirdPersonCameraGO.GetComponent<CinemachineVirtualCamera>();
+                if (tpVCam != null)
+                    _tpFollow = tpVCam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+            }
         }
 
         // ── Panel builder ─────────────────────────────────────────────────────
@@ -374,6 +381,13 @@ namespace LushWorld.UI
 
         public void ApplySettings(GameSettings s)
         {
+            ApplyCameraViewSettings(s);
+            ApplyCameraTuningSettings(s);
+            ApplyControlsSettings(s);
+        }
+
+        private void ApplyCameraViewSettings(GameSettings s)
+        {
             _camModeIdx = Mathf.Clamp(s.cameraMode, 0, CamModeNames.Length - 1);
             if (_camModeLabel != null) _camModeLabel.text = CamModeNames[_camModeIdx];
             _camView?.SetMode((LushWorld.Camera.CameraMode)_camModeIdx);
@@ -381,11 +395,18 @@ namespace LushWorld.UI
             _slideModeIdx = Mathf.Clamp(s.slideMode, 0, SlideModeNames.Length - 1);
             if (_slideModeLabel != null) _slideModeLabel.text = SlideModeNames[_slideModeIdx];
             if (_slide != null) _slide.CameraMode = (SlideCameraMode)_slideModeIdx;
+        }
 
+        private void ApplyCameraTuningSettings(GameSettings s)
+        {
             // Setting slider.value fires onValueChanged which updates the underlying system and label.
             if (_tpDistSlider != null) _tpDistSlider.value = s.tpDistance;
             if (_fpFovSlider  != null) _fpFovSlider.value  = s.fpFov;
-            if (_sensSlider   != null) _sensSlider.value   = s.lookSensitivity;
+        }
+
+        private void ApplyControlsSettings(GameSettings s)
+        {
+            if (_sensSlider != null) _sensSlider.value = s.lookSensitivity;
         }
 
         void OnResetSettingsClicked() =>

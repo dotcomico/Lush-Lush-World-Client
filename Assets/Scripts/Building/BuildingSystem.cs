@@ -106,30 +106,8 @@ namespace LushWorld.Building
             _placementBaseRotation = _ghostInstance.transform.rotation;
             _currentYRotation      = 0f;
 
-            foreach (var col in _ghostInstance.GetComponentsInChildren<Collider>())
-                col.enabled = false;
-
-            foreach (var node in _ghostInstance.GetComponentsInChildren<LushWorld.Resource.ResourceNode>())
-                Destroy(node);
-
-            _ghostInvalidMaterial = new Material(_ghostValidMaterial);
-            Color validColor = _ghostValidMaterial.GetColor("_BaseColor");
-            _ghostInvalidMaterial.SetColor("_BaseColor", new Color(1f, 0.2f, 0.2f, validColor.a));
-
-            _rendererData.Clear();
-            foreach (var mr in _ghostInstance.GetComponentsInChildren<MeshRenderer>())
-            {
-                int slots = mr.sharedMaterials.Length;
-                var validMats   = new Material[slots];
-                var invalidMats = new Material[slots];
-                for (int i = 0; i < slots; i++)
-                {
-                    validMats[i]   = _ghostValidMaterial;
-                    invalidMats[i] = _ghostInvalidMaterial;
-                }
-                mr.sharedMaterials = validMats;
-                _rendererData.Add((mr, validMats, invalidMats));
-            }
+            SetupGhostColliders();
+            PrepareGhostMaterials();
 
             _isValidPlacement = true;
             _state = PlacementState.PlacingGhost;
@@ -163,8 +141,7 @@ namespace LushWorld.Building
             {
                 var b = brs[0].bounds;
                 for (int i = 1; i < brs.Length; i++) b.Encapsulate(brs[i].bounds);
-                float lift = b.extents.y - (b.center.y - groundPosition.y);
-                blueprint.transform.position = groundPosition + new Vector3(0f, Mathf.Max(0f, lift), 0f);
+                blueprint.transform.position = groundPosition + new Vector3(0f, ComputeYOffset(b, groundPosition.y), 0f);
             }
 
             foreach (var node in blueprint.GetComponentsInChildren<LushWorld.Resource.ResourceNode>())
@@ -193,6 +170,22 @@ namespace LushWorld.Building
             if (_cam == null) _cam = UnityEngine.Camera.main;
             if (_cam == null || _ghostInstance == null) return;
 
+            if (TryGetGroundHit(out var hit))
+            {
+                UpdateGhostTransform(hit.point);
+                _ghostInstance.SetActive(true);
+            }
+            else
+            {
+                _ghostInstance.SetActive(false);
+                SetValidity(false);
+            }
+
+            HandlePlacementInput();
+        }
+
+        private bool TryGetGroundHit(out RaycastHit hit)
+        {
 #if ENABLE_INPUT_SYSTEM
             Ray ray;
             if (PlatformDetector.IsDesktop && Mouse.current != null)
@@ -209,31 +202,26 @@ namespace LushWorld.Building
                 ? _cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f))
                 : _cam.ScreenPointToRay(Input.mousePosition);
 #endif
-
-            if (Physics.Raycast(ray, out var hit, _maxPlacementDistance, _groundLayer))
-            {
-                Vector3 snapped = SnapToGrid(hit.point, _activeDef.SnapSize);
-                _ghostGroundPosition = snapped;
-
-                Quaternion ghostRotation = _placementBaseRotation * Quaternion.Euler(0f, _currentYRotation, 0f);
-                _ghostInstance.transform.SetPositionAndRotation(snapped, ghostRotation);
-
-                var b = GetGhostBounds(snapped);
-                float lift = b.extents.y - (b.center.y - snapped.y);
-                Vector3 placedPos = snapped + new Vector3(0f, Mathf.Max(0f, lift), 0f);
-                _ghostInstance.transform.position = placedPos;
-
-                _ghostInstance.SetActive(true);
-                SetValidity(CheckPlacementValid(placedPos));
-            }
-            else
-            {
-                _ghostInstance.SetActive(false);
-                SetValidity(false);
-            }
-
-            HandlePlacementInput();
+            return Physics.Raycast(ray, out hit, _maxPlacementDistance, _groundLayer);
         }
+
+        private void UpdateGhostTransform(Vector3 groundPoint)
+        {
+            Vector3 snapped = SnapToGrid(groundPoint, _activeDef.SnapSize);
+            _ghostGroundPosition = snapped;
+
+            Quaternion ghostRotation = _placementBaseRotation * Quaternion.Euler(0f, _currentYRotation, 0f);
+            _ghostInstance.transform.SetPositionAndRotation(snapped, ghostRotation);
+
+            var b = GetGhostBounds(snapped);
+            Vector3 placedPos = snapped + new Vector3(0f, ComputeYOffset(b, snapped.y), 0f);
+            _ghostInstance.transform.position = placedPos;
+
+            SetValidity(CheckPlacementValid(placedPos));
+        }
+
+        private static float ComputeYOffset(Bounds bounds, float groundY)
+            => Mathf.Max(0f, bounds.extents.y - (bounds.center.y - groundY));
 
         private void SetValidity(bool valid)
         {
@@ -261,29 +249,62 @@ namespace LushWorld.Building
 
         private void HandlePlacementInput()
         {
-#if ENABLE_INPUT_SYSTEM
-            bool rotateHeld = _mobileRotating || (Keyboard.current != null && Keyboard.current.rKey.isPressed);
-            bool leftClick  = Mouse.current    != null && Mouse.current.leftButton.wasPressedThisFrame;
-            bool cancel     = (Mouse.current   != null && Mouse.current.rightButton.wasPressedThisFrame)
-                           || (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame);
-#else
-            bool rotateHeld = _mobileRotating || Input.GetKey(KeyCode.R);
-            bool leftClick  = Input.GetMouseButtonDown(0);
-            bool cancel     = Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape);
-#endif
-            if (rotateHeld) _currentYRotation += _rotationSpeed * Time.deltaTime;
+            ReadPlacementInput(out bool place, out bool cancel, out bool rotateHeld);
 
+            if (rotateHeld) _currentYRotation += _rotationSpeed * Time.deltaTime;
             if (cancel) { CancelPlacement(); return; }
 
-            if (leftClick
+            if (place
                 && _isValidPlacement
                 && _ghostInstance != null
                 && _ghostInstance.activeSelf
                 && !EventSystem.current.IsPointerOverGameObject())
             {
-                RequestPlaceBlueprint(
-                    _ghostGroundPosition,
-                    _ghostInstance.transform.rotation);
+                RequestPlaceBlueprint(_ghostGroundPosition, _ghostInstance.transform.rotation);
+            }
+        }
+
+        private void ReadPlacementInput(out bool place, out bool cancel, out bool rotateHeld)
+        {
+#if ENABLE_INPUT_SYSTEM
+            rotateHeld = _mobileRotating || (Keyboard.current != null && Keyboard.current.rKey.isPressed);
+            place      = Mouse.current    != null && Mouse.current.leftButton.wasPressedThisFrame;
+            cancel     = (Mouse.current   != null && Mouse.current.rightButton.wasPressedThisFrame)
+                      || (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame);
+#else
+            rotateHeld = _mobileRotating || Input.GetKey(KeyCode.R);
+            place      = Input.GetMouseButtonDown(0);
+            cancel     = Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape);
+#endif
+        }
+
+        private void SetupGhostColliders()
+        {
+            foreach (var col in _ghostInstance.GetComponentsInChildren<Collider>())
+                col.enabled = false;
+            foreach (var node in _ghostInstance.GetComponentsInChildren<LushWorld.Resource.ResourceNode>())
+                Destroy(node);
+        }
+
+        private void PrepareGhostMaterials()
+        {
+            _ghostInvalidMaterial = new Material(_ghostValidMaterial);
+            Color validColor = _ghostValidMaterial.GetColor("_BaseColor");
+            _ghostInvalidMaterial.SetColor("_BaseColor", new Color(1f, 0.2f, 0.2f, validColor.a));
+
+            _rendererData.Clear();
+            foreach (var mr in _ghostInstance.GetComponentsInChildren<MeshRenderer>())
+            {
+                int slots = mr.sharedMaterials.Length;
+                var validMats   = new Material[slots];
+                var invalidMats = new Material[slots];
+                for (int i = 0; i < slots; i++)
+                {
+                    validMats[i]   = _ghostValidMaterial;
+                    invalidMats[i] = _ghostInvalidMaterial;
+                }
+                mr.sharedMaterials = validMats;
+                _rendererData.Add((mr, validMats, invalidMats));
             }
         }
 
@@ -310,8 +331,7 @@ namespace LushWorld.Building
             {
                 var b = brs[0].bounds;
                 for (int i = 1; i < brs.Length; i++) b.Encapsulate(brs[i].bounds);
-                float lift = b.extents.y - (b.center.y - groundPosition.y);
-                go.transform.position = groundPosition + new Vector3(0f, Mathf.Max(0f, lift), 0f);
+                go.transform.position = groundPosition + new Vector3(0f, ComputeYOffset(b, groundPosition.y), 0f);
             }
 
             foreach (var node in go.GetComponentsInChildren<LushWorld.Resource.ResourceNode>())

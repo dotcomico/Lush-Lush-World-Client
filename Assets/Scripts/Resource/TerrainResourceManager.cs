@@ -45,14 +45,24 @@ namespace LushWorld.Resource
 
         private void Awake()
         {
+            if (!InitTerrainData()) return;
+            ResolvePlayerTransform();
+#if UNITY_EDITOR
+            // Guard against interrupted play sessions: restores terrain even if OnDestroy is skipped.
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+#endif
+        }
+
+        private bool InitTerrainData()
+        {
             _terrain = Terrain.activeTerrain;
             if (_terrain == null)
             {
                 Debug.LogWarning("[TerrainResourceManager] No active terrain found.");
-                return;
+                return false;
             }
 
-            // Cache before any modifications so OnDestroy can fully restore
+            // Cache before any modifications so OnDestroy can fully restore.
             _originalTreeInstances = _terrain.terrainData.treeInstances;
             BuildProtoLookup();
             BuildSpotList();
@@ -68,6 +78,11 @@ namespace LushWorld.Resource
                     $"Fix: Select the Terrain → Inspector → Terrain Settings → Tree & Detail Objects → " +
                     $"set Tree Distance to at least {despawnRadius * 4f}.");
 
+            return true;
+        }
+
+        private void ResolvePlayerTransform()
+        {
             if (playerTransform == null)
             {
                 var fpc = FindFirstObjectByType<FirstPersonController>();
@@ -88,11 +103,6 @@ namespace LushWorld.Resource
                     playerTransform = cc.transform;
                 }
             }
-
-#if UNITY_EDITOR
-            // Guard against interrupted play sessions: restores terrain even if OnDestroy is skipped.
-            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-#endif
         }
 
 #if UNITY_EDITOR
@@ -224,14 +234,22 @@ namespace LushWorld.Resource
             spot.activeGO = Instantiate(prefab, spot.worldPos, Quaternion.identity);
             Debug.Log($"[TerrainResourceManager] Spawned '{prefab.name}' at {spot.worldPos} | scale ws={spot.originalInstance.widthScale:F2} hs={spot.originalInstance.heightScale:F2}");
 
+            ApplySpawnScale(spot);
+
+            var node = spot.activeGO.GetComponent<ResourceNode>();
+            if (node != null)
+                node.OnPickedUp += OnNodePickedUp;
+        }
+
+        private void ApplySpawnScale(ResourceSpot spot)
+        {
             // Capture the prefab's authored scale and LODGroup size before we touch localScale.
-            Vector3 authoredScale = spot.activeGO.transform.localScale;
-            var lodGroup = spot.activeGO.GetComponentInChildren<LODGroup>();
-            float authoredLodSize = (lodGroup != null) ? lodGroup.size : 0f;
+            Vector3 authoredScale  = spot.activeGO.transform.localScale;
+            var     lodGroup       = spot.activeGO.GetComponentInChildren<LODGroup>();
+            float   authoredLodSz  = (lodGroup != null) ? lodGroup.size : 0f;
 
             // Use terrain widthScale/heightScale as a multiplier on top of the prefab's own scale.
-            // This preserves the scale authored in the prefab (e.g. 0.3,0.3,0.3) while still
-            // respecting terrain brush size variation (e.g. width=1.5 for a large rock variant).
+            // This preserves the scale authored in the prefab while respecting terrain brush size variation.
             float ws = Mathf.Max(spot.originalInstance.widthScale, 1f);
             float hs = Mathf.Max(spot.originalInstance.heightScale, 1f);
 
@@ -240,18 +258,11 @@ namespace LushWorld.Resource
                     "Fix: select the Terrain, open Paint Trees, click your rock prototype, and set Width to at least 1.");
 
             spot.activeGO.transform.localScale = new Vector3(
-                authoredScale.x * ws,
-                authoredScale.y * hs,
-                authoredScale.z * ws
-            );
+                authoredScale.x * ws, authoredScale.y * hs, authoredScale.z * ws);
 
             // LODGroup.size is a world-space reference diameter — scale it to match the final world size.
-            if (lodGroup != null && authoredLodSize > 0f)
-                lodGroup.size = authoredLodSize * authoredScale.x * ws;
-
-            var node = spot.activeGO.GetComponent<ResourceNode>();
-            if (node != null)
-                node.OnPickedUp += OnNodePickedUp;
+            if (lodGroup != null && authoredLodSz > 0f)
+                lodGroup.size = authoredLodSz * authoredScale.x * ws;
         }
 
         private void DespawnSpot(ResourceSpot spot)

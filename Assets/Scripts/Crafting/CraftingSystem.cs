@@ -57,17 +57,23 @@ namespace LushWorld.Crafting
                 return;
             }
 
-            if (quantity <= 0) return;
-
-            if (GetMaxCraftable(recipe) < quantity)
+            if (!ValidateCraft(recipe, quantity, out string error))
             {
-                OnCraftFailed?.Invoke("Not enough materials");
+                if (error != null) OnCraftFailed?.Invoke(error);
                 return;
             }
 
             ConsumeIngredients(recipe, quantity);
             InventorySystem.GiveItem(recipe.OutputItemId, recipe.OutputQuantity * quantity);
             OnCraftSuccess?.Invoke(recipeId);
+        }
+
+        private bool ValidateCraft(RecipeDefinition recipe, int qty, out string error)
+        {
+            error = null;
+            if (qty <= 0) return false;
+            if (GetMaxCraftable(recipe) < qty) { error = "Not enough materials"; return false; }
+            return true;
         }
 
         public int GetMaxCraftable(RecipeDefinition recipe)
@@ -86,19 +92,20 @@ namespace LushWorld.Crafting
         public int CountItem(string itemId)
         {
             if (_inventory == null) return 0;
-            var data = _inventory.Data;
-            int total = 0;
-            for (int i = 0; i < InventoryData.HotbarSize; i++)
+            return CountItemInSection(itemId, true) + CountItemInSection(itemId, false);
+        }
+
+        private int CountItemInSection(string itemId, bool isHotbar)
+        {
+            var data  = _inventory.Data;
+            int size  = isHotbar ? InventoryData.HotbarSize : InventoryData.BackpackSize;
+            int count = 0;
+            for (int i = 0; i < size; i++)
             {
-                var slot = data.GetHotbarSlot(i);
-                if (!slot.IsEmpty && slot.ItemId == itemId) total += slot.Quantity;
+                var slot = data.GetSlot(i, isHotbar);
+                if (!slot.IsEmpty && slot.ItemId == itemId) count += slot.Quantity;
             }
-            for (int i = 0; i < InventoryData.BackpackSize; i++)
-            {
-                var slot = data.GetBackpackSlot(i);
-                if (!slot.IsEmpty && slot.ItemId == itemId) total += slot.Quantity;
-            }
-            return total;
+            return count;
         }
 
         private void ConsumeIngredients(RecipeDefinition recipe, int quantity)
@@ -109,24 +116,20 @@ namespace LushWorld.Crafting
 
         private void RemoveItem(string itemId, int qty)
         {
+            RemoveItemFromSection(itemId, ref qty, true);
+            RemoveItemFromSection(itemId, ref qty, false);
+        }
+
+        private void RemoveItemFromSection(string itemId, ref int remaining, bool isHotbar)
+        {
             var data = _inventory.Data;
-            int remaining = qty;
-
-            for (int i = 0; i < InventoryData.HotbarSize && remaining > 0; i++)
+            int size = isHotbar ? InventoryData.HotbarSize : InventoryData.BackpackSize;
+            for (int i = 0; i < size && remaining > 0; i++)
             {
-                var slot = data.GetHotbarSlot(i);
+                var slot = data.GetSlot(i, isHotbar);
                 if (slot.IsEmpty || slot.ItemId != itemId) continue;
                 int toRemove = Mathf.Min(remaining, slot.Quantity);
-                _inventory.RequestRemoveItem(i, isHotbar: true, toRemove);
-                remaining -= toRemove;
-            }
-
-            for (int i = 0; i < InventoryData.BackpackSize && remaining > 0; i++)
-            {
-                var slot = data.GetBackpackSlot(i);
-                if (slot.IsEmpty || slot.ItemId != itemId) continue;
-                int toRemove = Mathf.Min(remaining, slot.Quantity);
-                _inventory.RequestRemoveItem(i, isHotbar: false, toRemove);
+                _inventory.RequestRemoveItem(i, isHotbar, toRemove);
                 remaining -= toRemove;
             }
         }
