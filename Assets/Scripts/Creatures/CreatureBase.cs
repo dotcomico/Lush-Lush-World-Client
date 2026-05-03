@@ -10,6 +10,8 @@ namespace LushWorld.Creatures
         public bool IsDead { get; private set; }
         public bool IsKnockedBack { get; private set; }
 
+        public event System.Action OnHit;
+
         // Subclass returns its typed definition cast to the base type.
         protected abstract CreatureDefinitionBase BaseDefinition { get; }
 
@@ -40,6 +42,8 @@ namespace LushWorld.Creatures
 
             if (_currentHealth <= 0f)
                 Die();
+            else
+                OnHit?.Invoke();
         }
 
         // Call BEFORE TakeDamage on the same hit — if the hit kills the creature, IsDead
