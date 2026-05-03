@@ -138,10 +138,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Enemies.EnemyBase
   _definition: {fileID: 11400000, guid: 992b06853c1187347979f5fdabad37bf, type: 2}
-  _knockbackHorizontalForce: 10
-  _knockbackUpwardForce: 3
-  _hitFlashColor: {r: 1, g: 0.15, b: 0.15, a: 1}
-  _hitFlashDuration: 0.12
 --- !u!114 &5685873269454226607
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -190,7 +186,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 24073828103138e4cb66ee7ed2030dd2, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.556
+  m_Volume: 0.183
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -198,8 +194,8 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 10
+  MinDistance: 0.5
+  MaxDistance: 5
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0

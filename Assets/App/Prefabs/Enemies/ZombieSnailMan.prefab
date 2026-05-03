@@ -77,6 +77,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2401183745091584645}
     m_Modifications:
+    - target: {fileID: -1036644959745387582, guid: aadc1ac8a6ef3254980174cd02135f85, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ca69579934b085b4bb4a596c79f36706, type: 2}
     - target: {fileID: 4814140183114437194, guid: aadc1ac8a6ef3254980174cd02135f85, type: 3}
       propertyPath: m_Name
       value: Zombie_Snail_Man

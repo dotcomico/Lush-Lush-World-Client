@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1036644959745387582, guid: 74d112838b471dd47a0f8a6dbf8528ff, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a49f7786a42c76a4598f9d5c76f1ba92, type: 2}
     - target: {fileID: 4814140183114437194, guid: 74d112838b471dd47a0f8a6dbf8528ff, type: 3}
       propertyPath: m_Name
       value: GummyRed
@@ -68,6 +72,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4814140183114437194, guid: 74d112838b471dd47a0f8a6dbf8528ff, type: 3}
       insertIndex: -1
       addedObject: {fileID: -9062167638493323010}
+    - targetCorrespondingSourceObject: {fileID: 4814140183114437194, guid: 74d112838b471dd47a0f8a6dbf8528ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4762025965788829339}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: 74d112838b471dd47a0f8a6dbf8528ff, type: 3}
 --- !u!1 &1061725377542675870 stripped
 GameObject:
@@ -109,8 +116,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Mobs.MobBase
   _definition: {fileID: 11400000, guid: 55c1ad4fe1f8d044f8727ba74f61d3d2, type: 2}
-  _hitFlashColor: {r: 1, g: 0.4, b: 0.1, a: 1}
-  _hitFlashDuration: 0.12
 --- !u!114 &-2581251358990085410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -147,3 +152,18 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4762025965788829339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1061725377542675870}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c73736e08c8ad46adde73cdbc15aa2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Creatures.LootDropper
+  _itemId: gummy
+  _dropChance: 1
+  _itemRegistry: {fileID: 11400000, guid: eb4469f6f44f4124fbbcff30e118c857, type: 2}

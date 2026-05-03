@@ -12,10 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2818bc31bbc6974c9bb486093b9eea5, type: 3}
   m_Name: GummyBearDefinition
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Mobs.MobDefinition
-  mobName: Mob
+  creatureName: Creature
   maxHealth: 50
   moveSpeed: 1.8
   wanderRadius: 10
+  enableKnockback: 1
+  knockbackHorizontalForce: 10
+  knockbackUpwardForce: 3
+  hitFlashColor: {r: 1, g: 0.15, b: 0.15, a: 1}
+  hitFlashDuration: 0.12
   followRadius: 14
   stopDistance: 2.5
   hopHeight: 0.18

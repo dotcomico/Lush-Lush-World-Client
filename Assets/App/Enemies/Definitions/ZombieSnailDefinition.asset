@@ -12,10 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6732e5d4caec47141a9a22e0b54df4e4, type: 3}
   m_Name: ZombieSnailDefinition
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Enemies.EnemyDefinition
-  enemyName: Enemy
+  creatureName: Creature
   maxHealth: 100
   moveSpeed: 2
-  patrolRadius: 50
+  wanderRadius: 50
+  enableKnockback: 1
+  knockbackHorizontalForce: 10
+  knockbackUpwardForce: 3
+  hitFlashColor: {r: 1, g: 0.15, b: 0.15, a: 1}
+  hitFlashDuration: 0.12
   detectionRadius: 20
   attackRadius: 0.8
   attackDamage: 10

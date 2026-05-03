@@ -1,64 +1,53 @@
-using System.Collections;
-using LushWorld.Utilities;
 using UnityEngine;
-using UnityEngine.AI;
+using LushWorld.Creatures;
 using LushWorld.Player;
 using LushWorld.World;
 
 namespace LushWorld.Enemies
 {
-    [RequireComponent(typeof(NavMeshAgent))]
+    [RequireComponent(typeof(UnityEngine.AI.NavMeshAgent))]
     [RequireComponent(typeof(EnemyBase))]
-    public class EnemyAI : MonoBehaviour
+    public class EnemyAI : CreatureAIBase
     {
         private enum State { Patrol, Chase, Attack, Dead }
 
-        private NavMeshAgent _agent;
         private EnemyBase _base;
-        private Transform _player;
         private State _state = State.Patrol;
-        private Vector3 _spawnPoint;
         private bool _isNight;
-
-        private const float ThinkInterval = 0.25f;
-        private const float PatrolArrivalThreshold = 0.5f;
 
         private void Awake()
         {
-            _agent = GetComponent<NavMeshAgent>();
             _base = GetComponent<EnemyBase>();
-            _spawnPoint = transform.position;
+            BaseAwake();
         }
 
         private void OnEnable()
         {
             DayNightCycle.OnNightStarted += OnNightStarted;
-            DayNightCycle.OnDayStarted += OnDayStarted;
-            EnemyBase.OnEnemyDied += OnAnyEnemyDied;
+            DayNightCycle.OnDayStarted   += OnDayStarted;
+            EnemyBase.OnEnemyDied        += OnAnyEnemyDied;
         }
 
         private void OnDisable()
         {
             DayNightCycle.OnNightStarted -= OnNightStarted;
-            DayNightCycle.OnDayStarted -= OnDayStarted;
-            EnemyBase.OnEnemyDied -= OnAnyEnemyDied;
+            DayNightCycle.OnDayStarted   -= OnDayStarted;
+            EnemyBase.OnEnemyDied        -= OnAnyEnemyDied;
         }
 
         private void Start()
         {
             if (_base.Definition != null)
-                _agent.speed = _base.Definition.moveSpeed;
-
-            if (PlayerStats.LocalPlayer != null)
-                _player = PlayerStats.LocalPlayer.transform;
-            else
-                Debug.LogWarning("[EnemyAI] PlayerStats.LocalPlayer not found — AI detection disabled.", this);
+                Agent.speed = _base.Definition.moveSpeed;
 
             // Initialize current day/night state (single lookup on Start is acceptable).
             var dnc = FindFirstObjectByType<DayNightCycle>();
             if (dnc != null) _isNight = dnc.IsNight;
 
-            StartCoroutine(ThinkLoop());
+            if (PlayerStats.LocalPlayer == null)
+                Debug.LogWarning("[EnemyAI] PlayerStats.LocalPlayer not found — AI detection disabled.", this);
+
+            BaseStart(); // caches PlayerTransform + starts ThinkLoop
         }
 
         private void OnNightStarted() => _isNight = true;
@@ -69,41 +58,33 @@ namespace LushWorld.Enemies
             if (dead == _base) TransitionTo(State.Dead);
         }
 
-        private IEnumerator ThinkLoop()
-        {
-            while (true)
-            {
-                if (_state != State.Dead) EvaluateState();
-                yield return CoroutineUtils.Wait0_25;
-            }
-        }
+        protected override bool IsDead() => _base.IsDead;
 
-        private void EvaluateState()
+        protected override void EvaluateState()
         {
             if (_base.Definition == null || _base.IsKnockedBack) return;
 
             // Patrol when passive (day) OR when player reference is missing —
             // enemies must always roam; never freeze waiting for the player.
-            if (!CanAggro() || _player == null)
+            if (!CanAggro() || PlayerTransform == null)
             {
                 if (_state != State.Patrol) TransitionTo(State.Patrol);
-                ExecutePatrol();
+                ExecuteWander(_base.Definition.wanderRadius);
                 return;
             }
 
             State next = EvaluateDistanceState(GetDistanceToPlayer());
             if (next != _state) TransitionTo(next);
 
-            // Per-state continuous actions — called every think tick regardless of transition.
-            if (next == State.Chase)  _agent.SetDestination(_player.position);
-            if (next == State.Patrol) ExecutePatrol();
+            if (next == State.Chase)  Agent.SetDestination(PlayerTransform.position);
+            if (next == State.Patrol) ExecuteWander(_base.Definition.wanderRadius);
         }
 
         private bool CanAggro()
             => _base.Definition.isAlwaysAggressive || _isNight;
 
         private float GetDistanceToPlayer()
-            => Vector3.Distance(transform.position, _player.position);
+            => Vector3.Distance(transform.position, PlayerTransform.position);
 
         private State EvaluateDistanceState(float dist)
         {
@@ -119,26 +100,12 @@ namespace LushWorld.Enemies
             switch (next)
             {
                 case State.Dead:
-                    _agent.enabled = false;
-                    enabled = false;
+                    TransitionToDead();
                     break;
                 case State.Attack:
-                    _agent.ResetPath();
+                    Agent.ResetPath();
                     break;
             }
-        }
-
-        private void ExecutePatrol()
-        {
-            if (!_agent.enabled || _agent.pathPending) return;
-            if (_agent.remainingDistance > PatrolArrivalThreshold) return;
-
-            Vector3 randomOffset = Random.insideUnitSphere * _base.Definition.patrolRadius;
-            randomOffset.y = 0f;
-            Vector3 target = _spawnPoint + randomOffset;
-
-            if (NavMesh.SamplePosition(target, out NavMeshHit hit, _base.Definition.patrolRadius, NavMesh.AllAreas))
-                _agent.SetDestination(hit.position);
         }
     }
 }

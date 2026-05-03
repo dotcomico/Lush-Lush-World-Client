@@ -1,32 +1,25 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.AI;
+using LushWorld.Creatures;
 using LushWorld.Player;
 
 namespace LushWorld.Mobs
 {
-    [RequireComponent(typeof(NavMeshAgent))]
+    [RequireComponent(typeof(UnityEngine.AI.NavMeshAgent))]
     [RequireComponent(typeof(MobBase))]
-    public class MobAI : MonoBehaviour
+    public class MobAI : CreatureAIBase
     {
         private enum State { Wander, Follow, Dead }
 
         [SerializeField] private Transform _visualModel;
 
-        private NavMeshAgent _agent;
         private MobBase _base;
-        private Transform _player;
         private State _state = State.Wander;
-        private Vector3 _spawnPoint;
-
-        private const float ThinkInterval = 0.25f;
-        private const float WanderArrivalThreshold = 0.5f;
 
         private void Awake()
         {
-            _agent = GetComponent<NavMeshAgent>();
             _base = GetComponent<MobBase>();
-            _spawnPoint = transform.position;
+            BaseAwake();
         }
 
         private void OnEnable()
@@ -43,16 +36,14 @@ namespace LushWorld.Mobs
         {
             if (_base.Definition != null)
             {
-                _agent.speed = _base.Definition.moveSpeed;
-                _agent.stoppingDistance = WanderArrivalThreshold;
+                Agent.speed = _base.Definition.moveSpeed;
+                Agent.stoppingDistance = WanderArrivalThreshold;
             }
 
-            if (PlayerStats.LocalPlayer != null)
-                _player = PlayerStats.LocalPlayer.transform;
-            else
+            if (PlayerStats.LocalPlayer == null)
                 Debug.LogWarning("[MobAI] PlayerStats.LocalPlayer not found — mob will wander only.", this);
 
-            StartCoroutine(ThinkLoop());
+            BaseStart(); // caches PlayerTransform + starts ThinkLoop
             StartCoroutine(HopLoop());
         }
 
@@ -61,39 +52,30 @@ namespace LushWorld.Mobs
             if (dead == _base) TransitionTo(State.Dead);
         }
 
-        private IEnumerator ThinkLoop()
-        {
-            var wait = new WaitForSeconds(ThinkInterval);
-            while (true)
-            {
-                if (_state != State.Dead)
-                    EvaluateState();
-                yield return wait;
-            }
-        }
+        protected override bool IsDead() => _base.IsDead;
 
-        private void EvaluateState()
+        protected override void EvaluateState()
         {
             if (_base.Definition == null) return;
 
-            if (_player == null)
+            if (PlayerTransform == null)
             {
                 if (_state != State.Wander) TransitionTo(State.Wander);
-                ExecuteWander();
+                ExecuteWander(_base.Definition.wanderRadius);
                 return;
             }
 
-            float dist = Vector3.Distance(transform.position, _player.position);
+            float dist = Vector3.Distance(transform.position, PlayerTransform.position);
 
             if (dist <= _base.Definition.followRadius)
             {
                 if (_state != State.Follow) TransitionTo(State.Follow);
-                _agent.SetDestination(_player.position);
+                Agent.SetDestination(PlayerTransform.position);
             }
             else
             {
                 if (_state != State.Wander) TransitionTo(State.Wander);
-                ExecuteWander();
+                ExecuteWander(_base.Definition.wanderRadius);
             }
         }
 
@@ -104,32 +86,18 @@ namespace LushWorld.Mobs
             switch (next)
             {
                 case State.Dead:
-                    _agent.enabled = false;
-                    enabled = false;
+                    TransitionToDead();
                     break;
                 case State.Follow:
-                    _agent.stoppingDistance = _base.Definition?.stopDistance ?? 2.5f;
+                    Agent.stoppingDistance = _base.Definition?.stopDistance ?? 2.5f;
                     break;
                 case State.Wander:
-                    _agent.stoppingDistance = WanderArrivalThreshold;
+                    Agent.stoppingDistance = WanderArrivalThreshold;
                     break;
             }
         }
 
-        private void ExecuteWander()
-        {
-            if (!_agent.enabled || _agent.pathPending) return;
-            if (_agent.remainingDistance > WanderArrivalThreshold) return;
-
-            Vector3 randomOffset = Random.insideUnitSphere * _base.Definition.wanderRadius;
-            randomOffset.y = 0f;
-            Vector3 target = _spawnPoint + randomOffset;
-
-            if (NavMesh.SamplePosition(target, out NavMeshHit hit, _base.Definition.wanderRadius, NavMesh.AllAreas))
-                _agent.SetDestination(hit.position);
-        }
-
-        // Hop loop: oscillates _visualModel localY whenever the agent is moving.
+        // Oscillates _visualModel localY whenever the agent is moving.
         // The NavMeshAgent root stays flat on the NavMesh; only the visual child bounces.
         private IEnumerator HopLoop()
         {
@@ -143,8 +111,8 @@ namespace LushWorld.Mobs
                 }
 
                 bool isMoving = _visualModel != null
-                    && _agent.enabled
-                    && _agent.velocity.sqrMagnitude > 0.01f;
+                    && Agent.enabled
+                    && Agent.velocity.sqrMagnitude > 0.01f;
 
                 if (isMoving && _base.Definition != null)
                 {
@@ -154,7 +122,6 @@ namespace LushWorld.Mobs
                 }
                 else
                 {
-                    // Smoothly settle back to rest position
                     if (_visualModel != null && _visualModel.localPosition.y > 0.001f)
                     {
                         Vector3 pos = _visualModel.localPosition;
@@ -171,7 +138,6 @@ namespace LushWorld.Mobs
             float halfDur = hopDuration * 0.5f;
             float elapsed = 0f;
 
-            // Rise
             while (elapsed < halfDur)
             {
                 elapsed += Time.deltaTime;
@@ -182,7 +148,6 @@ namespace LushWorld.Mobs
 
             elapsed = 0f;
 
-            // Fall
             while (elapsed < halfDur)
             {
                 elapsed += Time.deltaTime;

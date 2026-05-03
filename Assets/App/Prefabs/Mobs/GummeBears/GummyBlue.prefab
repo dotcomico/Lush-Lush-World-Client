@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1036644959745387582, guid: c4e3cad380ac7944bab1fee0eeacea7a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 2cdc8ce77ddff404f8beb8a78ca03baa, type: 2}
     - target: {fileID: 4814140183114437194, guid: c4e3cad380ac7944bab1fee0eeacea7a, type: 3}
       propertyPath: m_Name
       value: GummyBlue
@@ -71,6 +75,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4814140183114437194, guid: c4e3cad380ac7944bab1fee0eeacea7a, type: 3}
       insertIndex: -1
       addedObject: {fileID: -7122203652046341778}
+    - targetCorrespondingSourceObject: {fileID: 4814140183114437194, guid: c4e3cad380ac7944bab1fee0eeacea7a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -6708520926436742853}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: c4e3cad380ac7944bab1fee0eeacea7a, type: 3}
 --- !u!1 &4091353940963336413 stripped
 GameObject:
@@ -112,8 +119,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Mobs.MobBase
   _definition: {fileID: 11400000, guid: 55c1ad4fe1f8d044f8727ba74f61d3d2, type: 2}
-  _hitFlashColor: {r: 1, g: 0.4, b: 0.1, a: 1}
-  _hitFlashDuration: 0.12
 --- !u!114 &-99315720247388144
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -163,7 +168,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 3e9e8e3ca2e7b4941add1615c3b0a245, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.456
+  m_Volume: 0.22
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -171,8 +176,8 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1.47
-  MinDistance: 1
-  MaxDistance: 10
+  MinDistance: 0.5
+  MaxDistance: 5
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -247,3 +252,18 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &-6708520926436742853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4091353940963336413}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c73736e08c8ad46adde73cdbc15aa2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Creatures.LootDropper
+  _itemId: gummy
+  _dropChance: 1
+  _itemRegistry: {fileID: 11400000, guid: eb4469f6f44f4124fbbcff30e118c857, type: 2}

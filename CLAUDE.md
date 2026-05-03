@@ -221,6 +221,13 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Prefabs: `Assets/App/Prefabs/SettingsUI.prefab`
 - Docs: `../Docs/settings-ui.md`
 - Tech debt: `../Docs/TECH_DEBT.md` (3 items flagged)
+- Refactored (2026-05-02): private logic split into `DiscoverSceneReferences()`, `SetupCinemachineRefs()`, `ApplyCameraViewSettings()`, `ApplyCameraTuningSettings()`, `ApplyControlsSettings()` — public API unchanged
+
+### Menu UI Base
+- Script: `Assets/Scripts/UI/MenuUIBase.cs` — abstract `MonoBehaviour` base for all toggle-able menu panels
+- Provides: `InitBackdrop()` — spawns full-screen transparent backdrop Button (click-outside-to-close); `ApplyMenuToggle(bool)` — handles cursor lock/unlock, zeroes `StarterAssetsInputs.look/move`, sets Canvas `sortingOrder`
+- Consumers: `CraftingUI` (G key), `BuildingMenuUI` (B key)
+- Rule: all new toggle-able menu panels must extend `MenuUIBase` — do not reimplement backdrop or cursor logic inline
 
 ### Resource Pickup
 - Scripts: `Assets/Scripts/Resource/TerrainResourceManager.cs`, `Assets/Scripts/Resource/ResourceNode.cs`, `Assets/Scripts/Resource/ResourceInteractor.cs` — extended in Subtask 4 to also detect `IInteractable` in range (see Building System)
@@ -252,6 +259,13 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Script: `Assets/Scripts/Utilities/PlatformDetector.cs` — static class; `PlatformDetector.IsMobile` returns `true` on Android/iOS (`SystemInfo.deviceType == Handheld`), `false` on desktop; `PlatformDetector.IsDesktop` is the convenience inverse; in the Editor set `PlatformDetector.SimulateMobileInEditor = true` at runtime to test mobile layout without a device
 - Usage: any script that must behave differently on mobile vs desktop should read `PlatformDetector.IsMobile` — do **not** call `SystemInfo.deviceType` directly
 - Docs: `../Docs/platform-detection.md` — API reference, usage examples, consumer table, editor testing guide
+
+### Global Utilities (Utilities/)
+Four stateless helper classes in `Assets/Scripts/Utilities/`. Use anywhere — never inline these patterns manually.
+- `Assets/Scripts/Utilities/DistanceUtils.cs` — `IsWithinRadius(a, b, radius)` + `GetClosestWithinRadius(origin, candidates, radius)` — uses `sqrMagnitude` (no `sqrt` overhead)
+- `Assets/Scripts/Utilities/RaycastUtils.cs` — `TryRaycastFromCamera(cam, layerMask, out hit)`, `TryRaycastFromScreenPoint(cam, screenPos, layerMask, out hit)`, `TryRaycastDown(origin, layerMask, out hit)`
+- `Assets/Scripts/Utilities/CoroutineUtils.cs` — pre-cached `WaitForSeconds` constants: `Wait0_1` → `Wait30`; use instead of `new WaitForSeconds(x)` in any coroutine loop to avoid per-frame GC alloc; already used by SaveManager (auto-save) and EnemyAI (think loop)
+- `Assets/Scripts/Utilities/UIUtils.cs` — `SetVisible(go, bool)`, `Toggle(go)`, `SetAllVisible(IEnumerable<GameObject>, bool)` — null-safe `SetActive` wrappers
 
 ### Mobile Input
 - Scripts: `Assets/StarterAssets/Mobile/Scripts/UICanvasControllerInput.cs`, `Assets/Scripts/UI/MobileInventoryButton.cs`, `Assets/Scripts/UI/MobilePickupButton.cs`, `Assets/Scripts/UI/MobileBuildingButton.cs`, `Assets/Scripts/UI/MobileAttackButton.cs`, `Assets/Scripts/UI/MobileCanvasVisibility.cs`, `Assets/Scripts/UI/MobilePlacementControls.cs`, `Assets/Scripts/UI/MobileSkeletonControls.cs`
@@ -291,13 +305,20 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - On complete: `PlayerStats.ConsumeFood(FoodValue)` + `InventorySystem.RequestRemoveItem(selectedSlot, hotbar, 1)`
 - No conflict with right-click split-stack — desktop eating only fires when `Cursor.lockState == Locked`
 
+### Creature Shared Base (Phase 1 Refactor ✓ DONE)
+- Folder: `Assets/Scripts/Creatures/` — namespace `LushWorld.Creatures`
+- `CreatureDefinitionBase.cs` — abstract ScriptableObject; shared fields: `creatureName`, `maxHealth`, `moveSpeed`, `wanderRadius` (with `[FormerlySerializedAs("patrolRadius")]` for enemy migration), `enableKnockback` (default false), `knockbackHorizontalForce`, `knockbackUpwardForce`, `hitFlashColor`, `hitFlashDuration`
+- `CreatureBase.cs` — abstract MonoBehaviour; `IsDead`, `IsKnockedBack` props; `BaseAwake()` caches NavMeshAgent + Renderers + MPB; `TakeDamage(float)`, `ApplyKnockback(Vector3)` (no-op if `enableKnockback=false`), `KnockbackCoroutine`, `HitFlashCoroutine`, `Die()`, `DeactivateAfterDelay()` (uses `CoroutineUtils.Wait0_25`); abstract `BaseDefinition` property + `FireDeathEvent()`
+- `CreatureAIBase.cs` — abstract MonoBehaviour; protected `Agent` (NavMeshAgent), `PlayerTransform`, `SpawnPoint`, `WanderArrivalThreshold`; `BaseAwake()`, `BaseStart()` (caches player + starts ThinkLoop); `ExecuteWander(float)`, `TransitionToDead()`; abstract `EvaluateState()` + `IsDead()`; private `ThinkLoop()` uses `CoroutineUtils.Wait0_25`
+- `CreatureSpawnerBase.cs` — abstract MonoBehaviour; shared Inspector fields `_creaturePrefabs[]`, `_spawnPoints[]`, scatter/activation/deactivation radii, `_checkInterval`, `_debugLog`; protected `_isActive`; `BaseStart()` → starts `ProximityLoop()`; protected `TopUp()`; private `ProximityLoop()`, `SpawnOneCreature()`, `AnyPointWithinRadius()`, `MinPointDistance()`, `Activate()`, `Deactivate()`; abstract `GetEffectiveCap()`, `GetActiveCount()`, `DestroyAllActive()`, `OnCreatureSpawned(GameObject)`; virtual gizmo color properties; `OnDrawGizmosSelected()`
+
 ### Enemy System
 - Scripts:
-  - `Assets/Scripts/Enemies/EnemyDefinition.cs` — ScriptableObject config (health, speed, radii, damage, day/night aggression flag)
-  - `Assets/Scripts/Enemies/EnemyBase.cs` — health, TakeDamage, Die; fires static `OnEnemyDied(EnemyBase)`
-  - `Assets/Scripts/Enemies/EnemyAI.cs` — state machine (Patrol/Chase/Attack/Dead) + NavMeshAgent; ThinkLoop coroutine every 0.25 s; patrol runs even when player reference is null; subscribes to DayNightCycle events for live aggression gating
+  - `Assets/Scripts/Enemies/EnemyDefinition.cs` — inherits `CreatureDefinitionBase`; adds `detectionRadius`, `attackRadius`, `attackDamage`, `attackCooldown`, `isAlwaysAggressive`; `Reset()` sets `enableKnockback=true`, `wanderRadius=15` for new assets
+  - `Assets/Scripts/Enemies/EnemyBase.cs` — inherits `CreatureBase`; implements `BaseDefinition => _definition`, `FireDeathEvent() => OnEnemyDied?.Invoke(this)`; `Awake()` null-checks then calls `BaseAwake()`
+  - `Assets/Scripts/Enemies/EnemyAI.cs` — inherits `CreatureAIBase`; state machine (Patrol/Chase/Attack/Dead); uses `Agent`/`PlayerTransform`/`SpawnPoint` from base; `EvaluateState()` calls `ExecuteWander(_base.Definition.wanderRadius)`; subscribes to DayNightCycle events for live aggression gating
   - `Assets/Scripts/Enemies/Attacks/ZombieSnailAttack.cs` — touch melee; place on child `AttackZone` GO with SphereCollider (trigger); OnTriggerStay → `PlayerStats.TakeDamage` on cooldown
-  - `Assets/Scripts/Enemies/EnemySpawner.cs` — proximity-based spawner; per-spawn-point activation radius (not spawner position); `maxEnemiesDay` / `maxEnemiesNight` caps; scatter radius prevents enemies piling on same spot; reacts to `DayNightCycle.OnNightStarted` / `OnDayStarted`; lazy player lookup avoids Start() race condition; **kill debt** (`_killsThisPhase`) reduces effective cap so player-killed enemies never respawn until the next day/night phase
+  - `Assets/Scripts/Enemies/EnemySpawner.cs` — inherits `CreatureSpawnerBase`; implements `GetEffectiveCap()` with kill-debt logic, `GetActiveCount()`, `DestroyAllActive()`, `OnCreatureSpawned()`; handles day/night phase transitions and enemy trimming; green gizmos
 - Prefabs (to be created by user): `Assets/App/Prefabs/Enemies/ZombieSnailMan.prefab`, `Assets/App/Prefabs/Enemies/ZombieSnailWoman.prefab`
 - Definition assets (to be created by user): `Assets/App/Enemies/Definitions/ZombieSnailDefinition.asset`
 - Models: `Assets/App/Enemies/Zombie_Snail_Man.glb`, `Assets/App/Enemies/Zombie_Snail_Woman.glb`
@@ -325,7 +346,7 @@ Quick-reference for every implemented feature. Check this before searching. Upda
   - `Assets/Scripts/Crafting/RecipeDefinition.cs` — ScriptableObject; fields: `RecipeId`, `DisplayName`, `Category` (enum), `Ingredients` (List<LushWorld.Data.Ingredient>), `OutputItemId`, `OutputQuantity`
   - `Assets/Scripts/Crafting/RecipeRegistry.cs` — ScriptableObject singleton; `List<RecipeDefinition>`, dictionary lookup via `TryGetRecipe(id)`
   - `Assets/Scripts/Crafting/CraftingSystem.cs` — MonoBehaviour on `PlayerCapsule`; static `LocalPlayer`; `RequestCraft(recipeId, qty)` consumes ingredients + calls `InventorySystem.GiveItem`; `GetMaxCraftable(recipe)` + `CountItem(itemId)` are public helpers; static events `OnCraftSuccess`, `OnCraftFailed`, `OnCraftingMenuToggleRequested`; **G** key → `ToggleCraftingMenu()` (called from `InventoryInputHandler.Update`)
-  - `Assets/Scripts/UI/Crafting/CraftingUI.cs` — MonoBehaviour on `CraftingMenuUI.prefab` (nested in PlayerRig); subscribes to `CraftingSystem.OnCraftingMenuToggleRequested`; instantiates `CraftingRecipeRowUI` prefab per recipe; refreshes rows on slot changes via `InventoryData` events; on open: unlocks cursor, zeros `StarterAssetsInputs.look/move`, raises Canvas `sortingOrder=150`; spawns full-screen transparent backdrop Button on `Start()` — clicking outside the panel calls `CloseCraftingMenu()`
+  - `Assets/Scripts/UI/Crafting/CraftingUI.cs` — extends `MenuUIBase`; on `CraftingMenuUI.prefab` (nested in PlayerRig); subscribes to `CraftingSystem.OnCraftingMenuToggleRequested`; instantiates `CraftingRecipeRowUI` prefab per recipe; refreshes rows on slot changes via `InventoryData` events; backdrop + cursor logic inherited from `MenuUIBase`
   - `Assets/Scripts/UI/Crafting/CraftingRecipeRowUI.cs` — MonoBehaviour on row prefab; shows recipe name, ingredient counts (have/need), max craftable; Craft button calls `CraftingSystem.LocalPlayer.RequestCraft`
 - Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — C key → `CraftingSystem.LocalPlayer?.ToggleCraftingMenu()`
 - Assets (user creates): `Assets/App/Crafting/RecipeRegistry.asset`; one `RecipeDefinition` asset per recipe under `Assets/App/Crafting/Recipes/`
@@ -340,7 +361,7 @@ Quick-reference for every implemented feature. Check this before searching. Upda
   - `Assets/Scripts/Building/BuildingSystem.cs` — MonoBehaviour on `PlayerCapsule`; states: Idle | PlacingGhost; `EnterPlacementMode(def)`, `CancelPlacement()`, `RequestPlaceBlueprint(groundPos,rot)`, `ToggleBuildingMenu()`; ghost follows cursor on ground layer raycast, grid-snapped; swaps sharedMaterials to red on invalid; B key via InventoryInputHandler; Y-offset fix: ghost lifted by `extents.y - (center.y - groundY)` so bottom is flush with ground; `_ghostGroundPosition` passed to `RequestPlaceBlueprint` (not ghost.transform.position) for NGO-safe ground-truth position; mobile API: `MobilePlacePressed()` (tap to confirm), `MobileRotateHeld(bool)` (sets `_mobileRotating` flag — drives same continuous rotation as R-key hold); `CancelPlacement` resets `_mobileRotating`
   - `Assets/Scripts/Building/BlueprintInstance.cs` — MonoBehaviour + IInteractable on skeleton at spawn; `Init(def)` saves original materials, adds SphereCollider trigger; `Interact(player)` directly calls `RequestDeposit(GetNextNeededItemId(), 1)` — no panel opens; `GetNextNeededItemId()` returns first incomplete ingredient id; `RequestDeposit` removes items from inventory, tracks deposits, calls `TryComplete()`; `TryComplete()` restores materials, re-enables colliders, adds `BuildingPiece`, fires `OnCompleted`; `Demolish()` destroys GO; static event: `OnCompleted` only
   - `Assets/Scripts/Building/BuildingPiece.cs` — MonoBehaviour on completed buildings; `Init(def)` sets MaxHealth; `TakeDamage(float)`, `Demolish()` refunds 50% of Cost via `InventorySystem.GiveItem`
-  - `Assets/Scripts/UI/Building/BuildingMenuUI.cs` — Canvas nested in PlayerRig; subscribes to `BuildingSystem.OnBuildingMenuToggleRequested`; cursor/backdrop pattern mirrors CraftingUI
+  - `Assets/Scripts/UI/Building/BuildingMenuUI.cs` — extends `MenuUIBase`; Canvas nested in PlayerRig; subscribes to `BuildingSystem.OnBuildingMenuToggleRequested`; backdrop + cursor logic inherited from `MenuUIBase`
   - `Assets/Scripts/UI/Building/BuildingMenuPieceRowUI.cs` — row prefab; icon, name, cost, Select → `BuildingSystem.EnterPlacementMode`
 - Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — B key added
 - Modified: `Assets/Scripts/Resource/ResourceInteractor.cs` — `FindNearestNode()` scans for `IInteractable`; `UpdatePrompt()` special-cases `BlueprintInstance`: shows all ingredients as "DisplayName: X/Y" per line + "[E] Add Material   [Hold R] Remove"; `TryPickupNearest()` calls `UpdatePrompt()` after `Interact()` to refresh counts; `HandleBlueprintRHold()` in Update() accumulates R hold and calls `bp.Demolish()` at 1.5 s
@@ -394,16 +415,40 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 
 ### Friendly Mob System (GummyBears etc.)
 - Scripts:
-  - `Assets/Scripts/Mobs/MobDefinition.cs` — ScriptableObject config (health, speed, wanderRadius, followRadius, stopDistance, hopHeight, hopDuration)
-  - `Assets/Scripts/Mobs/MobBase.cs` — health, TakeDamage, Die; fires static `OnMobDied(MobBase)`; orange hit flash; no knockback (friendly)
-  - `Assets/Scripts/Mobs/MobAI.cs` — state machine (Wander/Follow/Dead) + NavMeshAgent; ThinkLoop every 0.25 s; HopLoop coroutine oscillates `_visualModel` child localY (hop is purely visual — NavMesh root stays flat); Follow stops at `stopDistance` via `agent.stoppingDistance`; no day/night dependency
-  - `Assets/Scripts/Mobs/MobSpawner.cs` — same proximity spawning as EnemySpawner; single `_maxMobs` cap (no day/night split); no kill debt; subscribes to `MobBase.OnMobDied` to track count
+  - `Assets/Scripts/Mobs/MobDefinition.cs` — inherits `CreatureDefinitionBase`; adds `followRadius`, `stopDistance`, `hopHeight`, `hopDuration`; `enableKnockback` defaults false (base default)
+  - `Assets/Scripts/Mobs/MobBase.cs` — inherits `CreatureBase`; implements `BaseDefinition => _definition`, `FireDeathEvent() => OnMobDied?.Invoke(this)`; `ApplyKnockback` inherited (no-op since `enableKnockback=false`)
+  - `Assets/Scripts/Mobs/MobAI.cs` — inherits `CreatureAIBase`; state machine (Wander/Follow/Dead); unique `HopLoop()` coroutine for visual mesh bobbing; `EvaluateState()` calls `ExecuteWander(_base.Definition.wanderRadius)`
+  - `Assets/Scripts/Mobs/MobSpawner.cs` — inherits `CreatureSpawnerBase`; `_maxMobs` cap; optional `_useKillDebt` + `_maxMobsNight` (day/night split, -1 = same as day); teal gizmos
 - Prefabs (to be created by user): `Assets/App/Prefabs/Mobs/GummyBear.prefab`
   - Prefab structure: root has `NavMeshAgent` + `CapsuleCollider` + `MobBase` + `MobAI`; mesh child assigned to `MobAI._visualModel` in Inspector
 - Definition assets (to be created by user): `Assets/App/Mobs/Definitions/GummyBearDefinition.asset`
 - Static event: `MobBase.OnMobDied(MobBase)` — fires before GO is deactivated
-- HopLoop detail: `_visualModel` localY oscillates using `Mathf.SmoothStep` over `hopDuration`; only runs when `agent.velocity.sqrMagnitude > 0.01`; smoothly settles to 0 when stopped
+- HopLoop detail: `_visualModel` localY oscillates using `Mathf.SmoothStep` over `hopDuration`; only runs when `Agent.velocity.sqrMagnitude > 0.01`; smoothly settles to 0 when stopped
 - Editor tool: `Assets/Scripts/Editor/MobSpawnerEditor.cs` — same Scatter Tool as EnemySpawnerEditor; teal disc in Scene view; wires `_spawnPoints` array automatically
+- Spawn behavior: killed mobs always reduce `_killsThisPhase` (same as enemies — no toggleable kill debt); cap resets each day/night phase change
+- Optional night cap: `MobSpawner._maxMobsNight = N` → separate night population cap; `-1` (default) = same as day cap
+- `MobDefinition.enableKnockback = true` → mobs fly back on hit (off by default)
+
+### Gummy Rush Buff System
+- Scripts:
+  - `Assets/Scripts/Inventory/ItemDefinition.cs` — added `BuffId` (string) field; empty = no buff; non-empty value is passed to `PlayerBuffSystem.ApplyBuff(buffId)` after eating
+  - `Assets/Scripts/Player/EatingSystem.cs` — caches `_cachedBuffId` in `TryBeginEating`; fires `PlayerBuffSystem.LocalPlayer?.ApplyBuff` in `FinishEating`; clears in `CancelEating`
+  - `Assets/Scripts/Player/PlayerBuffSystem.cs` — MonoBehaviour on `PlayerCapsule`; static `LocalPlayer`; `ApplyBuff("gummy_rush")` caches original `MoveSpeed/SprintSpeed/JumpHeight` from `FirstPersonController` and multiplies by 1.5× for 30 s; refreshes timer if buff already active; restores exact cached values on end; static events `OnBuffStarted(string, float)`, `OnBuffTick(string, float)`, `OnBuffEnded(string)`; cancels cleanly on `PlayerStats.OnPlayerDied`
+  - `Assets/Scripts/Creatures/LootDropper.cs` — attach to any creature prefab; subscribes to `MobBase.OnMobDied` or `EnemyBase.OnEnemyDied` (auto-detects in Awake); on matching death: spawns `ItemDefinition.WorldPrefab` at position + 0.5u up, adds Rigidbody + pop impulse; Inspector fields: `_itemId`, `_dropChance`, `_itemRegistry`
+  - `Assets/Scripts/Player/GummyCandyEffect.cs` — attach to any persistent scene GO; `[SerializeField] Volume _buffVolume`; on buff start lerps volume.weight 0→1 (0.5 s fade), animates `ColorAdjustments.hueShift` ±25° via `Mathf.Sin` each frame; on buff end lerps weight 1→0 (0.8 s fade)
+  - `Assets/Scripts/UI/BuffHUD.cs` — MonoBehaviour on a `BuffHUD` child GO in `InventoryUI.prefab`; subscribes to `PlayerBuffSystem` events; shows panel + countdown text (`30s` → `0s`); pulsing scale in Update; hidden when no buff active
+- Assets:
+  - `Assets/App/Items/Gummy.asset` (ItemDefinition) — `ItemId: gummy`, `DisplayName: Gummy`, `FoodValue: 5`, `BuffId: gummy_rush`, `WorldPrefab: Assets/App/Prefabs/PickUpItems/Gummy.prefab`, `MaxStackSize: 10`
+  - `Assets/App/Prefabs/PickUpItems/Gummy.prefab` — user-provided 3D model; **must have** `ResourceNode` (itemId=gummy, qty=1) + trigger `SphereCollider` (radius≈0.3) for pickup detection
+  - `Assets/App/PostProcessing/GummyRushProfile.asset` (VolumeProfile) — `ColorAdjustments`: Saturation +80, Post Exposure +0.3; `Bloom`: Intensity 1.2, Threshold 0.9; `ChromaticAberration`: Intensity 0.25
+- Scene setup (WorldTestScene):
+  - `GummyRushVolume` GO — `Volume` component, isGlobal=true, weight=0, profile=GummyRushProfile.asset
+  - Assign `GummyRushVolume` to `GummyCandyEffect._buffVolume`
+- Prefab wiring:
+  - `PlayerCapsule` in `PlayerRig.prefab` — add `PlayerBuffSystem` (assign `_fpc` → FirstPersonController on same GO) + `GummyCandyEffect` (assign `_buffVolume`)
+  - `GummyBear.prefab` — add `LootDropper` (`_itemId=gummy`, `_dropChance=1`, `_itemRegistry` → ItemRegistry.asset)
+  - `InventoryUI.prefab` — add `BuffHUD` child GO with `Image` (panel bg) + `TextMeshProUGUI` (timer text); wire refs on `BuffHUD` component; anchor top-right
+- Buff key: `"gummy_rush"` — the string connecting `ItemDefinition.BuffId` → `PlayerBuffSystem.ApplyBuff`
 
 ### Dev / Editor Tools
 - Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`, `Assets/Scripts/Editor/StatsSetupTool.cs`

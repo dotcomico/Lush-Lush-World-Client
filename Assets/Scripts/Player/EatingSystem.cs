@@ -25,6 +25,7 @@ namespace LushWorld.Player
         private float _eatProgress;
         private string _cachedItemId;
         private float _cachedFoodValue;
+        private string _cachedBuffId;
         private bool _mobileEatHeld;
 
         private void Awake()
@@ -89,6 +90,7 @@ namespace LushWorld.Player
             _eatProgress = 0f;
             _cachedItemId = activeStack.ItemId;
             _cachedFoodValue = def.FoodValue;
+            _cachedBuffId = def.BuffId;
 
             _heldItemView?.StartEatingAnimation();
         }
@@ -99,6 +101,7 @@ namespace LushWorld.Player
             _eatProgress = 0f;
             _cachedItemId = null;
             _cachedFoodValue = 0f;
+            _cachedBuffId = null;
             _heldItemView?.StopEatingAnimation();
         }
 
@@ -110,8 +113,12 @@ namespace LushWorld.Player
             PlayerStats.ConsumeFood(_cachedFoodValue);
             _inventory.RequestRemoveItem(_inventory.Data.SelectedHotbarSlot, isHotbar: true, qty: 1);
 
+            if (!string.IsNullOrEmpty(_cachedBuffId))
+                PlayerBuffSystem.LocalPlayer?.ApplyBuff(_cachedBuffId);
+
             _cachedItemId = null;
             _cachedFoodValue = 0f;
+            _cachedBuffId = null;
             _eatProgress = 0f;
         }
     }
