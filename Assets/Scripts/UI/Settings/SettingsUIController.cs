@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using Unity.Cinemachine;
 using LushWorld.Save;
@@ -39,6 +40,7 @@ namespace LushWorld.UI
         private TextMeshProUGUI  _sensLabel;
 
         // ── State ─────────────────────────────────────────────────────────────
+        public static bool IsOpen { get; private set; }
         private int   _camModeIdx;
         private int   _slideModeIdx;
         private Slider _tpDistSlider;
@@ -108,6 +110,7 @@ namespace LushWorld.UI
         public void TogglePanel()
         {
             bool opening = !_panel.activeSelf;
+            IsOpen = opening;
             _panel.SetActive(opening);
 
             if (opening)
@@ -227,12 +230,14 @@ namespace LushWorld.UI
             Stretch(RT(_panel));
 
             // Full-screen dimmer backdrop; clicking it closes the panel.
+            // ScrollBlocker ensures scroll wheel events over the dimmer don't leak to the game.
             var dimmer = Go("Dimmer", _panel.transform);
             Stretch(RT(dimmer));
             dimmer.AddComponent<Image>().color = C_Dimmer;
             var dimmerBtn = dimmer.AddComponent<Button>();
             dimmerBtn.transition = Selectable.Transition.None;
             dimmerBtn.onClick.AddListener(TogglePanel);
+            dimmer.AddComponent<ScrollBlocker>();
 
             // Card: fills 80% width x 88% height, centered, scales with CanvasScaler.
             var card = Go("Card", _panel.transform);
@@ -295,6 +300,10 @@ namespace LushWorld.UI
             var viewport = Go("Viewport", scrollGO.transform);
             Stretch(RT(viewport));
             viewport.AddComponent<RectMask2D>();
+            // Transparent image makes the entire viewport area a raycast target,
+            // so scroll events register even over empty space between rows.
+            var vpImg = viewport.AddComponent<Image>();
+            vpImg.color = Color.clear;
             scroll.viewport = RT(viewport);
 
             // Content grows automatically via ContentSizeFitter.
@@ -691,6 +700,12 @@ namespace LushWorld.UI
             t.overflowMode = TextOverflowModes.Overflow;
 
             return btn;
+        }
+
+        // Consumes scroll events so they don't reach the game camera behind the dimmer.
+        private class ScrollBlocker : MonoBehaviour, IScrollHandler
+        {
+            public void OnScroll(PointerEventData _) { }
         }
     }
 }
