@@ -244,7 +244,7 @@ namespace LushWorld.UI
             card.AddComponent<Image>().color = C_Bg;
 
             // ── Fixed title strip pinned to top of card ───────────────────────
-            const float TitleH = 68f; // 22 top-pad + 46 row
+            const float TitleH = 100f; // 24 top-pad + 76 row
             var titleStrip = Go("TitleStrip", card.transform);
             var tsRT = RT(titleStrip);
             tsRT.anchorMin        = new Vector2(0f, 1f);
@@ -253,17 +253,17 @@ namespace LushWorld.UI
             tsRT.sizeDelta        = new Vector2(0f, TitleH);
             tsRT.anchoredPosition = Vector2.zero;
             var tsVG = titleStrip.AddComponent<VerticalLayoutGroup>();
-            tsVG.padding            = new RectOffset(34, 34, 22, 0);
+            tsVG.padding            = new RectOffset(34, 34, 24, 0);
             tsVG.spacing            = 0;
             tsVG.childControlWidth  = true;  tsVG.childForceExpandWidth  = true;
             tsVG.childControlHeight = false; tsVG.childForceExpandHeight = false;
 
-            var titleRow = HRow(titleStrip.transform, 46, 6);
-            Lbl(titleRow.transform, "SETTINGS", 20, C_White, FontStyles.Bold,
+            var titleRow = HRow(titleStrip.transform, 76, 6);
+            Lbl(titleRow.transform, "SETTINGS", 32, C_White, FontStyles.Bold,
                 TextAlignmentOptions.Left, flexW: 1);
-            var closeBtn = IconBtn(titleRow.transform, "X", 38, 38, C_BtnBg, C_Gray, 16);
+            var closeBtn = IconBtn(titleRow.transform, "X", 52, 52, C_BtnBg, C_Gray, 24);
             closeBtn.onClick.AddListener(TogglePanel);
-            LE(closeBtn.gameObject, prefW: 38);
+            LE(closeBtn.gameObject, prefW: 52);
 
             // 1-px divider below the title strip
             var divider = Go("Divider", card.transform);
@@ -307,8 +307,8 @@ namespace LushWorld.UI
             contentRT.anchoredPosition = Vector2.zero;
 
             var vg = content.AddComponent<VerticalLayoutGroup>();
-            vg.padding = new RectOffset(34, 34, 10, 22);
-            vg.spacing = 6;
+            vg.padding = new RectOffset(34, 34, 16, 30);
+            vg.spacing = 10;
             vg.childControlWidth  = true;  vg.childForceExpandWidth  = true;
             vg.childControlHeight = false; vg.childForceExpandHeight = false;
 
@@ -317,6 +317,7 @@ namespace LushWorld.UI
             scroll.content = contentRT;
 
             // ── Section: CAMERA VIEW ─────────────────────────────────────────
+            Gap(content.transform, 4);
             SectionHdr(content.transform, "CAMERA VIEW");
 
             var cmRow = SettingRow(content.transform, "Camera Mode");
@@ -327,6 +328,7 @@ namespace LushWorld.UI
             HintLbl(content.transform, "First person only — no effect in TP or ISO");
 
             // ── Section: CAMERA TUNING ───────────────────────────────────────
+            Gap(content.transform, 8);
             SectionHdr(content.transform, "CAMERA TUNING");
 
             float initDist = _tpFollow != null ? _tpFollow.CameraDistance : 5f;
@@ -344,6 +346,7 @@ namespace LushWorld.UI
             HintLbl(content.transform, "First person only");
 
             // ── Section: CONTROLS ────────────────────────────────────────────
+            Gap(content.transform, 8);
             SectionHdr(content.transform, "CONTROLS");
 
             float initSens = _fpc != null ? _fpc.RotationSpeed : 1f;
@@ -353,7 +356,9 @@ namespace LushWorld.UI
             _sensSlider = sensRow.GetComponentInChildren<Slider>();
 
             // ── Section: GAME ────────────────────────────────────────────────
+            Gap(content.transform, 8);
             Separator(content.transform);
+            Gap(content.transform, 4);
             SectionHdr(content.transform, "GAME");
 
             var resetSettingsBtn = ActionBtn(content.transform, "Reset Settings", C_BtnBg, C_White);
@@ -468,9 +473,9 @@ namespace LushWorld.UI
 
         static GameObject SettingRow(Transform parent, string label)
         {
-            var row = HRow(parent, 38, 10);
-            Lbl(row.transform, label, 13, C_Gray, FontStyles.Normal,
-                TextAlignmentOptions.Left, prefW: 210);
+            var row = HRow(parent, 58, 12);
+            Lbl(row.transform, label, 20, C_Gray, FontStyles.Normal,
+                TextAlignmentOptions.Left, prefW: 270);
             return row;
         }
 
@@ -493,17 +498,17 @@ namespace LushWorld.UI
         static void SectionHdr(Transform parent, string title)
         {
             var go = Go("Sec_" + title, parent);
-            RT(go).sizeDelta = new Vector2(0, 28);
+            RT(go).sizeDelta = new Vector2(0, 46);
             go.AddComponent<Image>().color = C_Section;
             var le = go.AddComponent<LayoutElement>();
-            le.preferredHeight = 28; le.flexibleWidth = 1;
+            le.preferredHeight = 46; le.flexibleWidth = 1;
 
             var inner = Go("Lbl", go.transform);
             var rt = RT(inner);
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
-            rt.offsetMin = new Vector2(12, 0); rt.offsetMax = Vector2.zero;
+            rt.offsetMin = new Vector2(16, 6); rt.offsetMax = new Vector2(0, -6);
             var t = inner.AddComponent<TextMeshProUGUI>();
-            t.text = title; t.fontSize = 10; t.color = C_Accent;
+            t.text = title; t.fontSize = 17; t.color = C_Accent;
             t.fontStyle = FontStyles.Bold; t.alignment = TextAlignmentOptions.Left;
         }
 
@@ -516,15 +521,23 @@ namespace LushWorld.UI
             le.preferredHeight = 1; le.flexibleWidth = 1;
         }
 
+        static void Gap(Transform parent, float h)
+        {
+            var go = Go("Gap", parent);
+            RT(go).sizeDelta = new Vector2(0, h);
+            var le = go.AddComponent<LayoutElement>();
+            le.preferredHeight = h; le.flexibleWidth = 1;
+        }
+
         static void HintLbl(Transform parent, string text)
         {
             var go = Go("Hint", parent);
-            RT(go).sizeDelta = new Vector2(0, 18);
+            RT(go).sizeDelta = new Vector2(0, 26);
             var le = go.AddComponent<LayoutElement>();
-            le.preferredHeight = 18; le.flexibleWidth = 1;
+            le.preferredHeight = 26; le.flexibleWidth = 1;
             var t = go.AddComponent<TextMeshProUGUI>();
             t.text = text;
-            t.fontSize = 10;
+            t.fontSize = 14;
             t.color = new Color(0.38f, 0.38f, 0.42f, 1f);
             t.fontStyle = FontStyles.Italic;
             t.alignment = TextAlignmentOptions.Right;
@@ -536,18 +549,18 @@ namespace LushWorld.UI
         static TextMeshProUGUI Cycler(Transform parent, string[] opts, int startIdx,
                                        System.Action<int> step)
         {
-            var left = IconBtn(parent, "◄", 30, 30, C_BtnBg, C_White, 13);
+            var left = IconBtn(parent, "◄", 44, 44, C_BtnBg, C_White, 20);
             left.onClick.AddListener(() => step(-1));
 
             var valGO = Go("Val", parent);
-            RT(valGO).sizeDelta = new Vector2(170, 30);
+            RT(valGO).sizeDelta = new Vector2(220, 44);
             var t = valGO.AddComponent<TextMeshProUGUI>();
-            t.text = opts[startIdx]; t.fontSize = 14; t.color = C_White;
+            t.text = opts[startIdx]; t.fontSize = 22; t.color = C_White;
             t.alignment = TextAlignmentOptions.Center;
             t.overflowMode = TextOverflowModes.Overflow;
             LE(valGO, flexW: 1);
 
-            var right = IconBtn(parent, "►", 30, 30, C_BtnBg, C_White, 13);
+            var right = IconBtn(parent, "►", 44, 44, C_BtnBg, C_White, 20);
             right.onClick.AddListener(() => step(1));
 
             return t;
@@ -563,12 +576,12 @@ namespace LushWorld.UI
             LE(slider.gameObject, flexW: 1);
 
             var valGO = Go("Val", parent);
-            RT(valGO).sizeDelta = new Vector2(70, 28);
+            RT(valGO).sizeDelta = new Vector2(90, 36);
             var t = valGO.AddComponent<TextMeshProUGUI>();
-            t.text = initText; t.fontSize = 13; t.color = C_White;
+            t.text = initText; t.fontSize = 20; t.color = C_White;
             t.alignment = TextAlignmentOptions.Right;
             t.overflowMode = TextOverflowModes.Overflow;
-            LE(valGO, prefW: 70);
+            LE(valGO, prefW: 90);
             return t;
         }
 
@@ -654,10 +667,10 @@ namespace LushWorld.UI
             return slider;
         }
 
-        static Button ActionBtn(Transform parent, string label, Color bg, Color textColor, int fontSize = 13)
+        static Button ActionBtn(Transform parent, string label, Color bg, Color textColor, int fontSize = 20)
         {
             var go = Go("ActBtn_" + label, parent);
-            RT(go).sizeDelta = new Vector2(0, 36);
+            RT(go).sizeDelta = new Vector2(0, 54);
             var img = go.AddComponent<Image>();
             img.color = bg;
             var btn = go.AddComponent<Button>();

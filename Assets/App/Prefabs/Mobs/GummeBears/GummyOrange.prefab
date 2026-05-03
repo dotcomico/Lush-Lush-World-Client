@@ -75,6 +75,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4814140183114437194, guid: f49fc905a4f29d342a5e25a7d82d5d28, type: 3}
       insertIndex: -1
       addedObject: {fileID: -6744171039166370497}
+    - targetCorrespondingSourceObject: {fileID: 4814140183114437194, guid: f49fc905a4f29d342a5e25a7d82d5d28, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 738751466025870936}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: f49fc905a4f29d342a5e25a7d82d5d28, type: 3}
 --- !u!1 &1169853534260216382 stripped
 GameObject:
@@ -116,6 +119,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Mobs.MobBase
   _definition: {fileID: 11400000, guid: 55c1ad4fe1f8d044f8727ba74f61d3d2, type: 2}
+  _hitScream: {fileID: 0}
+  _screamVolume: 0.8
+  _screamMaxDistance: 20
 --- !u!114 &-7098888862045395172
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -167,3 +173,19 @@ MonoBehaviour:
   _itemId: gummy
   _dropChance: 1
   _itemRegistry: {fileID: 11400000, guid: eb4469f6f44f4124fbbcff30e118c857, type: 2}
+--- !u!114 &738751466025870936
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1169853534260216382}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc10fb4a16dc2514cb7edfac2c0be9ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Mobs.MobBase
+  _definition: {fileID: 11400000, guid: 55c1ad4fe1f8d044f8727ba74f61d3d2, type: 2}
+  _hitScream: {fileID: 8300000, guid: 42c5b4346e2b1ce418c2a86a06edd694, type: 3}
+  _screamVolume: 1
+  _screamMaxDistance: 20

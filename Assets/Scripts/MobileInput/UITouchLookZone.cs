@@ -50,6 +50,12 @@ public class UITouchLookZone : MonoBehaviour,
         Vector2 delta = eventData.position - _prevPosition;
         _prevPosition = eventData.position;
 
+        // Normalize raw pixel delta to physical distance so sensitivity feels
+        // the same regardless of screen DPI (high-DPI phones were faster).
+        // Reference 300 DPI ≈ a typical quality Android screen.
+        float dpi = Screen.dpi > 1f ? Screen.dpi : 300f;
+        delta *= 300f / dpi;
+
         if (invertX) delta.x = -delta.x;
         if (invertY) delta.y = -delta.y;
 

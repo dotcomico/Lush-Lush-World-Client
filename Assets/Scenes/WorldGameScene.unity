@@ -442,6 +442,10 @@ PrefabInstance:
       propertyPath: _buffVolume
       value: 
       objectReference: {fileID: 404235601}
+    - target: {fileID: 2553614447541828535, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
+      propertyPath: _cameraRoot
+      value: 
+      objectReference: {fileID: 676825945}
     - target: {fileID: 2753887583838102160, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_Name
       value: PlayerRig
@@ -1628,6 +1632,11 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!4 &676825945 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5935966555844025259, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
+  m_PrefabInstance: {fileID: 184620762}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &689347552
 PrefabInstance:
   m_ObjectHideFlags: 0

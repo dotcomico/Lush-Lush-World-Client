@@ -10,8 +10,11 @@ namespace LushWorld.Player
     public class PlayerBuffSystem : MonoBehaviour
     {
         private const string GummyRushId = "gummy_rush";
-        private const float GummyRushDuration = 30f;
-        private const float GummyRushMultiplier = 1.5f;
+
+        [Header("Gummy Rush Tuning")]
+        [SerializeField] private float _buffDuration    = 30f;
+        [SerializeField] private float _speedMultiplier = 2f;
+        [SerializeField] private float _jumpMultiplier  = 2f;
 
         public static PlayerBuffSystem LocalPlayer { get; private set; }
 
@@ -66,9 +69,9 @@ namespace LushWorld.Player
         private IEnumerator GummyRushCoroutine()
         {
             CacheAndApplyGummyRush();
-            OnBuffStarted?.Invoke(GummyRushId, GummyRushDuration);
+            OnBuffStarted?.Invoke(GummyRushId, _buffDuration);
 
-            float remaining = GummyRushDuration;
+            float remaining = _buffDuration;
             while (remaining > 0f)
             {
                 yield return Utilities.CoroutineUtils.Wait1;
@@ -85,9 +88,9 @@ namespace LushWorld.Player
             _originalSprintSpeed = _fpc.SprintSpeed;
             _originalJumpHeight = _fpc.JumpHeight;
 
-            _fpc.MoveSpeed *= GummyRushMultiplier;
-            _fpc.SprintSpeed *= GummyRushMultiplier;
-            _fpc.JumpHeight *= GummyRushMultiplier;
+            _fpc.MoveSpeed   *= _speedMultiplier;
+            _fpc.SprintSpeed *= _speedMultiplier;
+            _fpc.JumpHeight  *= _jumpMultiplier;
         }
 
         private void RestoreGummyRushStats()

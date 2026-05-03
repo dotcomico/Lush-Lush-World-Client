@@ -40,10 +40,10 @@ namespace LushWorld.Creatures
             if (!_isFlashing)
                 StartCoroutine(HitFlashCoroutine());
 
+            OnHit?.Invoke();
+
             if (_currentHealth <= 0f)
                 Die();
-            else
-                OnHit?.Invoke();
         }
 
         // Call BEFORE TakeDamage on the same hit — if the hit kills the creature, IsDead
