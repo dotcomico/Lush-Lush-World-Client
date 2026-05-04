@@ -14,9 +14,9 @@ namespace LushWorld.Mobs
 
         [Header("Hop")]
         [Tooltip("How high the visual mesh lifts on each hop.")]
-        public float hopHeight     = 0.18f;
+        public float hopHeight     = 0.28f;
         [Tooltip("Duration of one full hop cycle (up + down) in seconds.")]
-        public float hopDuration   = 0.32f;
+        public float hopDuration   = 0.42f;
 
         private void Reset()
         {

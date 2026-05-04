@@ -54,6 +54,8 @@ namespace LushWorld.Creatures
 
             Vector3 spawnPos = transform.position + Vector3.up * 0.5f;
             GameObject drop = Instantiate(def.WorldPrefab, spawnPos, Random.rotation);
+            if (!Mathf.Approximately(def.DropScale, 1f))
+                drop.transform.localScale = Vector3.one * def.DropScale;
 
             // Ensure a collider exists for ResourceInteractor proximity detection
             if (drop.GetComponentInChildren<Collider>() == null)

@@ -65,9 +65,6 @@ PrefabInstance:
       addedObject: {fileID: 4917838647828703998}
     - targetCorrespondingSourceObject: {fileID: 4814140183114437194, guid: c4e3cad380ac7944bab1fee0eeacea7a, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5500950533982595952}
-    - targetCorrespondingSourceObject: {fileID: 4814140183114437194, guid: c4e3cad380ac7944bab1fee0eeacea7a, type: 3}
-      insertIndex: -1
       addedObject: {fileID: -99315720247388144}
     - targetCorrespondingSourceObject: {fileID: 4814140183114437194, guid: c4e3cad380ac7944bab1fee0eeacea7a, type: 3}
       insertIndex: -1
@@ -109,22 +106,6 @@ NavMeshAgent:
   m_BaseOffset: 0.5
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &5500950533982595952
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4091353940963336413}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc10fb4a16dc2514cb7edfac2c0be9ef, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Mobs.MobBase
-  _definition: {fileID: 11400000, guid: 55c1ad4fe1f8d044f8727ba74f61d3d2, type: 2}
-  _hitScream: {fileID: 0}
-  _screamVolume: 0.8
-  _screamMaxDistance: 20
 --- !u!114 &-99315720247388144
 MonoBehaviour:
   m_ObjectHideFlags: 0

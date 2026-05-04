@@ -168,6 +168,14 @@ namespace LushWorld.Inventory
             OnBackpackToggleRequested?.Invoke(_backpackOpen);
         }
 
+public void ForceCloseBackpack()
+        {
+            if (!_backpackOpen) return;
+            _backpackOpen = false;
+            OnBackpackToggleRequested?.Invoke(false);
+        }
+
+
         // Q key — always drops exactly 1 unit, leaving the rest in the slot.
         public void RequestDropActiveItem()
         {
