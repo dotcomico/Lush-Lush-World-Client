@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace LushWorld.Save
 {
     [System.Serializable]
@@ -8,6 +10,8 @@ namespace LushWorld.Save
         public float tpDistance      = 5f;
         public float fpFov           = 80f;
         public float lookSensitivity = 1f;
+
+        public List<MobileElementLayoutData> mobileLayout = new();
 
         public static GameSettings Default => new GameSettings();
     }

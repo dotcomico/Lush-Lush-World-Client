@@ -1,4 +1,5 @@
 using LushWorld.Building;
+using LushWorld.UI.Mobile;
 using LushWorld.Utilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -37,6 +38,7 @@ namespace LushWorld.UI
         private void SetVisible(bool show)
         {
             if (_group == null) return;
+            if (!show && MobileLayoutCustomizer.IsEditing) return;
             _group.alpha          = show ? 1f : 0f;
             _group.interactable   = show;
             _group.blocksRaycasts = show;

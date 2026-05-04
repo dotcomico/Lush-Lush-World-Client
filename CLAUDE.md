@@ -278,6 +278,19 @@ Four stateless helper classes in `Assets/Scripts/Utilities/`. Use anywhere — n
 - Modified: `Assets/Scripts/Resource/ResourceInteractor.cs` — added `public static event Action<BlueprintInstance> OnNearBlueprintChanged`; fired in `FindNearestNode()` when nearest blueprint changes
 - Docs: none yet
 
+### Mobile HUD Customizer
+- Scripts:
+  - `Assets/Scripts/UI/Mobile/MobileUIElement.cs` — attach to every mobile UI RectTransform that should be customizable; `[SerializeField] string _elementId` (set in Inspector, must be unique); registers with `MobileLayoutCustomizer` in `Awake`; in edit mode becomes draggable (`IBeginDragHandler`, `IDragHandler`, `IEndDragHandler`) and tappable (`IPointerClickHandler` → fires `OnSelected`); `EnterEditMode()` saves current CanvasGroup state, forces visible, disables interactable to block child buttons, adds `Outline`; `ExitEditMode()` restores; `ApplyLayout(MobileElementLayoutData)` restores saved position/scale/alpha; `GetCurrentLayout()` snapshots current state
+  - `Assets/Scripts/UI/Mobile/MobileLayoutCustomizer.cs` — scene singleton; `static Register/Unregister` called by `MobileUIElement.Awake/OnDestroy`; `EnterEditMode()` elevates mobile canvases to sortingOrder=550, creates dimmer overlay (sort 500) + top-center control panel (sort 600), enables drag on all elements, zeroes `StarterAssetsInputs` in Update to block gameplay; `ExitEditMode()` collects layout, calls `SaveManager.Instance.SaveSettings()`, restores canvas sort orders; `ApplySavedLayout(List<MobileElementLayoutData>)` called from `SettingsUIController.ApplySettings`; `GetAllLayoutData()` called from `SettingsUIController.GetCurrentSettings`
+  - `Assets/Scripts/Save/MobileElementLayoutData.cs` — `[Serializable]` data class: `elementId`, `anchoredPosition`, `scale`, `alpha`
+- Modified:
+  - `Assets/Scripts/Save/SettingsData.cs` — added `List<MobileElementLayoutData> mobileLayout` to `GameSettings`
+  - `Assets/Scripts/UI/Settings/SettingsUIController.cs` — added "MOBILE CONTROLS" section with "Customize Mobile HUD" button (only shown when `PlatformDetector.IsMobile || SimulateMobileInEditor`); wired `mobileLayout` into `GetCurrentSettings()` and `ApplySettings()`
+- Prefab setup (user applies once, after scripts compile):
+  - Add `MobileLayoutCustomizer` component to a new child GO inside `PlayerRig.prefab`
+  - Add `MobileUIElement` to each mobile button/joystick with matching `elementId` strings: `"joystick_move"`, `"joystick_look"`, `"btn_jump"`, `"btn_sprint"`, `"btn_slide"`, `"btn_attack"`, `"btn_pickup"`, `"btn_backpack"`, `"btn_building"`, `"btn_eat"`, `"panel_placement"`, `"panel_skeleton"`
+- Save flow: layout is included in `settings.json` via existing `SaveManager.SaveSettings()` → `SettingsUIController.GetCurrentSettings()` → `MobileLayoutCustomizer.GetAllLayoutData()`
+
 ### Day / Night Cycle
 - Scripts: `Assets/Scripts/World/DayNightCycle.cs`
 - Scene objects: `DayNightCycle` (root), `Directional Light` (sun)

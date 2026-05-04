@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using TMPro;
 using Unity.Cinemachine;
 using LushWorld.Save;
+using LushWorld.UI.Mobile;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -360,6 +361,17 @@ namespace LushWorld.UI
                 initSens.ToString("F2") + "×");
             _sensSlider = sensRow.GetComponentInChildren<Slider>();
 
+            if (LushWorld.Utilities.PlatformDetector.IsMobile)
+            {
+                Gap(content.transform, 8);
+                SectionHdr(content.transform, "MOBILE CONTROLS");
+
+                var customizeBtn = ActionBtn(content.transform, "Customize Mobile HUD", C_BtnBg, C_White);
+                customizeBtn.onClick.AddListener(OnCustomizeMobileHUD);
+
+                HintLbl(content.transform, "Drag, resize, and adjust opacity of every on-screen button");
+            }
+
             Gap(content.transform, 8);
             Separator(content.transform);
             Gap(content.transform, 4);
@@ -386,6 +398,8 @@ namespace LushWorld.UI
             tpDistance      = _tpFollow != null ? _tpFollow.CameraDistance       : 5f,
             fpFov           = _fpVCam   != null ? _fpVCam.m_Lens.FieldOfView     : 80f,
             lookSensitivity = _fpc      != null ? _fpc.RotationSpeed             : 1f,
+            mobileLayout    = MobileLayoutCustomizer.Instance?.GetAllLayoutData()
+                                  ?? new System.Collections.Generic.List<MobileElementLayoutData>(),
         };
 
         public void ApplySettings(GameSettings s)
@@ -393,6 +407,7 @@ namespace LushWorld.UI
             ApplyCameraViewSettings(s);
             ApplyCameraTuningSettings(s);
             ApplyControlsSettings(s);
+            MobileLayoutCustomizer.Instance?.ApplySavedLayout(s.mobileLayout);
         }
 
         private void ApplyCameraViewSettings(GameSettings s)
@@ -415,6 +430,12 @@ namespace LushWorld.UI
         private void ApplyControlsSettings(GameSettings s)
         {
             if (_sensSlider != null) _sensSlider.value = s.lookSensitivity;
+        }
+
+        void OnCustomizeMobileHUD()
+        {
+            ForceClose();
+            MobileLayoutCustomizer.Instance?.EnterEditMode();
         }
 
         void OnResetSettingsClicked() =>
