@@ -1,17 +1,20 @@
 using LushWorld.Inventory;
+using LushWorld.UI;
 using UnityEngine;
 
 namespace LushWorld.UI.Inventory
 {
-    // Manages the 4×6 backpack grid and panel visibility.
-    // Panel toggle is driven by InventorySystem.OnBackpackToggleRequested.
-    public class BackpackUI : MonoBehaviour
+    public class BackpackUI : MonoBehaviour, IPanelUI
     {
         [SerializeField] private GameObject backpackPanel;
         [SerializeField] private InventorySlotUI[] slots;
         [SerializeField] private ItemRegistry itemRegistry;
 
         private InventoryData _data;
+
+        public bool IsOpen => backpackPanel != null && backpackPanel.activeSelf;
+
+        public void ForceClose() => InventorySystem.LocalPlayer?.ForceCloseBackpack();
 
         private void OnEnable()
         {
@@ -63,6 +66,10 @@ namespace LushWorld.UI.Inventory
         private void HandleBackpackToggle(bool isOpen)
         {
             backpackPanel.SetActive(isOpen);
+            if (isOpen)
+                PanelManager.RequestOpen(this);
+            else
+                PanelManager.NotifyClosed(this);
         }
 
         private void RefreshSlot(int index)

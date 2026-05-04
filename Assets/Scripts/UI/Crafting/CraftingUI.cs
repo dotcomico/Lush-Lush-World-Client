@@ -7,9 +7,7 @@ using UnityEngine.UI;
 
 namespace LushWorld.UI
 {
-    // Nested inside PlayerRig.prefab as CraftingMenuUI.prefab.
-    // Subscribes to CraftingSystem static events — no direct scene references needed.
-    public class CraftingUI : MenuUIBase
+    public class CraftingUI : MenuUIBase, IPanelUI
     {
         [SerializeField] private GameObject      _panel;
         [SerializeField] private Transform       _rowContainer;
@@ -21,6 +19,10 @@ namespace LushWorld.UI
         private InventoryData       _inventoryData;
         private StarterAssetsInputs _inputBridge;
         private Canvas              _canvas;
+
+        public bool IsOpen => _panel != null && _panel.activeSelf;
+
+        public void ForceClose() => CraftingSystem.LocalPlayer?.CloseCraftingMenu();
 
         private void OnEnable()
         {
@@ -45,11 +47,7 @@ namespace LushWorld.UI
         {
             _inputBridge = FindFirstObjectByType<StarterAssetsInputs>();
             _canvas      = GetComponent<Canvas>();
-
-            // Raise sort order so this canvas is always on top of HUD/inventory
-            // when visible — backdrop clicks won't be intercepted by other canvases.
             if (_canvas != null) _canvas.sortingOrder = 150;
-
             if (_panel != null) _panel.SetActive(false);
             InitBackdrop("CraftingBackdrop", () => CraftingSystem.LocalPlayer?.CloseCraftingMenu(), _panel);
             BuildRows();
@@ -82,6 +80,10 @@ namespace LushWorld.UI
         {
             ApplyMenuToggle(open, _panel, _inputBridge);
             if (open) RefreshAllRows();
+            if (open)
+                PanelManager.RequestOpen(this);
+            else
+                PanelManager.NotifyClosed(this);
         }
 
         private void HandleCraftResult(string _) => RefreshAllRows();
@@ -89,7 +91,6 @@ namespace LushWorld.UI
         private void BuildRows()
         {
             if (_recipeRegistry == null || _rowPrefab == null || _rowContainer == null) return;
-
             foreach (var recipe in _recipeRegistry.Recipes)
             {
                 var go  = Instantiate(_rowPrefab, _rowContainer);

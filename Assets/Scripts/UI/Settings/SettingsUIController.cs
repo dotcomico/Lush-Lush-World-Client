@@ -20,7 +20,7 @@ namespace LushWorld.UI
     /// ThirdPersonOrbitController from the scene.
     /// </summary>
     [RequireComponent(typeof(UnityEngine.UI.GraphicRaycaster))]
-    public class SettingsUIController : MonoBehaviour
+    public class SettingsUIController : MonoBehaviour, IPanelUI
     {
         // ── Discovered scene references ───────────────────────────────────────
         private SlideController            _slide;
@@ -40,7 +40,7 @@ namespace LushWorld.UI
         private TextMeshProUGUI  _sensLabel;
 
         // ── State ─────────────────────────────────────────────────────────────
-        public static bool IsOpen { get; private set; }
+        public bool IsOpen { get; private set; }
         private int   _camModeIdx;
         private int   _slideModeIdx;
         private Slider _tpDistSlider;
@@ -72,7 +72,6 @@ namespace LushWorld.UI
             var _canvas = GetComponent<Canvas>();
             if (_canvas != null) _canvas.sortingOrder = 200;
 
-            // Scale UI with screen resolution, matching the Building/Crafting menus.
             var scaler = GetComponent<CanvasScaler>() ?? gameObject.AddComponent<CanvasScaler>();
             scaler.uiScaleMode         = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
@@ -115,7 +114,7 @@ namespace LushWorld.UI
 
             if (opening)
             {
-                // Free the cursor so the player can click settings controls
+                PanelManager.RequestOpen(this);
                 if (_inputBridge != null) { _inputBridge.cursorLocked = false; _inputBridge.cursorInputForLook = false; }
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible   = true;
@@ -123,11 +122,21 @@ namespace LushWorld.UI
             }
             else
             {
-                // Re-lock cursor so camera look resumes
+                PanelManager.NotifyClosed(this);
                 if (_inputBridge != null) { _inputBridge.cursorLocked = true; _inputBridge.cursorInputForLook = true; }
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible   = false;
             }
+        }
+
+        public void ForceClose()
+        {
+            if (_panel == null || !_panel.activeSelf) return;
+            IsOpen = false;
+            _panel.SetActive(false);
+            if (_inputBridge != null) { _inputBridge.cursorLocked = true; _inputBridge.cursorInputForLook = true; }
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible   = false;
         }
 
         // ── Sync (game state -> UI) ───────────────────────────────────────────
@@ -229,8 +238,6 @@ namespace LushWorld.UI
             _panel = Go("SettingsPanel", transform);
             Stretch(RT(_panel));
 
-            // Full-screen dimmer backdrop; clicking it closes the panel.
-            // ScrollBlocker ensures scroll wheel events over the dimmer don't leak to the game.
             var dimmer = Go("Dimmer", _panel.transform);
             Stretch(RT(dimmer));
             dimmer.AddComponent<Image>().color = C_Dimmer;
@@ -239,7 +246,6 @@ namespace LushWorld.UI
             dimmerBtn.onClick.AddListener(TogglePanel);
             dimmer.AddComponent<ScrollBlocker>();
 
-            // Card: fills 80% width x 88% height, centered, scales with CanvasScaler.
             var card = Go("Card", _panel.transform);
             var cardRT = RT(card);
             cardRT.anchorMin        = new Vector2(0.10f, 0.06f);
@@ -248,8 +254,7 @@ namespace LushWorld.UI
             cardRT.anchoredPosition = Vector2.zero;
             card.AddComponent<Image>().color = C_Bg;
 
-            // ── Fixed title strip pinned to top of card ───────────────────────
-            const float TitleH = 100f; // 24 top-pad + 76 row
+            const float TitleH = 100f;
             var titleStrip = Go("TitleStrip", card.transform);
             var tsRT = RT(titleStrip);
             tsRT.anchorMin        = new Vector2(0f, 1f);
@@ -270,7 +275,6 @@ namespace LushWorld.UI
             closeBtn.onClick.AddListener(TogglePanel);
             LE(closeBtn.gameObject, prefW: 52);
 
-            // 1-px divider below the title strip
             var divider = Go("Divider", card.transform);
             var divRT   = RT(divider);
             divRT.anchorMin        = new Vector2(0f, 1f);
@@ -280,8 +284,6 @@ namespace LushWorld.UI
             divRT.anchoredPosition = new Vector2(0f, -TitleH);
             divider.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.07f);
 
-            // ── ScrollRect fills the card below the title strip ───────────────
-            // This means any number of settings rows will scroll rather than overflow.
             var scrollGO = Go("Scroll", card.transform);
             var scrollRT = RT(scrollGO);
             scrollRT.anchorMin = Vector2.zero;
@@ -300,13 +302,10 @@ namespace LushWorld.UI
             var viewport = Go("Viewport", scrollGO.transform);
             Stretch(RT(viewport));
             viewport.AddComponent<RectMask2D>();
-            // Transparent image makes the entire viewport area a raycast target,
-            // so scroll events register even over empty space between rows.
             var vpImg = viewport.AddComponent<Image>();
             vpImg.color = Color.clear;
             scroll.viewport = RT(viewport);
 
-            // Content grows automatically via ContentSizeFitter.
             var content = Go("Content", viewport.transform);
             var contentRT = RT(content);
             contentRT.anchorMin        = new Vector2(0f, 1f);
@@ -325,7 +324,6 @@ namespace LushWorld.UI
                 ContentSizeFitter.FitMode.PreferredSize;
             scroll.content = contentRT;
 
-            // ── Section: CAMERA VIEW ─────────────────────────────────────────
             Gap(content.transform, 4);
             SectionHdr(content.transform, "CAMERA VIEW");
 
@@ -336,7 +334,6 @@ namespace LushWorld.UI
             _slideModeLabel = Cycler(slRow.transform, SlideModeNames, 0, StepSlideMode);
             HintLbl(content.transform, "First person only — no effect in TP or ISO");
 
-            // ── Section: CAMERA TUNING ───────────────────────────────────────
             Gap(content.transform, 8);
             SectionHdr(content.transform, "CAMERA TUNING");
 
@@ -354,7 +351,6 @@ namespace LushWorld.UI
             _fpFovSlider = fovRow.GetComponentInChildren<Slider>();
             HintLbl(content.transform, "First person only");
 
-            // ── Section: CONTROLS ────────────────────────────────────────────
             Gap(content.transform, 8);
             SectionHdr(content.transform, "CONTROLS");
 
@@ -364,7 +360,6 @@ namespace LushWorld.UI
                 initSens.ToString("F2") + "×");
             _sensSlider = sensRow.GetComponentInChildren<Slider>();
 
-            // ── Section: GAME ────────────────────────────────────────────────
             Gap(content.transform, 8);
             Separator(content.transform);
             Gap(content.transform, 4);
@@ -413,7 +408,6 @@ namespace LushWorld.UI
 
         private void ApplyCameraTuningSettings(GameSettings s)
         {
-            // Setting slider.value fires onValueChanged which updates the underlying system and label.
             if (_tpDistSlider != null) _tpDistSlider.value = s.tpDistance;
             if (_fpFovSlider  != null) _fpFovSlider.value  = s.fpFov;
         }
@@ -554,7 +548,6 @@ namespace LushWorld.UI
             t.enableWordWrapping = false;
         }
 
-        // Value cycler (◄ label ►) — returns the center label for later sync
         static TextMeshProUGUI Cycler(Transform parent, string[] opts, int startIdx,
                                        System.Action<int> step)
         {
@@ -575,7 +568,6 @@ namespace LushWorld.UI
             return t;
         }
 
-        // Slider + right-aligned value readout — returns the readout label
         static TextMeshProUGUI SliderRow(Transform parent, float min, float max, float val,
                                           UnityEngine.Events.UnityAction<float> onChange,
                                           string initText)
@@ -620,13 +612,11 @@ namespace LushWorld.UI
             return btn;
         }
 
-        // Builds a functional Unity Slider from scratch
         static Slider BuildSlider(Transform parent, float min, float max, float value)
         {
             var go = Go("Slider", parent);
             RT(go).sizeDelta = new Vector2(300, 28);
 
-            // Background track
             var bg = Go("Bg", go.transform);
             var bgRT = RT(bg);
             bgRT.anchorMin = new Vector2(0f, 0.30f);
@@ -634,7 +624,6 @@ namespace LushWorld.UI
             bgRT.offsetMin = bgRT.offsetMax = Vector2.zero;
             bg.AddComponent<Image>().color = C_Track;
 
-            // Fill area + fill
             var fillArea = Go("FillArea", go.transform);
             var faRT = RT(fillArea);
             faRT.anchorMin = new Vector2(0f, 0.30f);
@@ -649,7 +638,6 @@ namespace LushWorld.UI
             fillRT.offsetMin = fillRT.offsetMax = Vector2.zero;
             fill.AddComponent<Image>().color = C_Accent;
 
-            // Handle slide area + handle
             var hsa   = Go("HandleArea", go.transform);
             var hsaRT = RT(hsa);
             hsaRT.anchorMin = Vector2.zero;
@@ -702,7 +690,6 @@ namespace LushWorld.UI
             return btn;
         }
 
-        // Consumes scroll events so they don't reach the game camera behind the dimmer.
         private class ScrollBlocker : MonoBehaviour, IScrollHandler
         {
             public void OnScroll(PointerEventData _) { }

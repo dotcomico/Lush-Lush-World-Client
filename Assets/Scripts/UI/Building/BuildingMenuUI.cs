@@ -7,10 +7,7 @@ using UnityEngine.UI;
 
 namespace LushWorld.UI.Building
 {
-    // Nested inside PlayerRig.prefab as BuildingMenuUI.prefab.
-    // Subscribes to BuildingSystem static events — no direct scene references needed.
-    // Follows the same open/close + backdrop + cursor pattern as CraftingUI.
-    public class BuildingMenuUI : MenuUIBase
+    public class BuildingMenuUI : MenuUIBase, IPanelUI
     {
         [SerializeField] private GameObject       _panel;
         [SerializeField] private Transform        _rowContainer;
@@ -19,6 +16,10 @@ namespace LushWorld.UI.Building
 
         private StarterAssetsInputs _inputBridge;
         private Canvas              _canvas;
+
+        public bool IsOpen => _panel != null && _panel.activeSelf;
+
+        public void ForceClose() => BuildingSystem.LocalPlayer?.CloseBuildingMenu();
 
         private void OnEnable()  => BuildingSystem.OnBuildingMenuToggleRequested += HandleMenuToggle;
         private void OnDisable() => BuildingSystem.OnBuildingMenuToggleRequested -= HandleMenuToggle;
@@ -33,7 +34,14 @@ namespace LushWorld.UI.Building
             BuildRows();
         }
 
-        private void HandleMenuToggle(bool open) => ApplyMenuToggle(open, _panel, _inputBridge);
+        private void HandleMenuToggle(bool open)
+        {
+            ApplyMenuToggle(open, _panel, _inputBridge);
+            if (open)
+                PanelManager.RequestOpen(this);
+            else
+                PanelManager.NotifyClosed(this);
+        }
 
         private void BuildRows()
         {
