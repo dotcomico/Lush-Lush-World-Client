@@ -18,6 +18,7 @@ MonoBehaviour:
   <MaxStackSize>k__BackingField: 64
   <IsDroppable>k__BackingField: 1
   <WorldPrefab>k__BackingField: {fileID: 7033868853737932464, guid: f96f139a22b14be4da454916e3e76807, type: 3}
-  <HeldScale>k__BackingField: 1
+  <HeldScale>k__BackingField: 0.4
+  <DropScale>k__BackingField: 1
   <FoodValue>k__BackingField: 5
   <BuffId>k__BackingField: gummy_rush

@@ -18,5 +18,7 @@ MonoBehaviour:
   <MaxStackSize>k__BackingField: 6
   <IsDroppable>k__BackingField: 0
   <WorldPrefab>k__BackingField: {fileID: 7404384159976300054, guid: 2ff66728027875e4c9d1c36725e7f5b1, type: 3}
-  <HeldScale>k__BackingField: 1
+  <HeldScale>k__BackingField: 0.4
+  <DropScale>k__BackingField: 1
   <FoodValue>k__BackingField: 0
+  <BuffId>k__BackingField: 
