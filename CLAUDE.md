@@ -198,7 +198,7 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 
 ### Inventory Logic
 - Scripts: `Assets/Scripts/Inventory/InventorySystem.cs`, `Assets/Scripts/Inventory/InventoryData.cs`, `Assets/Scripts/Inventory/InventoryInputHandler.cs`, `Assets/Scripts/Inventory/ItemDefinition.cs`, `Assets/Scripts/Inventory/ItemRegistry.cs`, `Assets/Scripts/Inventory/ItemStack.cs`, `Assets/Scripts/Inventory/CursorLockManager.cs`
-- Assets: `Assets/App/Items/SmallRock.asset`, `Assets/App/Items/Mushroom.asset`, `Assets/App/Items/Branch.asset` (ItemDefinition ScriptableObjects)
+- Assets: `Assets/App/Items/SmallRock.asset`, `Assets/App/Items/Mushroom.asset`, `Assets/App/Items/Branch.asset`, `Assets/App/Items/Gummy.asset`, `Assets/App/Items/Heart.asset`, `Assets/App/Items/MushroomBourekas.asset` (id: mushroom_bourekas, DisplayName: Bourekas Pitriot, FoodValue: 100) (ItemDefinition ScriptableObjects)
 - Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (PlayerCapsule child holds InventorySystem + InventoryInputHandler + CursorLockManager)
 - Docs: `../Docs/adding-pickup-items.md`
 
@@ -362,7 +362,7 @@ Four stateless helper classes in `Assets/Scripts/Utilities/`. Use anywhere — n
   - `Assets/Scripts/UI/Crafting/CraftingUI.cs` — extends `MenuUIBase`; on `CraftingMenuUI.prefab` (nested in PlayerRig); subscribes to `CraftingSystem.OnCraftingMenuToggleRequested`; instantiates `CraftingRecipeRowUI` prefab per recipe; refreshes rows on slot changes via `InventoryData` events; backdrop + cursor logic inherited from `MenuUIBase`
   - `Assets/Scripts/UI/Crafting/CraftingRecipeRowUI.cs` — MonoBehaviour on row prefab; shows recipe name, ingredient counts (have/need), max craftable; Craft button calls `CraftingSystem.LocalPlayer.RequestCraft`
 - Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — C key → `CraftingSystem.LocalPlayer?.ToggleCraftingMenu()`
-- Assets (user creates): `Assets/App/Crafting/RecipeRegistry.asset`; one `RecipeDefinition` asset per recipe under `Assets/App/Crafting/Recipes/`
+- Assets: `Assets/App/Crafting/RecipeRegistry.asset`; `Assets/App/Crafting/SimpleTorchRecipe.asset` (placeholder); `Assets/App/Crafting/MushroomBourekasRecipe.asset` (id: recipe_mushroom_bourekas, 12× mushroom → mushroom_bourekas)
 - Prefabs: `Assets/App/Prefabs/CraftingMenuUI.prefab` (Canvas, Screen Space Overlay, **Scale With Screen Size 1920×1080 match=0.5**, sortingOrder=150) nested inside `PlayerRig.prefab`; Panel anchored 10%–90% width × 17.5%–82.5% height (centered, screen-proportional); Content top-stretched inside Panel with VerticalLayoutGroup; `Assets/App/Prefabs/UI/CraftingRowPrefab.prefab` — HorizontalLayoutGroup row, 60px height, auto-size TMP texts 14–28pt, Craft Button
 - Inspector wiring on `PlayerCapsule`: `CraftingSystem._recipeRegistry` → `RecipeRegistry.asset`; `CraftingUI._recipeRegistry`, `_itemRegistry`, `_panel`, `_rowContainer`, `_rowPrefab`
 - Docs: `../Docs/crafting-building-system.md`

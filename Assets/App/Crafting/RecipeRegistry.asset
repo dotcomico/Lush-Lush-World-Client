@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Crafting.RecipeRegistry
   _recipes:
   - {fileID: 11400000, guid: c244fadf1e8619d4ab4aafbe055ee79a, type: 2}
+  - {fileID: 11400000, guid: 2a7f8d3c1e5b9a4f6c2e8d1b7a3f9e5c, type: 2}

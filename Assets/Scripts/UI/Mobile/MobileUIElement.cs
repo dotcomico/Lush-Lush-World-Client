@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -32,6 +33,7 @@ namespace LushWorld.UI.Mobile
 
         private Outline _outline;
         private Image   _ghostGraphic;   // added if root has no Graphic, so Outline renders
+        private readonly List<(MonoBehaviour comp, bool wasEnabled)> _disabledHandlers = new();
 
         public string ElementId    => _elementId;
         public float  CurrentScale => _rt.localScale.x;
@@ -96,6 +98,19 @@ namespace LushWorld.UI.Mobile
             _outline              ??= gameObject.AddComponent<Outline>();
             _outline.effectColor    = new Color(0.4f, 0.7f, 1f, 0.85f);
             _outline.effectDistance = new Vector2(3, -3);
+
+            // CanvasGroup.interactable=false blocks Selectable (Button) but NOT raw
+            // IPointerDownHandler components (e.g. UIVirtualButton). Disable them explicitly
+            // so the underlying game action never fires during HUD customization.
+            foreach (var comp in GetComponentsInChildren<MonoBehaviour>(true))
+            {
+                if (comp is MobileUIElement) continue;
+                if (comp is IPointerDownHandler or IPointerUpHandler or Selectable)
+                {
+                    _disabledHandlers.Add((comp, comp.enabled));
+                    comp.enabled = false;
+                }
+            }
         }
 
         public void ExitEditMode()
@@ -103,6 +118,10 @@ namespace LushWorld.UI.Mobile
             _editMode             = false;
             _group.interactable   = _savedInteractable;
             _group.blocksRaycasts = _savedBlocksRaycasts;
+
+            foreach (var (comp, wasEnabled) in _disabledHandlers)
+                if (comp != null) comp.enabled = wasEnabled;
+            _disabledHandlers.Clear();
 
             // Restore alpha only if we don't own the group
             // (owned-group alpha was already set by ApplyLayout on load)
