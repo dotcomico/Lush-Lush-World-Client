@@ -11,9 +11,9 @@ namespace LushWorld.UI
     // Wire all [SerializeField] fields in the row prefab in the Unity Inspector.
     public class CraftingRecipeRowUI : MonoBehaviour
     {
+        [SerializeField] private Image    _icon;
         [SerializeField] private TMP_Text _nameText;
         [SerializeField] private TMP_Text _ingredientsText;
-        [SerializeField] private TMP_Text _maxCraftableText;
         [SerializeField] private Button   _craftButton;
 
         private RecipeDefinition _recipe;
@@ -25,11 +25,9 @@ namespace LushWorld.UI
             _recipe       = recipe;
             _itemRegistry = itemRegistry;
 
-            if (_nameText != null)
-                _nameText.text = recipe.DisplayName;
-
-            if (_craftButton != null)
-                _craftButton.onClick.AddListener(OnCraftClicked);
+            if (_icon != null)     { _icon.enabled = recipe.Icon != null; if (recipe.Icon != null) _icon.sprite = recipe.Icon; }
+            if (_nameText != null) _nameText.text = recipe.DisplayName;
+            if (_craftButton != null) _craftButton.onClick.AddListener(OnCraftClicked);
 
             Refresh();
         }
@@ -60,9 +58,6 @@ namespace LushWorld.UI
                 }
                 _ingredientsText.text = _sb.ToString();
             }
-
-            if (_maxCraftableText != null)
-                _maxCraftableText.text = $"Can craft: {maxCraftable}";
 
             if (_craftButton != null)
                 _craftButton.interactable = maxCraftable > 0;

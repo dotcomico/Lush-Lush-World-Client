@@ -229,6 +229,29 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Consumers: `CraftingUI` (G key), `BuildingMenuUI` (B key)
 - Rule: all new toggle-able menu panels must extend `MenuUIBase` — do not reimplement backdrop or cursor logic inline
 
+### Standard Panel Hierarchy (Single Source of Truth)
+All full-screen toggle panels must follow this exact prefab structure. Never deviate — this enforces scrollability, content bounds, cursor management, and single-panel-at-a-time from one shared system.
+
+```
+[Name]Canvas  (MenuUIBase subclass + Canvas + CanvasScaler: ScaleWithScreenSize 1920×1080 match=0.5)
+└── Panel  (Image bg, anchored 10–90% W × 17.5–82.5% H, sortingOrder set to 150 in code)
+    └── ScrollView  (ScrollRect: Horizontal=off Vertical=on MovementType=Clamped, anchored to fill Panel)
+        ├── Viewport  (RectMask2D, anchored to fill ScrollView)
+        │   └── Content  (VerticalLayoutGroup + ContentSizeFitter verticalFit=PreferredSize, top-stretched)
+        │       └── [RowPrefab instances — Instantiate() at runtime, parented here]
+        └── Scrollbar Vertical  (optional — standard Unity Scrollbar UI element)
+```
+
+Shared C# infrastructure that every panel gets for free:
+- `MenuUIBase` → backdrop (click-outside-to-close) + cursor lock/unlock + input zeroing
+- `IPanelUI` → `IsOpen` property + `ForceClose()` method
+- `PanelManager` → static mutex (calling `RequestOpen(this)` closes any other open panel)
+
+Row prefab standard (HorizontalLayoutGroup):
+```
+[Icon Image, 60×60, LayoutElement preferredW=60]  |  [Name TMP]  |  [Details TMP]  |  [Action Button]
+```
+
 ### Resource Pickup
 - Scripts: `Assets/Scripts/Resource/TerrainResourceManager.cs`, `Assets/Scripts/Resource/ResourceNode.cs`, `Assets/Scripts/Resource/ResourceInteractor.cs` — extended in Subtask 4 to also detect `IInteractable` in range (see Building System)
 - Prefabs: `Assets/App/Prefabs/Rocks/` (variants), `Assets/App/Prefabs/Mushrooms/` (variants), `Assets/App/Prefabs/Sticks/` (variants)
@@ -356,15 +379,15 @@ Four stateless helper classes in `Assets/Scripts/Utilities/`. Use anywhere — n
 - Scripts:
   - `Assets/Scripts/Utilities/IInteractable.cs` — interface (`InteractionLabel`, `Interact(GameObject)`) for any E-key world interactable; implemented by `BlueprintInstance` (Subtask 4); used by `ResourceInteractor`
   - `Assets/Scripts/Data/Ingredient.cs` — shared `[Serializable] struct Ingredient { ItemId, Quantity }` in `LushWorld.Data`; used by both RecipeDefinition and BuildingDefinition
-  - `Assets/Scripts/Crafting/RecipeDefinition.cs` — ScriptableObject; fields: `RecipeId`, `DisplayName`, `Category` (enum), `Ingredients` (List<LushWorld.Data.Ingredient>), `OutputItemId`, `OutputQuantity`
+  - `Assets/Scripts/Crafting/RecipeDefinition.cs` — ScriptableObject; fields: `RecipeId`, `DisplayName`, `Category` (enum), `Ingredients` (List<Ingredient>), `OutputItemId`, `OutputQuantity`, **`Icon` (Sprite)**
   - `Assets/Scripts/Crafting/RecipeRegistry.cs` — ScriptableObject singleton; `List<RecipeDefinition>`, dictionary lookup via `TryGetRecipe(id)`
   - `Assets/Scripts/Crafting/CraftingSystem.cs` — MonoBehaviour on `PlayerCapsule`; static `LocalPlayer`; `RequestCraft(recipeId, qty)` consumes ingredients + calls `InventorySystem.GiveItem`; `GetMaxCraftable(recipe)` + `CountItem(itemId)` are public helpers; static events `OnCraftSuccess`, `OnCraftFailed`, `OnCraftingMenuToggleRequested`; **G** key → `ToggleCraftingMenu()` (called from `InventoryInputHandler.Update`)
   - `Assets/Scripts/UI/Crafting/CraftingUI.cs` — extends `MenuUIBase`; on `CraftingMenuUI.prefab` (nested in PlayerRig); subscribes to `CraftingSystem.OnCraftingMenuToggleRequested`; instantiates `CraftingRecipeRowUI` prefab per recipe; refreshes rows on slot changes via `InventoryData` events; backdrop + cursor logic inherited from `MenuUIBase`
-  - `Assets/Scripts/UI/Crafting/CraftingRecipeRowUI.cs` — MonoBehaviour on row prefab; shows recipe name, ingredient counts (have/need), max craftable; Craft button calls `CraftingSystem.LocalPlayer.RequestCraft`
-- Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — C key → `CraftingSystem.LocalPlayer?.ToggleCraftingMenu()`
-- Assets: `Assets/App/Crafting/RecipeRegistry.asset`; `Assets/App/Crafting/SimpleTorchRecipe.asset` (placeholder); `Assets/App/Crafting/MushroomBourekasRecipe.asset` (id: recipe_mushroom_bourekas, 12× mushroom → mushroom_bourekas)
-- Prefabs: `Assets/App/Prefabs/CraftingMenuUI.prefab` (Canvas, Screen Space Overlay, **Scale With Screen Size 1920×1080 match=0.5**, sortingOrder=150) nested inside `PlayerRig.prefab`; Panel anchored 10%–90% width × 17.5%–82.5% height (centered, screen-proportional); Content top-stretched inside Panel with VerticalLayoutGroup; `Assets/App/Prefabs/UI/CraftingRowPrefab.prefab` — HorizontalLayoutGroup row, 60px height, auto-size TMP texts 14–28pt, Craft Button
-- Inspector wiring on `PlayerCapsule`: `CraftingSystem._recipeRegistry` → `RecipeRegistry.asset`; `CraftingUI._recipeRegistry`, `_itemRegistry`, `_panel`, `_rowContainer`, `_rowPrefab`
+  - `Assets/Scripts/UI/Crafting/CraftingRecipeRowUI.cs` — MonoBehaviour on row prefab; **Icon Image** + name + ingredient counts (have/need); Craft button greyed-out when can't craft; calls `CraftingSystem.LocalPlayer.RequestCraft`; mirrors `BuildingMenuPieceRowUI` structure
+- Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — G key → `CraftingSystem.LocalPlayer?.ToggleCraftingMenu()`
+- Assets: `Assets/App/Crafting/RecipeRegistry.asset`; `Assets/App/Crafting/SimpleTorchRecipe.asset` (placeholder); `Assets/App/Crafting/MushroomBourekasRecipe.asset` (id: recipe_mushroom_bourekas, 12× mushroom → mushroom_bourekas); assign `Icon` sprite on each recipe asset in Inspector
+- Prefabs: `Assets/App/Prefabs/CraftingMenuUI.prefab` — follows **Standard Panel Hierarchy** (see above): Canvas > Panel (10–90% W × 17.5–82.5% H) > ScrollView (ScrollRect) > Viewport (RectMask2D) > Content (VerticalLayoutGroup + ContentSizeFitter); update `_rowContainer` to point to Content inside Viewport after restructure; `Assets/App/Prefabs/UI/CraftingRowPrefab.prefab` — HorizontalLayoutGroup row with children: **Icon** (Image 60×60) | NameText (TMP) | IngredientsText (TMP) | CraftButton — no MaxCraftableText
+- Inspector wiring on `PlayerCapsule`: `CraftingSystem._recipeRegistry` → `RecipeRegistry.asset`; `CraftingUI._recipeRegistry`, `_itemRegistry`, `_panel`, `_rowContainer` (→ Content inside Viewport), `_rowPrefab`
 - Docs: `../Docs/crafting-building-system.md`
 
 ### Building System ✓ DONE (all 5 subtasks complete)
@@ -379,7 +402,7 @@ Four stateless helper classes in `Assets/Scripts/Utilities/`. Use anywhere — n
 - Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — B key added
 - Modified: `Assets/Scripts/Resource/ResourceInteractor.cs` — `FindNearestNode()` scans for `IInteractable`; `UpdatePrompt()` special-cases `BlueprintInstance`: shows all ingredients as "DisplayName: X/Y" per line + "[E] Add Material   [Hold R] Remove"; `TryPickupNearest()` calls `UpdatePrompt()` after `Interact()` to refresh counts; `HandleBlueprintRHold()` in Update() accumulates R hold and calls `bp.Demolish()` at 1.5 s
 - Assets (user creates): `Assets/App/Building/BuildingRegistry.asset`; definitions in `Assets/App/Building/Definitions/`; materials in `Assets/App/Materials/Building/`
-- Prefabs: `Assets/App/Prefabs/Buildings/StickFence.prefab` (5× branch, X rot 90°, 0.18 m spacing), `Assets/App/Prefabs/Buildings/StoneWall.prefab` (4× rock, 2×2 grid 0.35×0.25 m); `BuildingMenuUI.prefab` + `BuildingPieceRowPrefab.prefab` nested in PlayerRig
+- Prefabs: `Assets/App/Prefabs/Buildings/StickFence.prefab` (5× branch, X rot 90°, 0.18 m spacing), `Assets/App/Prefabs/Buildings/StoneWall.prefab` (4× rock, 2×2 grid 0.35×0.25 m); `BuildingMenuUI.prefab` follows **Standard Panel Hierarchy** (see above) — restructure to ScrollView > Viewport (RectMask2D) > Content if not already done; `BuildingPieceRowPrefab.prefab` nested in PlayerRig
 - Materials: `Assets/App/My Materials/Building/GhostMaterial.mat` (URP Lit Transparent, cyan-blue, alpha 0.35, emission on), `Assets/App/My Materials/Building/SkeletonMaterial.mat` (URP Lit Transparent, amber, alpha 0.50)
 - Inspector wiring done: `BuildingSystem._ghostValidMaterial`, `_skeletonMaterial`, `_groundLayer=Default(1)`, `_obstacleLayer=Nothing(0)` on PlayerCapsule in PlayerRig.prefab
 - Docs: `../Docs/crafting-building-system.md`

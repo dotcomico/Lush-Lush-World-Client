@@ -11,30 +11,34 @@ GameObject:
   - component: {fileID: 6839833539277415424}
   - component: {fileID: 4311371114667860586}
   - component: {fileID: 6834761042958773136}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: MobileSkeleton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6839833539277415424
-Transform:
+--- !u!224 &6839833539277415424
+RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1103247074665121606}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 405.15265, y: -372.30203, z: 1353.0453}
-  m_LocalScale: {x: 1.6723282, y: 1.6723282, z: 1.6723282}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1295406976783135719}
   - {fileID: 2565509233617580681}
   m_Father: {fileID: 4959520258665505004}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &4311371114667860586
 MonoBehaviour:
   m_ObjectHideFlags: 0

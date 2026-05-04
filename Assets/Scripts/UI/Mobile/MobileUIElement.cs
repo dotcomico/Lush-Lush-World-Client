@@ -10,6 +10,7 @@ namespace LushWorld.UI.Mobile
     // Attach to every mobile UI RectTransform that should be customizable.
     // Sets an elementId in Inspector, registers with MobileLayoutCustomizer on Awake,
     // and becomes draggable during HUD edit mode.
+    [RequireComponent(typeof(RectTransform))]
     public class MobileUIElement : MonoBehaviour,
         IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
     {
@@ -47,7 +48,14 @@ namespace LushWorld.UI.Mobile
 
         void Awake()
         {
-            _rt       = GetComponent<RectTransform>();
+            _rt = GetComponent<RectTransform>();
+            if (_rt == null)
+            {
+                Debug.LogError($"[MobileUIElement] '{name}' (id='{_elementId}') has no RectTransform. " +
+                               "This component must be on a UI GameObject inside a Canvas hierarchy.", this);
+                enabled = false;
+                return;
+            }
             _parentRT = transform.parent?.GetComponent<RectTransform>();
 
             var existing = GetComponent<CanvasGroup>();
