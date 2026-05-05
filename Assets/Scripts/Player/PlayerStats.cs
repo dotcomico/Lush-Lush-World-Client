@@ -93,6 +93,7 @@ namespace LushWorld.Player
         private void RegenerateHealth()
         {
             if (_health >= _maxHealth) return;
+            if (HungerNormalized < 0.5f) return;   // no passive regen while starving
             _healthRegenTimer += Time.deltaTime;
             if (_healthRegenTimer < _healthRegenInterval) return;
             _healthRegenTimer = 0f;

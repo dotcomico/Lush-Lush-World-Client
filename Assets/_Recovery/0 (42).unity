@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 984420728}
+  m_SkyboxMaterial: {fileID: 1738784039}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -469,18 +469,6 @@ PrefabInstance:
     - target: {fileID: 387243180356104485, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 519775238646364580, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.435
-      objectReference: {fileID: 0}
-    - target: {fileID: 519775238646364580, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -0.287
-      objectReference: {fileID: 0}
-    - target: {fileID: 519775238646364580, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 1.023
       objectReference: {fileID: 0}
     - target: {fileID: 612021513897443818, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1480,11 +1468,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8173969039763012199, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8173969039763012199, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 137
+      value: 82.1
       objectReference: {fileID: 0}
     - target: {fileID: 8173969039763012199, guid: cb72d7fd6bcb55f4992abec7c5adac5e, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -2646,42 +2634,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1976283566}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!21 &984420728
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: NightSky
-  m_Shader: {fileID: 106, guid: 0000000000000000f000000000000000, type: 0}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - _SUNDISK_NONE
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs: []
-    m_Ints: []
-    m_Floats:
-    - _AtmosphereThickness: 0.1
-    - _Exposure: 0.8780747
-    - _SunDisk: 0
-    - _SunSize: 0.04
-    - _SunSizeConvergence: 5
-    m_Colors:
-    - _GroundColor: {r: 0, g: 0, b: 0, a: 1}
-    - _SkyTint: {r: 0.02, g: 0.03, b: 0.08, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1001 &1028115462
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8284,6 +8236,42 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1976283566}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!21 &1738784039
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: NightSky
+  m_Shader: {fileID: 106, guid: 0000000000000000f000000000000000, type: 0}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _SUNDISK_NONE
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Ints: []
+    m_Floats:
+    - _AtmosphereThickness: 0.1
+    - _Exposure: 0.8780747
+    - _SunDisk: 0
+    - _SunSize: 0.04
+    - _SunSizeConvergence: 5
+    m_Colors:
+    - _GroundColor: {r: 0, g: 0, b: 0, a: 1}
+    - _SkyTint: {r: 0.02, g: 0.03, b: 0.08, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &1758328883
 GameObject:
   m_ObjectHideFlags: 0
