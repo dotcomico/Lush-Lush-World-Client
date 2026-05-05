@@ -9,7 +9,7 @@ namespace LushWorld.UI
     // to true in Play Mode to test mobile layout without a device.
     public class MobileCanvasVisibility : MonoBehaviour
     {
-        private void Awake()
+        private void Start()
         {
             gameObject.SetActive(PlatformDetector.IsMobile);
         }

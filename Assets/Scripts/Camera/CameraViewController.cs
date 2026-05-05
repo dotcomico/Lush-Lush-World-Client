@@ -59,7 +59,14 @@ namespace LushWorld.Camera
         private void Start()
         {
             if (CycleCameraButton != null)
+            {
                 CycleCameraButton.onClick.AddListener(CycleCamera);
+                Debug.Log("[CameraView] CycleCameraButton wired.");
+            }
+            else
+            {
+                Debug.LogWarning("[CameraView] CycleCameraButton is NULL — assign it in the Inspector on CameraViewManager.");
+            }
 
             // Rewire TP VCam Follow to the orbit pivot so the camera orbits
             // around the player instead of locking to the character's facing direction.

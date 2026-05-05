@@ -1,5 +1,4 @@
 using LushWorld.Building;
-using LushWorld.Crafting;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -55,7 +54,7 @@ namespace LushWorld.Inventory
                 if (Keyboard.current.qKey.wasPressedThisFrame)
                     _inventory.RequestDropActiveItem();
                 if (Keyboard.current.gKey.wasPressedThisFrame)
-                    CraftingSystem.LocalPlayer?.ToggleCraftingMenu();
+                    _inventory.RequestToggleBackpack();
                 if (Keyboard.current.bKey.wasPressedThisFrame)
                     BuildingSystem.LocalPlayer?.ToggleBuildingMenu();
             }
@@ -63,7 +62,7 @@ namespace LushWorld.Inventory
             if (Input.GetKeyDown(KeyCode.Q))
                 _inventory.RequestDropActiveItem();
             if (Input.GetKeyDown(KeyCode.G))
-                CraftingSystem.LocalPlayer?.ToggleCraftingMenu();
+                _inventory.RequestToggleBackpack();
             if (Input.GetKeyDown(KeyCode.B))
                 BuildingSystem.LocalPlayer?.ToggleBuildingMenu();
 #endif

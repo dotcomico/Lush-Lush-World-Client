@@ -240,11 +240,6 @@ namespace LushWorld.Save
         {
             data.heartsPlaced = HeartStone.Instance != null ? HeartStone.Instance.PlacedCount : 0;
 
-            var trm = FindFirstObjectByType<TerrainResourceManager>();
-            data.harvestedSpotPositions = trm != null ? trm.GetHarvestedPositions() : new List<Vector3>();
-
-            data.collectedSceneNodePositions = GetCollectedSceneNodePositions();
-
             var dnc = FindFirstObjectByType<DayNightCycle>();
             data.worldData = new WorldSaveData { timeOfDay = dnc != null ? dnc.timeOfDay : 0.25f };
         }
@@ -304,11 +299,6 @@ namespace LushWorld.Save
             // Restore end-game visuals without replaying the animation if player already won.
             if (HeartStone.Instance != null && HeartStone.Instance.IsComplete)
                 HeartEndSequencer.Instance?.SnapToEndState();
-
-            FindFirstObjectByType<TerrainResourceManager>()
-                ?.ApplyHarvestedPositions(data.harvestedSpotPositions);
-
-            RestoreCollectedSceneNodes(data.collectedSceneNodePositions);
 
             FindFirstObjectByType<DayNightCycle>()?.LoadTimeOfDay(data.worldData?.timeOfDay ?? 0.25f);
         }

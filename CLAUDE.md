@@ -194,6 +194,8 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Scripts: `Assets/Scripts/Camera/CameraViewController.cs`, `Assets/Scripts/Camera/ThirdPersonOrbitController.cs`, `Assets/Scripts/Camera/CameraShaker.cs`
 - `CameraShaker` — on `MainCamera`; static `Instance`; shakes `_shakeTarget` (PlayerCameraRoot) in LateUpdate; called by `HeartEndSequencer`; **⚠ currently not working** (see HeartEnd section)
 - Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (CameraViewManager child; ThirdPerson_VirtualCamera + Isometric_VirtualCamera children)
+- **Button wiring (Inspector)**: `UI_Button_CycleCamera` OnClick() must be wired to `CameraViewManager > CameraViewController > CycleCamera` directly in the Inspector — do NOT rely on `CycleCameraButton` serialized field alone; the field is kept for future programmatic use but the Inspector OnClick() is the active trigger
+- Cycle modes: FP → 3P → ISO → FP; V key (desktop) and `UI_Button_CycleCamera` (mobile) both call `CycleCamera()`
 - Docs: none yet
 
 ### Inventory Logic
@@ -204,9 +206,14 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 
 ### Inventory UI
 - Scripts: `Assets/Scripts/UI/Inventory/BackpackUI.cs`, `Assets/Scripts/UI/Inventory/HotbarUI.cs`, `Assets/Scripts/UI/Inventory/InventorySlotUI.cs`, `Assets/Scripts/UI/Inventory/InventoryDragController.cs`, `Assets/Scripts/UI/Inventory/InventoryCharacterPreview.cs`
+- `BackpackUI` — now embeds `CraftingSidebarUI` (right-hand column); adds cursor lock/unlock via `StarterAssetsInputs` (`UnlockCursor` / `RestoreCursor`); `_craftingSidebar` field wired in Inspector
 - Prefabs: `Assets/App/Prefabs/InventoryUI.prefab` (nested inside PlayerRig.prefab)
   - `InventoryUI > HotbarRoot > HotbarPanel` (8 hotbar slots), `BackpackButton` (sibling of HotbarPanel, to its right)
-  - `InventoryUI > BackpackRoot > BackpackPanel` (24 backpack slots)
+  - `InventoryUI > BackpackRoot > BackpackPanel` (SetActive=false) → `BackpackContainer` (HorizontalLayoutGroup)
+    - `LeftSection` (VerticalLayoutGroup, preferredW=280) → existing 24 `InventorySlotUI` slots
+    - `RightSection` (flexibleWidth=1) → `CraftingSidebarUI` component + ScrollView > Viewport > Content
+  - Wire `BackpackUI._craftingSidebar` → `CraftingSidebarUI` on `RightSection`
+- T key and G key both open the backpack (G key now redirected in `InventoryInputHandler`)
 - Docs: none yet
 
 ### Held Item View (Minecraft-style)
@@ -381,13 +388,19 @@ Four stateless helper classes in `Assets/Scripts/Utilities/`. Use anywhere — n
   - `Assets/Scripts/Data/Ingredient.cs` — shared `[Serializable] struct Ingredient { ItemId, Quantity }` in `LushWorld.Data`; used by both RecipeDefinition and BuildingDefinition
   - `Assets/Scripts/Crafting/RecipeDefinition.cs` — ScriptableObject; fields: `RecipeId`, `DisplayName`, `Category` (enum), `Ingredients` (List<Ingredient>), `OutputItemId`, `OutputQuantity`, **`Icon` (Sprite)**
   - `Assets/Scripts/Crafting/RecipeRegistry.cs` — ScriptableObject singleton; `List<RecipeDefinition>`, dictionary lookup via `TryGetRecipe(id)`
-  - `Assets/Scripts/Crafting/CraftingSystem.cs` — MonoBehaviour on `PlayerCapsule`; static `LocalPlayer`; `RequestCraft(recipeId, qty)` consumes ingredients + calls `InventorySystem.GiveItem`; `GetMaxCraftable(recipe)` + `CountItem(itemId)` are public helpers; static events `OnCraftSuccess`, `OnCraftFailed`, `OnCraftingMenuToggleRequested`; **G** key → `ToggleCraftingMenu()` (called from `InventoryInputHandler.Update`)
-  - `Assets/Scripts/UI/Crafting/CraftingUI.cs` — extends `MenuUIBase`; on `CraftingMenuUI.prefab` (nested in PlayerRig); subscribes to `CraftingSystem.OnCraftingMenuToggleRequested`; instantiates `CraftingRecipeRowUI` prefab per recipe; refreshes rows on slot changes via `InventoryData` events; backdrop + cursor logic inherited from `MenuUIBase`
-  - `Assets/Scripts/UI/Crafting/CraftingRecipeRowUI.cs` — MonoBehaviour on row prefab; **Icon Image** + name + ingredient counts (have/need); Craft button greyed-out when can't craft; calls `CraftingSystem.LocalPlayer.RequestCraft`; mirrors `BuildingMenuPieceRowUI` structure
-- Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — G key → `CraftingSystem.LocalPlayer?.ToggleCraftingMenu()`
-- Assets: `Assets/App/Crafting/RecipeRegistry.asset`; `Assets/App/Crafting/SimpleTorchRecipe.asset` (placeholder); `Assets/App/Crafting/MushroomBourekasRecipe.asset` (id: recipe_mushroom_bourekas, 12× mushroom → mushroom_bourekas); assign `Icon` sprite on each recipe asset in Inspector
-- Prefabs: `Assets/App/Prefabs/CraftingMenuUI.prefab` — follows **Standard Panel Hierarchy** (see above): Canvas > Panel (10–90% W × 17.5–82.5% H) > ScrollView (ScrollRect) > Viewport (RectMask2D) > Content (VerticalLayoutGroup + ContentSizeFitter); update `_rowContainer` to point to Content inside Viewport after restructure; `Assets/App/Prefabs/UI/CraftingRowPrefab.prefab` — HorizontalLayoutGroup row with children: **Icon** (Image 60×60) | NameText (TMP) | IngredientsText (TMP) | CraftButton — no MaxCraftableText
-- Inspector wiring on `PlayerCapsule`: `CraftingSystem._recipeRegistry` → `RecipeRegistry.asset`; `CraftingUI._recipeRegistry`, `_itemRegistry`, `_panel`, `_rowContainer` (→ Content inside Viewport), `_rowPrefab`
+  - `Assets/Scripts/Crafting/CraftingSystem.cs` — MonoBehaviour on `PlayerCapsule`; static `LocalPlayer`; `RequestCraft(recipeId, qty)` consumes ingredients + calls `InventorySystem.GiveItem`; `GetMaxCraftable(recipe)` + `CountItem(itemId)` are public helpers; static events `OnCraftSuccess`, `OnCraftFailed`, `OnCraftingMenuToggleRequested`
+  - `Assets/Scripts/UI/Crafting/CraftingUI.cs` — **RETIRED** (script remains for compilation; `CraftingMenuUI` instance removed from `PlayerRig.prefab`; do not wire or instantiate)
+  - `Assets/Scripts/UI/Crafting/CraftingSidebarUI.cs` — embedded crafting list; namespace `LushWorld.UI.Crafting`; no MenuUIBase/canvas/PanelManager; lives as a component inside `BackpackUI`'s `RightSection`; builds rows once (`BuildRowsOnce`) + `RefreshAllRows()` called by `BackpackUI` on open; subscribes `InventorySystem.OnInventoryReady/Destroyed` + `CraftingSystem.OnCraftSuccess/Failed` for live refresh; row refresh gated by `gameObject.activeInHierarchy` (no-op while bag is closed)
+  - `Assets/Scripts/UI/Crafting/CraftingRecipeRowUI.cs` — **icon-based** (no text); fields: `_icon` (output icon), `_ingredientContainer` (HorizontalLayoutGroup), `_ingredientIconPrefab`, `_craftButton`; `SpawnIngredientIcons()` instantiates one `IngredientIconUI` per ingredient; `Refresh()` loops `_ingredientIcons[i].Refresh(have, need)`
+  - `Assets/Scripts/UI/Crafting/IngredientIconUI.cs` — namespace `LushWorld.UI.Crafting`; one ingredient slot: `_icon` (Image) + `_quantityText` (TMP); `Init(Sprite)` sets icon; `Refresh(have, need)` sets text + color (green ≥ need, red < need)
+- Modified: `Assets/Scripts/Inventory/InventoryInputHandler.cs` — G key now → `_inventory.RequestToggleBackpack()` (opens backpack with embedded crafting sidebar); `using LushWorld.Crafting` removed
+- Assets: `Assets/App/Crafting/RecipeRegistry.asset`; `Assets/App/Crafting/SimpleTorchRecipe.asset` (id: recipe_torch, 2× branch_01 → torch, icon wired); `Assets/App/Crafting/MushroomBourekasRecipe.asset` (id: recipe_mushroom_bourekas, 12× mushroom → mushroom_bourekas); Icons are wired on both recipe assets
+- Prefabs:
+  - `Assets/App/Prefabs/UI/IngredientIconPrefab.prefab` — Root (RectTransform + `IngredientIconUI` + LayoutElement preferredW=36/H=36) > `Icon` (Image 32×32 PreserveAspect) + `QuantityLabel` (TMP fontSize=10 anchor bottom-right)
+  - `Assets/App/Prefabs/UI/CraftingRowPrefab.prefab` — HorizontalLayoutGroup padding=8 spacing=8, preferredH=56; children: `OutputIcon` (Image 48×48) | `Arrow` (TMP "→" 20px) | `IngredientContainer` (HLG spacing=4 flexibleW=1) | `CraftButton` (Button 48px); wire `CraftingRecipeRowUI` fields in Inspector
+  - `Assets/App/Prefabs/CraftingMenuUI.prefab` — **no longer instantiated** in `PlayerRig.prefab`; asset stays on disk
+- Inspector wiring on `PlayerCapsule`: `CraftingSystem._recipeRegistry` → `RecipeRegistry.asset`
+- Inspector wiring on `CraftingSidebarUI` (RightSection): `_rowContainer` → Content (inside ScrollView/Viewport), `_rowPrefab` → `CraftingRowPrefab.prefab`, `_recipeRegistry` + `_itemRegistry` → existing assets
 - Docs: `../Docs/crafting-building-system.md`
 
 ### Building System ✓ DONE (all 5 subtasks complete)
@@ -487,6 +500,8 @@ Four stateless helper classes in `Assets/Scripts/Utilities/`. Use anywhere — n
 - Buff key: `"gummy_rush"` — the string connecting `ItemDefinition.BuffId` → `PlayerBuffSystem.ApplyBuff`
 
 ### Dev / Editor Tools
-- Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`, `Assets/Scripts/Editor/StatsSetupTool.cs`
+- Scripts: `Assets/Scripts/DevTools/DebugCursorToggle.cs`, `Assets/Scripts/Editor/ItemIconGenerator.cs`, `Assets/Scripts/Editor/StatsSetupTool.cs`, `Assets/Scripts/Editor/MobileSimulationToggle.cs`
+- `MobileSimulationToggle` — menu item `Lush World > Simulate Mobile` (checkmark); toggles `PlatformDetector.SimulateMobileInEditor`; persists via `EditorPrefs`; applies before any `Awake`/`Start` via `RuntimeInitializeOnLoadMethod`; use this to show mobile UI (joysticks, buttons) while testing in the Editor without a device
+- `MobileCanvasVisibility` uses `Start()` (not `Awake()`) so the simulator pref is always applied before the visibility check runs
 - Prefabs: none
 - Docs: none
