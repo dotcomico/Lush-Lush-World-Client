@@ -119,6 +119,7 @@ MonoBehaviour:
   _rowContainer: {fileID: 1155170781392868246}
   _rowPrefab: {fileID: 8347636202388681994, guid: dfdaa96680b0245419872d995494aa4d, type: 3}
   _buildingRegistry: {fileID: 11400000, guid: 65e57e328bd5e7d4994e0ae73b1a5dde, type: 2}
+  _itemRegistry: {fileID: 11400000, guid: eb4469f6f44f4124fbbcff30e118c857, type: 2}
 --- !u!1 &8871012680973918742
 GameObject:
   m_ObjectHideFlags: 0

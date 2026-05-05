@@ -16,12 +16,14 @@ namespace LushWorld.Resource
 
         public void SetQuantity(int qty) => quantity = qty;
 
+        public static event Action OnAnyPickedUp;
         public event Action<ResourceNode> OnPickedUp;
 
         public void TryPickup()
         {
             if (!InventorySystem.GiveItem(itemId, quantity)) return;
             OnPickedUp?.Invoke(this);
+            OnAnyPickedUp?.Invoke();
             foreach (var col in GetComponentsInChildren<Collider>())
                 col.enabled = false;
             Destroy(gameObject);

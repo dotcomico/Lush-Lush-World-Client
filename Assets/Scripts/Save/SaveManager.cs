@@ -68,6 +68,7 @@ namespace LushWorld.Save
             PlayerStats.OnHungerChanged          += OnStatChanged;
             InventorySystem.OnInventoryReady     += OnInventoryReady;
             InventorySystem.OnInventoryDestroyed += UntrackInventory;
+            ResourceNode.OnAnyPickedUp           += OnResourceNodePickedUp;
         }
 
         private void OnDisable()
@@ -80,6 +81,7 @@ namespace LushWorld.Save
             PlayerStats.OnHungerChanged          -= OnStatChanged;
             InventorySystem.OnInventoryReady     -= OnInventoryReady;
             InventorySystem.OnInventoryDestroyed -= UntrackInventory;
+            ResourceNode.OnAnyPickedUp           -= OnResourceNodePickedUp;
             UntrackInventory();
         }
 
@@ -112,6 +114,19 @@ namespace LushWorld.Save
         private void OnBuildingCompleted(BlueprintInstance bp) { if (!_isLoading) SaveGame(); }
         private void OnBlueprintPlaced()                       { if (!_isLoading) SaveGame(); }
         private void OnHeartsChanged()                         { if (!_isLoading) SaveGame(); }
+
+        // Deferred by one frame so Unity's Destroy() has actually removed the node
+        // before GetCollectedSceneNodePositions() snapshots which nodes are gone.
+        private void OnResourceNodePickedUp()
+        {
+            if (!_isLoading) StartCoroutine(SaveNextFrame());
+        }
+
+        private IEnumerator SaveNextFrame()
+        {
+            yield return null;
+            if (!_isLoading) SaveGame();
+        }
 
         private void OnPlayerDied()
         {
@@ -240,6 +255,8 @@ namespace LushWorld.Save
         {
             data.heartsPlaced = HeartStone.Instance != null ? HeartStone.Instance.PlacedCount : 0;
 
+            data.collectedSceneNodePositions = GetCollectedSceneNodePositions();
+
             var dnc = FindFirstObjectByType<DayNightCycle>();
             data.worldData = new WorldSaveData { timeOfDay = dnc != null ? dnc.timeOfDay : 0.25f };
         }
@@ -299,6 +316,8 @@ namespace LushWorld.Save
             // Restore end-game visuals without replaying the animation if player already won.
             if (HeartStone.Instance != null && HeartStone.Instance.IsComplete)
                 HeartEndSequencer.Instance?.SnapToEndState();
+
+            RestoreCollectedSceneNodes(data.collectedSceneNodePositions);
 
             FindFirstObjectByType<DayNightCycle>()?.LoadTimeOfDay(data.worldData?.timeOfDay ?? 0.25f);
         }

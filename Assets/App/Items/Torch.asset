@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LushWorld.Inventory.ItemDefinition
   <ItemId>k__BackingField: torch
   <DisplayName>k__BackingField: Torch
-  <Icon>k__BackingField: {fileID: 21300000, guid: 9215f802cbcd069439f897fa3c7af47c, type: 3}
+  <Icon>k__BackingField: {fileID: 21300000, guid: 37cf0678da7d4764589a9a6e887bb365, type: 3}
   <MaxStackSize>k__BackingField: 1
   <IsDroppable>k__BackingField: 1
   <WorldPrefab>k__BackingField: {fileID: 8583176603099729282, guid: 91051d4340f769a4785bfa42a0472999, type: 3}

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using LushWorld.Building;
 using LushWorld.Inventory;
 using LushWorld.UI;
@@ -13,7 +14,10 @@ namespace LushWorld.UI.Building
         [SerializeField] private Transform        _rowContainer;
         [SerializeField] private GameObject       _rowPrefab;
         [SerializeField] private BuildingRegistry _buildingRegistry;
+        [SerializeField] private ItemRegistry     _itemRegistry;
 
+        private readonly List<BuildingMenuPieceRowUI> _rows = new();
+        private InventoryData       _inventoryData;
         private StarterAssetsInputs _inputBridge;
         private Canvas              _canvas;
 
@@ -21,8 +25,20 @@ namespace LushWorld.UI.Building
 
         public void ForceClose() => BuildingSystem.LocalPlayer?.CloseBuildingMenu();
 
-        private void OnEnable()  => BuildingSystem.OnBuildingMenuToggleRequested += HandleMenuToggle;
-        private void OnDisable() => BuildingSystem.OnBuildingMenuToggleRequested -= HandleMenuToggle;
+        private void OnEnable()
+        {
+            BuildingSystem.OnBuildingMenuToggleRequested += HandleMenuToggle;
+            InventorySystem.OnInventoryReady             += HandleInventoryReady;
+            InventorySystem.OnInventoryDestroyed         += HandleInventoryDestroyed;
+        }
+
+        private void OnDisable()
+        {
+            BuildingSystem.OnBuildingMenuToggleRequested -= HandleMenuToggle;
+            InventorySystem.OnInventoryReady             -= HandleInventoryReady;
+            InventorySystem.OnInventoryDestroyed         -= HandleInventoryDestroyed;
+            UnsubscribeInventory();
+        }
 
         private void Start()
         {
@@ -32,11 +48,37 @@ namespace LushWorld.UI.Building
             if (_panel  != null) _panel.SetActive(false);
             InitBackdrop("BuildingBackdrop", () => BuildingSystem.LocalPlayer?.CloseBuildingMenu(), _panel);
             BuildRows();
+            if (InventorySystem.LocalPlayer != null)
+                HandleInventoryReady(InventorySystem.LocalPlayer.Data);
+        }
+
+        private void HandleInventoryReady(InventoryData data)
+        {
+            UnsubscribeInventory();
+            _inventoryData = data;
+            data.OnHotbarSlotChanged   += OnSlotChanged;
+            data.OnBackpackSlotChanged += OnSlotChanged;
+        }
+
+        private void HandleInventoryDestroyed() => UnsubscribeInventory();
+
+        private void UnsubscribeInventory()
+        {
+            if (_inventoryData == null) return;
+            _inventoryData.OnHotbarSlotChanged   -= OnSlotChanged;
+            _inventoryData.OnBackpackSlotChanged -= OnSlotChanged;
+            _inventoryData = null;
+        }
+
+        private void OnSlotChanged(int _, ItemStack __)
+        {
+            if (_panel != null && _panel.activeSelf) RefreshAllRows();
         }
 
         private void HandleMenuToggle(bool open)
         {
             ApplyMenuToggle(open, _panel, _inputBridge);
+            if (open) RefreshAllRows();
             if (open)
                 PanelManager.RequestOpen(this);
             else
@@ -50,8 +92,15 @@ namespace LushWorld.UI.Building
             {
                 var go  = Instantiate(_rowPrefab, _rowContainer);
                 var row = go.GetComponent<BuildingMenuPieceRowUI>();
-                row?.Init(def);
+                if (row == null) continue;
+                row.Init(def, _itemRegistry);
+                _rows.Add(row);
             }
+        }
+
+        private void RefreshAllRows()
+        {
+            foreach (var row in _rows) row.Refresh();
         }
     }
 }
