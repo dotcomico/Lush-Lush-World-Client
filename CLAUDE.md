@@ -196,6 +196,7 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Prefabs: `Assets/App/Prefabs/PlayerRig.prefab` (CameraViewManager child; ThirdPerson_VirtualCamera + Isometric_VirtualCamera children)
 - **Button wiring (Inspector)**: `UI_Button_CycleCamera` OnClick() must be wired to `CameraViewManager > CameraViewController > CycleCamera` directly in the Inspector — do NOT rely on `CycleCameraButton` serialized field alone; the field is kept for future programmatic use but the Inspector OnClick() is the active trigger
 - Cycle modes: FP → 3P → ISO → FP; V key (desktop) and `UI_Button_CycleCamera` (mobile) both call `CycleCamera()`
+- Static event: `CameraViewController.OnCameraModeChanged` (`Action<CameraMode>`) — fired in `ApplyMode()` after every mode switch; consumed by `HeldItemView` to re-parent the held item
 - Docs: none yet
 
 ### Inventory Logic
@@ -217,9 +218,12 @@ Quick-reference for every implemented feature. Check this before searching. Upda
 - Docs: none yet
 
 ### Held Item View (Minecraft-style)
-- Script: `Assets/Scripts/Player/HeldItemView.cs` — on `PlayerCapsule`; subscribes to `InventoryData.OnSelectedHotbarSlotChanged` + `OnHotbarSlotChanged`; instantiates `ItemDefinition.WorldPrefab` as a child of `HeldItemAnchor`; disables colliders + makes Rigidbodies kinematic on the clone so it never blocks gameplay
-- Scene setup: `HeldItemAnchor` — empty child of `MainCamera` inside `PlayerRig.prefab`; local position `(0.25, -0.22, 0.55)`, local rotation `(10, 335, 0)` — controls where the item appears on screen (bottom-right, like Minecraft)
-- Inspector wiring on `HeldItemView`: `_itemRegistry` → `Assets/App/Items/ItemRegistry.asset` (**not** `Assets/Scripts/Inventory/ItemRegistry.asset`); `_heldItemAnchor` → `HeldItemAnchor` (child of `MainCamera`)
+- Script: `Assets/Scripts/Player/HeldItemView.cs` — on `PlayerCapsule`; subscribes to `InventoryData.OnSelectedHotbarSlotChanged` + `OnHotbarSlotChanged` + `CameraViewController.OnCameraModeChanged`; instantiates `ItemDefinition.WorldPrefab` on the correct anchor for the active camera mode; on mode switch, re-parents the live held object (no re-instantiate); disables colliders + makes Rigidbodies kinematic on the clone so it never blocks gameplay
+- Two anchors (both must be wired in Inspector):
+  - `_heldItemAnchorFirstPerson` — child of `MainCamera`; local position `(0.25, -0.22, 0.55)`, local rotation `(10, 335, 0)` — item rendered in screen space (bottom-right, FP only)
+  - `_heldItemAnchorWorld` — child of `SnailBody`; position it so the item looks held by the snail body (visible in TP/ISO)
+- Inspector wiring on `HeldItemView`: `_itemRegistry` → `Assets/App/Items/ItemRegistry.asset`; `_heldItemAnchorFirstPerson` → `HeldItemAnchorFirstPerson` (child of `MainCamera`); `_heldItemAnchorWorld` → `HeldItemAnchor` (child of `SnailBody`)
+- Camera event source: `CameraViewController.OnCameraModeChanged` (static `Action<CameraMode>`) — fired in `ApplyMode()` after every mode switch
 - Per-item scale: `ItemDefinition.HeldScale` (float, default `1`) — set on each `.asset` to control how large the item appears in hand (e.g. SmallRock `0.15`, Mushroom `0.25`, Branch `0.2`)
 - Docs: `../Docs/adding-pickup-items.md` (Step 3 — HeldScale field)
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -51,6 +52,9 @@ namespace LushWorld.Camera
         public Button CycleCameraButton;
 
         // ─────────────────────────────────────────────────────────────────────
+        /// <summary>Fired whenever the camera mode changes. Passes the new mode.</summary>
+        public static event Action<CameraMode> OnCameraModeChanged;
+
         private CameraMode _currentMode = CameraMode.FirstPerson;
         private static readonly string[] _modeLabels = { "FP", "3P", "ISO" };
         private Coroutine _hideMeshCoroutine;
@@ -177,6 +181,7 @@ namespace LushWorld.Camera
                     label.text = _modeLabels[(int)mode];
             }
 
+            OnCameraModeChanged?.Invoke(mode);
             Debug.Log($"[CameraView] Switched to {mode}");
         }
 

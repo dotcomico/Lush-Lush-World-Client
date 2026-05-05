@@ -1,25 +1,33 @@
 using System.Collections;
+using LushWorld.Camera;
 using LushWorld.Inventory;
 using UnityEngine;
 
 namespace LushWorld.Player
 {
-    // Renders the selected hotbar item as a 3D model attached to the camera (Minecraft-style).
-    // HeldItemAnchor must be a child of MainCamera inside PlayerRig.prefab.
-    // Position the anchor in the Inspector to tune where the item appears (e.g. bottom-right).
+    // Renders the selected hotbar item as a 3D model on the correct anchor per camera mode.
+    // _heldItemAnchorFirstPerson: child of MainCamera (FP view, bottom-right screen space).
+    // _heldItemAnchorWorld: child of SnailBody (visible in TP/ISO as the player holding the item).
     public class HeldItemView : MonoBehaviour
     {
         [SerializeField] private ItemRegistry _itemRegistry;
-        [SerializeField] private Transform _heldItemAnchor;
+        [SerializeField] private Transform _heldItemAnchorFirstPerson;
+        [SerializeField] private Transform _heldItemAnchorWorld;
 
         private InventoryData _data;
         private GameObject _currentHeldObject;
         private Coroutine _eatingCoroutine;
+        private CameraMode _currentCameraMode = CameraMode.FirstPerson;
+
+        private Transform ActiveAnchor => _currentCameraMode == CameraMode.FirstPerson
+            ? _heldItemAnchorFirstPerson
+            : _heldItemAnchorWorld;
 
         private void OnEnable()
         {
             InventorySystem.OnInventoryReady += HandleInventoryReady;
             InventorySystem.OnInventoryDestroyed += HandleInventoryDestroyed;
+            CameraViewController.OnCameraModeChanged += HandleCameraModeChanged;
         }
 
         private void Start()
@@ -32,6 +40,7 @@ namespace LushWorld.Player
         {
             InventorySystem.OnInventoryReady -= HandleInventoryReady;
             InventorySystem.OnInventoryDestroyed -= HandleInventoryDestroyed;
+            CameraViewController.OnCameraModeChanged -= HandleCameraModeChanged;
             UnsubscribeData();
         }
 
@@ -51,6 +60,16 @@ namespace LushWorld.Player
             ClearHeldItem();
         }
 
+        private void HandleCameraModeChanged(CameraMode mode)
+        {
+            _currentCameraMode = mode;
+            if (_currentHeldObject == null || ActiveAnchor == null) return;
+            StopEatingAnimation();
+            _currentHeldObject.transform.SetParent(ActiveAnchor, worldPositionStays: false);
+            _currentHeldObject.transform.localPosition = Vector3.zero;
+            _currentHeldObject.transform.localRotation = Quaternion.identity;
+        }
+
         private void OnSelectionChanged(int _) => RefreshHeldItem();
 
         private void OnSlotChanged(int changedSlot, ItemStack _)
@@ -63,7 +82,7 @@ namespace LushWorld.Player
         {
             StopEatingAnimation();
             ClearHeldItem();
-            if (_data == null || _heldItemAnchor == null) return;
+            if (_data == null || ActiveAnchor == null) return;
 
             var activeStack = _data.ActiveItem;
             if (activeStack.IsEmpty) return;
@@ -71,7 +90,7 @@ namespace LushWorld.Player
             var def = _itemRegistry != null ? _itemRegistry.GetById(activeStack.ItemId) : null;
             if (def?.WorldPrefab == null) return;
 
-            _currentHeldObject = Instantiate(def.WorldPrefab, _heldItemAnchor);
+            _currentHeldObject = Instantiate(def.WorldPrefab, ActiveAnchor);
             _currentHeldObject.transform.localPosition = Vector3.zero;
             _currentHeldObject.transform.localRotation = Quaternion.identity;
             _currentHeldObject.transform.localScale = Vector3.one * def.HeldScale;
